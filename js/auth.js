@@ -54,3 +54,5 @@ const Auth = (() => {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = Auth;
 }
+
+export { Auth };

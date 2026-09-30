@@ -89,3 +89,5 @@ const Storage = (() => {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = Storage;
 }
+
+export { Storage };
