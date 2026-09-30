@@ -1,12 +1,12 @@
+import { Octokit } from 'https://cdn.jsdelivr.net/npm/@octokit/rest@20.0.2/+esm';
+
 const Storage = (() => {
   let config = null;
   let octokit = null;
 
   function init(cfg) {
     config = cfg;
-    if (typeof Octokit !== 'undefined') {
-      octokit = new Octokit({ auth: config.githubPat });
-    }
+    octokit = new Octokit({ auth: config.githubPat });
   }
 
   async function saveSubmission(data) {
