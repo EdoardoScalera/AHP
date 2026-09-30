@@ -1,4 +1,4 @@
-import { Octokit } from 'https://cdn.jsdelivr.net/npm/@octokit/rest@20.0.2/dist/octokit-rest.esm.min.js';
+import { Octokit } from 'https://esm.sh/@octokit/rest@20.0.2';
 
 const Storage = (() => {
   let config = null;
