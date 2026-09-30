@@ -1,3 +1,5 @@
+import { AHP } from './ahp-core.js';
+
 const UI = (() => {
   let criteria = [];
   let matrix = [];
