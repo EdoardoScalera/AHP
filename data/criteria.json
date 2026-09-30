@@ -1,0 +1,52 @@
+{
+  "criteria": [
+    {
+      "id": "energy_performance",
+      "name": "Energy performance",
+      "shortName": "Energy",
+      "description": "Primary energy consumption, energy savings, CO2 emissions reduction, and energy labeling of the building."
+    },
+    {
+      "id": "water_use",
+      "name": "Water use",
+      "shortName": "Water",
+      "description": "Water consumption efficiency, wastewater reduction, and water reuse systems in building renovation."
+    },
+    {
+      "id": "climate_impact",
+      "name": "Climate impact",
+      "shortName": "Climate",
+      "description": "Greenhouse gas emissions, carbon footprint, and climate resilience of the renovated building."
+    },
+    {
+      "id": "economic_performance",
+      "name": "Economic performance",
+      "shortName": "Economic",
+      "description": "Investment costs, operational savings, payback period, NPV, IRR, and life-cycle cost analysis."
+    },
+    {
+      "id": "ieq",
+      "name": "Indoor Environmental Quality (IEQ)",
+      "shortName": "IEQ",
+      "description": "Thermal comfort, indoor air quality, visual comfort, and acoustic comfort for building occupants."
+    },
+    {
+      "id": "energy_system_integration",
+      "name": "Energy system integration",
+      "shortName": "Energy System",
+      "description": "Demand response, peak load reduction, load shifting, grid interaction, flexibility, and smart readiness indicators."
+    },
+    {
+      "id": "technical_feasibility",
+      "name": "Technical feasibility",
+      "shortName": "Technical",
+      "description": "Constructability, technical complexity, maintenance requirements, and technology readiness of renovation measures."
+    },
+    {
+      "id": "social_impact",
+      "name": "Social impact",
+      "shortName": "Social",
+      "description": "Occupant satisfaction, social acceptance, equity, accessibility, and community benefits of the renovation."
+    }
+  ]
+}

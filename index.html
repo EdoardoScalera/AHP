@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AHP Stakeholder Survey - ENTRANCE Horizon EU</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Analytic Hierarchy Process Survey</h1>
+      <p class="subtitle">ENTRANCE Horizon EU — KPI Selection for Building Renovation</p>
+    </header>
+
+    <div id="password-screen" class="screen active">
+      <div class="card">
+        <h2>Access Required</h2>
+        <p>Enter the shared password to access the survey.</p>
+        <div class="form-group">
+          <label for="password-input">Password</label>
+          <input type="password" id="password-input" placeholder="Enter password" autocomplete="off">
+        </div>
+        <button id="password-submit" class="btn btn-primary">Unlock Survey</button>
+        <p id="password-error" class="error hidden">Incorrect password. Please try again.</p>
+      </div>
+    </div>
+
+    <div id="survey-screen" class="screen hidden">
+      <form id="survey-form" novalidate>
+        <section id="identity-section" class="card">
+          <h2>Respondent Information</h2>
+          <p class="hint">All fields are required to submit.</p>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="input-name">Name *</label>
+              <input type="text" id="input-name" required autocomplete="name">
+            </div>
+            <div class="form-group">
+              <label for="input-role">Role *</label>
+              <input type="text" id="input-role" required placeholder="e.g., Building Owner, Architect, Engineer" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="input-pilot">Pilot Name *</label>
+              <input type="text" id="input-pilot" required placeholder="e.g., Tallinn pilot" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="input-country">Country *</label>
+              <input type="text" id="input-country" required placeholder="e.g., Estonia" autocomplete="off">
+            </div>
+          </div>
+        </section>
+
+        <section id="matrix-section" class="card">
+          <h2>Pairwise Comparison Matrix</h2>
+          <p class="hint">How important is criterion <strong>row</strong> relative to criterion <strong>column</strong>?<br>
+          Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.<br>
+          Use fractions (e.g., 1/3) for inverse comparisons. Only fill upper triangle (yellow cells); lower triangle fills automatically.</p>
+          <div id="criteria-legend" class="criteria-legend"></div>
+          <div class="matrix-container">
+            <table id="matrix-table" class="matrix-table">
+              <thead>
+                <tr>
+                  <th class="corner">Criteria</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="cr-section" class="card">
+          <h2>Consistency Check</h2>
+          <div class="cr-display">
+            <div class="cr-value" id="cr-value">CR: —</div>
+            <div class="cr-status" id="cr-status">Complete the matrix to see consistency ratio</div>
+            <div class="cr-bar">
+              <div class="cr-bar-fill" id="cr-bar-fill"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="missing-section" class="card">
+          <h2>Missing Criteria</h2>
+          <p class="hint">Did we neglect some criteria relevant for KPI selection in building renovation?</p>
+          <textarea id="input-missing" rows="3" placeholder="Optional: Your comments..."></textarea>
+        </section>
+
+        <div class="form-actions">
+          <button type="button" id="btn-save-draft" class="btn btn-secondary">Save Draft</button>
+          <button type="submit" id="btn-submit" class="btn btn-primary" disabled>Submit</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="success-screen" class="screen hidden">
+      <div class="card success">
+        <h2>Thank You!</h2>
+        <p>Your response has been submitted successfully.</p>
+        <p class="detail" id="success-detail"></p>
+        <button id="btn-new-response" class="btn btn-primary">Submit Another Response</button>
+      </div>
+    </div>
+
+    <div id="error-screen" class="screen hidden">
+      <div class="card error">
+        <h2>Submission Failed</h2>
+        <p id="error-message">An error occurred while saving your response.</p>
+        <button id="btn-retry" class="btn btn-primary">Try Again</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@octokit/rest@20.0.2/dist/octokit-rest.umd.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
