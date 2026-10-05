@@ -37,16 +37,10 @@
       "description": "Demand response, peak load reduction, load shifting, grid interaction, flexibility, and smart readiness indicators."
     },
     {
-      "id": "technical_feasibility",
-      "name": "Technical feasibility",
-      "shortName": "Technical",
-      "description": "Constructability, technical complexity, maintenance requirements, and technology readiness of renovation measures."
-    },
-    {
-      "id": "social_impact",
-      "name": "Social impact",
-      "shortName": "Social",
-      "description": "Occupant satisfaction, social acceptance, equity, accessibility, and community benefits of the renovation."
+      "id": "practical_implementation",
+      "name": "Practical implementation",
+      "shortName": "Practical",
+      "description": "Practical implementation combining technical feasibility (constructability, technical complexity, maintenance requirements, technology readiness) with social impact (occupant satisfaction, social acceptance, equity, accessibility, and community benefits)."
     }
   ]
 }

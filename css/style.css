@@ -143,6 +143,47 @@ header h1 {
   display: none;
 }
 
+.hidden {
+  display: none !important;
+}
+
+.form-group .label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.form-group input[type="radio"],
+.form-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 6px;
+  accent-color: var(--primary);
+}
+
+/* Criteria selector (P1) */
+.criteria-checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.criteria-check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--primary-light);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.criteria-check-item input {
+  margin-top: 3px;
+}
+
 /* Matrix Table */
 .matrix-container {
   overflow-x: auto;

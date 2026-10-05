@@ -24,7 +24,8 @@ async function init() {
   UI.init(criteria, {
     onMatrixChange: handleMatrixChange,
     onSubmit: handleSubmit,
-    onSaveDraft: handleSaveDraft
+    onSaveDraft: handleSaveDraft,
+    onCriteriaChange: handleCriteriaChange
   });
 
   Auth.init(CONFIG, () => {
@@ -32,7 +33,17 @@ async function init() {
   });
 }
 
+function handleCriteriaChange(activeCriteria, meta) {
+  criteria = activeCriteria;
+  currentMatrix = [];
+  UI.updateCRDisplay(null);
+}
+
 function handleMatrixChange(matrix) {
+  if (!matrix) {
+    UI.updateCRDisplay(null);
+    return;
+  }
   currentMatrix = matrix;
   try {
     const result = AHP.calculateAll(matrix);

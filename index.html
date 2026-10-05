@@ -53,9 +53,29 @@
               <input type="email" id="input-email" placeholder="e.g., name@example.eu" autocomplete="email">
             </div>
             <div class="form-group">
+              <span class="label">Is a renovation under consideration? *</span>
+              <label><input type="radio" name="renovation" id="input-renovation-yes" value="yes" required> Yes</label>
+              <label><input type="radio" name="renovation" id="input-renovation-no" value="no" required> No</label>
+            </div>
+            <div class="form-group hidden" id="renovation-details-group">
+              <label for="input-renovation-details">Renovation details (optional, e.g. building, scope, timeline)</label>
+              <textarea id="input-renovation-details" rows="2" maxlength="2000" placeholder="Optional details..."></textarea>
+            </div>
+            <div class="form-group">
               <label><input type="checkbox" id="input-consent" required> I agree my name/role/pilot/country and comparisons are stored in the private repo <code>entrance-survey-responses</code> for ENTRANCE analysis. *</label>
             </div>
           </div>
+        </section>
+
+        <section id="criteria-section" class="card">
+          <h2>Decision Criteria</h2>
+          <p class="hint">Uncheck any criterion you don't think is relevant. Optionally add one missing criterion. The matrix below adapts automatically (minimum 3 active).</p>
+          <div id="criteria-checklist" class="criteria-checklist"></div>
+          <div class="form-group">
+            <label for="input-custom-criterion">Important criterion not in our list? (optional, adds a new row/column)</label>
+            <input type="text" id="input-custom-criterion" maxlength="120" placeholder="e.g., Heritage preservation" autocomplete="off">
+          </div>
+          <p class="hint" id="criteria-count"></p>
         </section>
 
         <section id="matrix-section" class="card">

@@ -1,28 +1,92 @@
 import { AHP } from './ahp-core.js';
 
 const UI = (() => {
+  const DRAFT_KEY = 'ahp-draft-v3';
+  const MIN_N = 3;
+  const MAX_N = 9;
+
+  let allCriteria = [];
   let criteria = [];
+  let excludedIds = [];
+  let customCriterion = null;
   let matrix = [];
   let onMatrixChange = null;
   let onSubmit = null;
   let onSaveDraft = null;
+  let onCriteriaChange = null;
 
   function init(criteriaData, callbacks) {
-    criteria = criteriaData;
+    allCriteria = criteriaData;
     onMatrixChange = callbacks.onMatrixChange;
     onSubmit = callbacks.onSubmit;
     onSaveDraft = callbacks.onSaveDraft;
+    onCriteriaChange = callbacks.onCriteriaChange || null;
 
-    buildMatrixTable();
-    buildCriteriaLegend();
+    buildCriteriaChecklist();
+    rebuildFromCriteria(false);
     attachEventListeners();
     loadDraft();
   }
 
+  function getActiveCriteria() {
+    return criteria;
+  }
+
+  function getCriteriaMeta() {
+    const activeIds = criteria.map(c => c.id);
+    const isDefault7 = activeIds.length === 7 && !customCriterion && excludedIds.length === 0 &&
+      activeIds.includes('practical_implementation');
+    return {
+      activeIds,
+      excludedIds: [...excludedIds],
+      custom: customCriterion ? { ...customCriterion } : null,
+      criteriaSet: customCriterion ? 'v3-custom' : (isDefault7 ? 'v3-7' : 'v3-subset')
+    };
+  }
+
+  function buildCriteriaChecklist() {
+    const container = document.getElementById('criteria-checklist');
+    if (!container) return;
+    container.innerHTML = allCriteria.map(c =>
+      `<label class="criteria-check-item"><input type="checkbox" data-criterion-id="${c.id}" checked> <span title="${escapeHtml(c.description)}">${escapeHtml(c.name)}</span></label>`
+    ).join('');
+  }
+
+  function readCriteriaSelection() {
+    const checked = new Set();
+    document.querySelectorAll('#criteria-checklist input[type="checkbox"]').forEach(cb => {
+      if (cb.checked) checked.add(cb.dataset.criterionId);
+    });
+    excludedIds = allCriteria.filter(c => !checked.has(c.id)).map(c => c.id);
+    const customInput = document.getElementById('input-custom-criterion');
+    const customName = customInput ? customInput.value.trim().slice(0, 120) : '';
+    customCriterion = customName ? { id: 'custom_1', name: customName, shortName: customName.slice(0, 24), description: customName } : null;
+
+    criteria = allCriteria.filter(c => checked.has(c.id));
+    if (customCriterion) criteria = [...criteria, customCriterion];
+
+    const countEl = document.getElementById('criteria-count');
+    if (countEl) {
+      countEl.textContent = `Active criteria: ${criteria.length} (minimum ${MIN_N}, maximum ${MAX_N})` +
+        (criteria.length < MIN_N ? ' — please activate at least 3.' : '');
+    }
+  }
+
+  function rebuildFromCriteria(notify = true) {
+    readCriteriaSelection();
+    buildMatrixTable();
+    buildCriteriaLegend();
+    const submitBtn = document.getElementById('btn-submit');
+    if (submitBtn) submitBtn.disabled = criteria.length < MIN_N;
+    if (criteria.length < MIN_N && onMatrixChange) onMatrixChange(null, { reason: 'too-few-criteria', n: criteria.length });
+    if (notify && onCriteriaChange) onCriteriaChange(getActiveCriteria(), getCriteriaMeta());
+  }
+
   function buildCriteriaLegend() {
     const container = document.getElementById('criteria-legend');
+    if (!container) return;
     container.innerHTML = criteria.map((c, i) =>
-      `<span class="criteria-legend-item"><span class="criteria-legend-num">${i + 1}.</span>${c.shortName}</span>`
+      `<span class="criteria-legend-item" title="${escapeHtml(c.description || c.name)}"><span class="criteria-legend-num">${i + 1}.</span>${escapeHtml(c.shortName)}</span>`
     ).join('');
   }
 
@@ -31,12 +95,15 @@ const UI = (() => {
     matrix = Array(n).fill(null).map(() => Array(n).fill(1));
 
     const thead = document.querySelector('#matrix-table thead tr');
-    thead.innerHTML = '<th class="corner">Criteria</th>' +
-      criteria.map((c, i) => `<th title="${c.name}">${i + 1}</th>`).join('');
+    if (thead) {
+      thead.innerHTML = '<th class="corner">Criteria</th>' +
+        criteria.map((c, i) => `<th title="${escapeHtml(c.name)}">${i + 1}</th>`).join('');
+    }
 
     const tbody = document.querySelector('#matrix-table tbody');
+    if (!tbody) return;
     tbody.innerHTML = criteria.map((c, i) => {
-      const row = [`<th title="${c.name}">${i + 1}. ${c.shortName}</th>`];
+      const row = [`<th title="${escapeHtml(c.name)}">${i + 1}. ${escapeHtml(c.shortName)}</th>`];
       for (let j = 0; j < n; j++) {
         if (i === j) {
           row.push('<td class="diagonal">1.00</td>');
@@ -48,19 +115,39 @@ const UI = (() => {
       }
       return `<tr>${row.join('')}</tr>`;
     }).join('');
-  }
 
-  function attachEventListeners() {
     document.querySelectorAll('#matrix-table input').forEach(input => {
       input.addEventListener('input', handleMatrixInput);
       input.addEventListener('blur', handleMatrixBlur);
     });
+  }
+
+  function attachEventListeners() {
+    document.querySelectorAll('#criteria-checklist input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => rebuildFromCriteria(true));
+    });
+    const customInput = document.getElementById('input-custom-criterion');
+    if (customInput) {
+      customInput.addEventListener('change', () => rebuildFromCriteria(true));
+    }
+
+    document.querySelectorAll('input[name="renovation"]').forEach(r => {
+      r.addEventListener('change', toggleRenovationDetails);
+    });
+    toggleRenovationDetails();
 
     document.getElementById('btn-submit').addEventListener('click', handleSubmit);
     document.getElementById('btn-save-draft').addEventListener('click', handleSaveDraft);
     document.getElementById('survey-form').addEventListener('submit', e => e.preventDefault());
     document.getElementById('btn-new-response').addEventListener('click', resetForm);
     document.getElementById('btn-retry').addEventListener('click', () => showScreen('survey-screen'));
+  }
+
+  function toggleRenovationDetails() {
+    const yes = document.getElementById('input-renovation-yes');
+    const group = document.getElementById('renovation-details-group');
+    if (!group) return;
+    group.classList.toggle('hidden', !(yes && yes.checked));
   }
 
   function handleMatrixInput(e) {
@@ -117,14 +204,19 @@ const UI = (() => {
     const crStatus = document.getElementById('cr-status');
     const crBarFill = document.getElementById('cr-bar-fill');
     const submitBtn = document.getElementById('btn-submit');
+    if (!crValue || !crStatus || !crBarFill || !submitBtn) return;
 
     if (result === null) {
       crValue.textContent = 'CR: —';
       crValue.className = 'cr-value';
-      crStatus.textContent = 'Complete the matrix to see consistency ratio';
+      if (criteria.length < MIN_N) {
+        crStatus.textContent = `Activate at least ${MIN_N} criteria to compute consistency.`;
+        submitBtn.disabled = true;
+      } else {
+        crStatus.textContent = 'Complete the matrix to see consistency ratio';
+      }
       crBarFill.style.width = '0%';
       crBarFill.className = 'cr-bar-fill';
-      submitBtn.disabled = true;
       return;
     }
 
@@ -133,24 +225,31 @@ const UI = (() => {
 
     crValue.textContent = `CR: ${cr.toFixed(4)}`;
     crValue.className = `cr-value ${result.consistent ? 'acceptable' : 'unacceptable'}`;
+    // Warn-but-allow: never disable submit for CR>0.10 (frozen decision).
     crStatus.textContent = result.consistent
       ? '✓ Consistency is acceptable (CR ≤ 0.10)'
-      : '✗ Consistency ratio exceeds 0.10 — please revise judgments';
+      : '✗ CR exceeds 0.10 — consider revising, but you can still submit (flagged for analysis)';
     crBarFill.style.width = `${percent}%`;
     crBarFill.className = `cr-bar-fill ${result.consistent ? '' : 'unacceptable'}`;
-    submitBtn.disabled = !result.consistent;
+    submitBtn.disabled = criteria.length < MIN_N;
   }
 
   function handleSubmit() {
+    if (criteria.length < MIN_N) {
+      alert(`Please activate at least ${MIN_N} criteria.`);
+      return;
+    }
     const identity = getIdentity();
     if (!validateIdentity(identity)) return;
 
     const missingCriteria = document.getElementById('input-missing').value.trim();
     const result = AHP.calculateAll(matrix);
+    const meta = getCriteriaMeta();
 
     if (onSubmit) {
       onSubmit({
         ...identity,
+        criteria: meta,
         matrix,
         weights: result.weights,
         cr: result.CR,
@@ -167,6 +266,7 @@ const UI = (() => {
     if (onSaveDraft) {
       onSaveDraft({
         identity,
+        criteria: getCriteriaMeta(),
         matrix,
         missingCriteria
       });
@@ -175,13 +275,21 @@ const UI = (() => {
 
   function getIdentity() {
     const consentEl = document.getElementById('input-consent');
+    const yesEl = document.getElementById('input-renovation-yes');
+    const noEl = document.getElementById('input-renovation-no');
+    const detailsEl = document.getElementById('input-renovation-details');
+    let renovationUnderConsideration = null;
+    if (yesEl && yesEl.checked) renovationUnderConsideration = true;
+    else if (noEl && noEl.checked) renovationUnderConsideration = false;
     return {
       name: document.getElementById('input-name').value.trim(),
       role: document.getElementById('input-role').value.trim(),
       pilot: document.getElementById('input-pilot').value.trim(),
       country: document.getElementById('input-country').value.trim(),
       email: document.getElementById('input-email') ? document.getElementById('input-email').value.trim() : '',
-      consent: consentEl ? consentEl.checked : false
+      consent: consentEl ? consentEl.checked : false,
+      renovationUnderConsideration,
+      renovationDetails: detailsEl ? detailsEl.value.trim().slice(0, 2000) : ''
     };
   }
 
@@ -199,6 +307,16 @@ const UI = (() => {
       document.getElementById('input-email').focus();
       return false;
     }
+    if (identity.renovationUnderConsideration === null) {
+      alert('Please answer: Is a renovation under consideration?');
+      document.getElementById('input-renovation-yes').focus();
+      return false;
+    }
+    if (identity.renovationDetails && identity.renovationDetails.length > 2000) {
+      alert('Renovation details are too long (max 2000 characters).');
+      document.getElementById('input-renovation-details').focus();
+      return false;
+    }
     if (!identity.consent) {
       alert('Please tick the consent box to allow storing your response in the private repository.');
       document.getElementById('input-consent').focus();
@@ -209,36 +327,55 @@ const UI = (() => {
 
   function loadDraft() {
     try {
-      const draft = JSON.parse(localStorage.getItem('ahp-draft'));
-      if (draft) {
-        if (draft.identity) {
-          Object.entries(draft.identity).forEach(([k, v]) => {
-            if (k === 'consent') {
-              const el = document.getElementById('input-consent');
-              if (el) el.checked = !!v;
-              return;
+      const draft = JSON.parse(localStorage.getItem(DRAFT_KEY));
+      if (!draft) return;
+      if (draft.identity) {
+        const simple = ['name', 'role', 'pilot', 'country', 'email'];
+        simple.forEach(k => {
+          const el = document.getElementById(`input-${k}`);
+          if (el && draft.identity[k]) el.value = draft.identity[k];
+        });
+        if (draft.identity.consent) {
+          const el = document.getElementById('input-consent');
+          if (el) el.checked = true;
+        }
+        if (draft.identity.renovationUnderConsideration === true) {
+          document.getElementById('input-renovation-yes').checked = true;
+        } else if (draft.identity.renovationUnderConsideration === false) {
+          document.getElementById('input-renovation-no').checked = true;
+        }
+        if (draft.identity.renovationDetails) {
+          document.getElementById('input-renovation-details').value = draft.identity.renovationDetails;
+        }
+        toggleRenovationDetails();
+      }
+      if (draft.criteria) {
+        const active = new Set(draft.criteria.activeIds || []);
+        document.querySelectorAll('#criteria-checklist input[type="checkbox"]').forEach(cb => {
+          cb.checked = active.has(cb.dataset.criterionId);
+        });
+        if (draft.criteria.custom && draft.criteria.custom.name) {
+          document.getElementById('input-custom-criterion').value = draft.criteria.custom.name;
+        }
+        rebuildFromCriteria(false);
+      }
+      if (draft.matrix && draft.matrix.length === matrix.length) {
+        draft.matrix.forEach((row, i) => {
+          row.forEach((val, j) => {
+            if (i < j && val !== 1) {
+              matrix[i][j] = val;
+              matrix[j][i] = 1 / val;
+              const input = document.querySelector(`#matrix-table input[data-row="${i}"][data-col="${j}"]`);
+              const lowerCell = document.querySelector(`#matrix-table tbody tr:nth-child(${j + 1}) td:nth-child(${i + 2})`);
+              if (input) input.value = formatInputDisplay(val);
+              if (lowerCell) lowerCell.textContent = Number(val).toFixed(2);
             }
-            const el = document.getElementById(`input-${k}`);
-            if (el) el.value = v;
           });
-        }
-        if (draft.matrix) {
-          draft.matrix.forEach((row, i) => {
-            row.forEach((val, j) => {
-              if (i < j && val !== 1) {
-                matrix[i][j] = val;
-                matrix[j][i] = 1 / val;
-                const input = document.querySelector(`#matrix-table input[data-row="${i}"][data-col="${j}"]`);
-                const lowerCell = document.querySelector(`#matrix-table tbody tr:nth-child(${j + 1}) td:nth-child(${i + 2})`);
-                if (input) input.value = formatInputDisplay(val);
-                if (lowerCell) lowerCell.textContent = val.toFixed(2);
-              }
-            });
-          });
-        }
-        if (draft.missingCriteria) {
-          document.getElementById('input-missing').value = draft.missingCriteria;
-        }
+        });
+        if (onMatrixChange) onMatrixChange(matrix);
+      }
+      if (draft.missingCriteria) {
+        document.getElementById('input-missing').value = draft.missingCriteria;
       }
     } catch (e) {
       console.warn('Failed to load draft:', e);
@@ -247,7 +384,7 @@ const UI = (() => {
 
   function saveDraft(data) {
     try {
-      localStorage.setItem('ahp-draft', JSON.stringify(data));
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
     } catch (e) {
       console.warn('Failed to save draft:', e);
     }
@@ -261,7 +398,7 @@ const UI = (() => {
   function showSuccess(detail) {
     document.getElementById('success-detail').textContent = detail;
     showScreen('success-screen');
-    localStorage.removeItem('ahp-draft');
+    localStorage.removeItem(DRAFT_KEY);
   }
 
   function showError(message) {
@@ -271,17 +408,21 @@ const UI = (() => {
 
   function resetForm() {
     document.getElementById('survey-form').reset();
-    const n = criteria.length;
-    matrix = Array(n).fill(null).map(() => Array(n).fill(1));
-    document.querySelectorAll('#matrix-table input').forEach(input => {
-      input.value = '';
-      input.classList.remove('valid', 'invalid');
-    });
-    document.querySelectorAll('#matrix-table tbody td.lower').forEach(td => {
-      td.textContent = '1.00';
-    });
+    document.querySelectorAll('#criteria-checklist input[type="checkbox"]').forEach(cb => { cb.checked = true; });
+    toggleRenovationDetails();
+    rebuildFromCriteria(false);
     updateCRDisplay(null);
+    if (onMatrixChange && matrix.length >= MIN_N) {
+      try {
+        const { AHP: Ahp } = { AHP };
+        void Ahp;
+      } catch (e) { /* noop */ }
+    }
     showScreen('survey-screen');
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   }
 
   return {
@@ -290,7 +431,9 @@ const UI = (() => {
     showScreen,
     showSuccess,
     showError,
-    saveDraft
+    saveDraft,
+    getActiveCriteria,
+    getCriteriaMeta
   };
 })();
 
