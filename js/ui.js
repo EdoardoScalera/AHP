@@ -391,8 +391,11 @@ const UI = (() => {
   }
 
   function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(screenId).classList.add('active');
+    document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.classList.add('hidden'); });
+    const el = document.getElementById(screenId);
+    if (!el) return;
+    el.classList.remove('hidden');
+    el.classList.add('active');
   }
 
   function showSuccess(detail) {

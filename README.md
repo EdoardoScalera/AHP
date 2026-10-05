@@ -9,10 +9,12 @@ This web application implements the Analytic Hierarchy Process (AHP) to collect 
 **Goal**: Visitors fill in the pairwise comparison matrix behind a shared password, and their responses are automatically committed to `data/submissions/` for analysis.
 
 **Authentication model (no OAuth)**:
-- Shared password `ENTRANCE25` gates the submit button (SHA-256 hash checked in JS, plaintext not in source).
-- One shared fine-grained GitHub PAT (`contents:write`, this repo only) stored in `js/config.js` performs the commit.
-- Respondent identity comes from form fields: **name, role, pilot name, country** — stored in the submission JSON and used as the git commit author.
-- ⚠️ **Tradeoff**: a public GitHub Pages site exposes its source, so a determined visitor can extract the PAT or password hash. This is accepted for the project; remedy is token rotation. Do not reuse the PAT elsewhere.
+- Shared password gates the submit button (SHA-256 hash checked in JS, plaintext not in source).
+- **Trigger-only GitHub PAT** (workflow scope only) stored in `js/config.js` triggers the submission workflow.
+- **Actual write** is performed by GitHub Actions workflow using ephemeral `GITHUB_TOKEN` with `contents: write`.
+- Respondent identity comes from form fields: **name, role, pilot name, country** — stored in the submission JSON.
+- Password validation happens in the GitHub Actions workflow against secret `SUBMISSION_PASSWORD`.
+- ⚠️ **Tradeoff**: The trigger-only PAT is exposed in frontend but can only trigger workflows (no read/write access). The privileged write happens server-side in the workflow. For production, use a serverless endpoint as intermediary.
 
 ---
 
@@ -29,18 +31,20 @@ ahp-survey/
 │   ├── auth.js             # Shared-password gate (Phase 3)
 │   ├── storage.js          # GitHub API data persistence (Phase 4)
 │   ├── config.js           # PAT, repo name, password hash
+│   ├── config.example.js   # Template for configuration
 │   └── app.js              # Main application initialization
 ├── data/
 │   ├── criteria.json       # Criteria definitions (8 criteria)
 │   └── submissions/        # Individual submissions (auto-generated)
-│       └── {name}_{timestamp}.json
+│       └── {name}_{timestamp}_{random}.json
 ├── docs/
 │   ├── AHP_survey.docx     # Original survey document
 │   ├── ENTRANCE_Analytic_Hierarchy_Process_for_KPI_selection.pdf
 │   └── stakeholder_matrix_ahp.xlsx
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml      # GitHub Pages deployment
+│       ├── deploy.yml      # GitHub Pages deployment
+│       └── submit-survey.yml  # Survey submission handler
 ├── README.md               # This file
 └── package.json            # Optional: for local dev dependencies
 ```
@@ -62,8 +66,9 @@ ahp-survey/
 
 | Item | Where | Steps |
 |------|-------|-------|
-| Fine-grained PAT | GitHub → Settings → Developer settings → Fine-grained tokens | Scope: this repo only, permission **Contents: Read and write**; paste into `js/config.js` |
-| Password hash | Computed once | `SHA-256("ENTRANCE25")` hex → paste into `js/config.js` |
+| **Trigger-only PAT** | GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens | Scope: **this repo only**, permission **Workflows: Read and write** (NOT Contents); paste into `js/config.js` |
+| **Submission password secret** | GitHub → Repository Settings → Secrets and variables → Actions | New repository secret: `SUBMISSION_PASSWORD` = your shared password (plaintext) |
+| Password hash | Computed once | `echo -n "your-password" \| sha256sum` → paste hex into `js/config.js` |
 | GitHub Pages | Repo → Settings → Pages | Source: **GitHub Actions** |
 
 ### **Will Be Created During Implementation**
@@ -135,20 +140,32 @@ ahp-survey/
 
 **Mechanism** (no OAuth, no server):
 1. On load, page shows a password prompt; submission stays locked until it passes.
-2. User types `ENTRANCE25`; JS computes SHA-256 and compares against the hash in `js/config.js`.
+2. User types the shared password; JS computes SHA-256 and compares against the hash in `js/config.js`.
 3. Match → unlock identity fields and Submit; mismatch → error, stay locked.
-4. Plaintext password never appears in source; only its hash does (see tradeoff above).
+4. Plaintext password never appears in source; only its hash does.
+5. **On submit**: The entered password is sent to the GitHub Actions workflow via `repository_dispatch` where it's validated against the `SUBMISSION_PASSWORD` secret.
 
 ---
 
-### **Phase 4: GitHub Data Persistence**
-**File**: `js/storage.js`
+### **Phase 4: GitHub Data Persistence (Workflow-Based)**
+**Files**: `js/storage.js`, `.github/workflows/submit-survey.yml`
 
-**Mechanism**: GitHub REST API via Octokit.js using the shared PAT from `js/config.js`
-- On submit: Create file `data/submissions/{name-slug}_{timestamp}.json`
-- Commit directly to `main` branch
-- Commit author = name (and role/pilot) from the identity form
-- File content:
+**Architecture**: Trigger-only PAT → GitHub Actions workflow → GITHUB_TOKEN write
+
+**Frontend (`js/storage.js`)**:
+- Uses trigger-only PAT (workflow scope only) to call GitHub API `repository_dispatch`
+- Sends payload: `{ password, response, triggered_by }`
+- No write credentials in frontend
+
+**Workflow (`.github/workflows/submit-survey.yml`)**:
+- Triggered by `repository_dispatch` event type `survey-submission`
+- Validates password against `SUBMISSION_PASSWORD` secret
+- Strict JSON schema validation (required fields, matrix structure, weights dimension, CR number, consistent boolean)
+- Generates filename: `{name-slug}_{timestamp}_{random-hex}.json`
+- Writes enriched JSON to `data/submissions/` with metadata
+- Commits using `GITHUB_TOKEN` (ephemeral, no PAT needed)
+
+**Submission JSON structure**:
 ```json
 {
   "name": "Jane Doe",
@@ -160,11 +177,20 @@ ahp-survey/
   "weights": [0.25, 0.15, ...],
   "cr": 0.05,
   "consistent": true,
-  "missingCriteria": "User comment"
+  "missingCriteria": "User comment",
+  "_meta": {
+    "filename": "jane-doe_2026-09-30T10-30-00-000Z_a1b2c3d4.json",
+    "submitted_at": "2026-09-30T10:30:00Z",
+    "triggered_by": "web-frontend",
+    "workflow_run": "1234567890"
+  }
 }
 ```
 
-**Permissions needed**: PAT with `contents: read and write` on this repository only.
+**Permissions needed**:
+- Frontend PAT: **Workflows: Read and write** only (no Contents access)
+- Workflow: `contents: write` via `GITHUB_TOKEN` (automatic)
+- Repository secret: `SUBMISSION_PASSWORD` (shared password, plaintext)
 
 ---
 
@@ -217,6 +243,10 @@ jobs:
 git clone https://github.com/<username>/ahp-survey.git
 cd ahp-survey
 
+# Copy config template and fill in your values
+cp js/config.example.js js/config.js
+# Edit js/config.js with your trigger-only PAT, repo info, and password hash
+
 # Serve locally (any static server)
 npx serve .           # or: python3 -m http.server 8000
 
@@ -224,6 +254,8 @@ npx serve .           # or: python3 -m http.server 8000
 ```
 
 **No build step required** - pure HTML/CSS/JS for GitHub Pages compatibility.
+
+**Note**: Local development requires a valid trigger-only PAT and the workflow must be deployed to the repository for submissions to work.
 
 ---
 
@@ -247,12 +279,14 @@ npx serve .           # or: python3 -m http.server 8000
 
 | Criterion | Test |
 |-----------|------|
-| Password gate | Wrong password keeps submit locked; `ENTRANCE25` unlocks it |
+| Password gate | Wrong password keeps submit locked; correct password unlocks it |
 | Matrix input | 8×8, reciprocals auto-fill, 1-9 scale |
 | CR calculation | Matches Excel reference (CR ≈ 0.05 for test matrix) |
 | Consistency flag | Green ≤0.10, Red >0.10 |
-| Identity | Name/role/pilot/country required; commit author = name |
+| Identity | Name/role/pilot/country required; stored in submission |
 | Data save | JSON file appears in `data/submissions/` after submit |
+| Workflow validation | Invalid password rejected; malformed payload rejected |
+| Filename format | `{name-slug}_{timestamp}_{random-hex}.json` |
 | Deployment | Live at `https://<user>.github.io/ahp-survey/` |
 
 ---
@@ -275,9 +309,10 @@ npx serve .           # or: python3 -m http.server 8000
    - `AHP_survey.docx`
    - `stakeholder_matrix_ahp.xlsx`
    - `Analytic Hierarchy Process.xlsx`
-3. **Create fine-grained PAT** (this repo, Contents: read/write) — note it down, it goes into `js/config.js`
-4. **Enable GitHub Pages** (Settings → Pages → Source: GitHub Actions)
-5. **Share repo URL** with the assistant in a clean conversation
+3. **Create trigger-only fine-grained PAT** (this repo, **Workflows: Read and write** only) — note it down, it goes into `js/config.js`
+4. **Add repository secret**: Settings → Secrets and variables → Actions → `SUBMISSION_PASSWORD` = your shared password
+5. **Enable GitHub Pages** (Settings → Pages → Source: GitHub Actions)
+6. **Share repo URL** with the assistant in a clean conversation
 
 Then implementation starts with **Phase 1 (ahp-core.js)**, unit-tested against the Excel reference values, followed by Phases 2–6.
 
