@@ -16,10 +16,10 @@
     <div id="password-screen" class="screen active">
       <div class="card">
         <h2>Access Required</h2>
-        <p>Enter the shared password to access the survey.</p>
+        <p>Enter the shared access code to access the survey. It is verified securely by our submission service (Cloudflare Worker) – nothing is stored in this page.</p>
         <div class="form-group">
-          <label for="password-input">Password</label>
-          <input type="password" id="password-input" placeholder="Enter password" autocomplete="off">
+          <label for="password-input">Access code</label>
+          <input type="password" id="password-input" placeholder="Enter access code" autocomplete="off">
         </div>
         <button id="password-submit" class="btn btn-primary">Unlock Survey</button>
         <p id="password-error" class="error hidden">Incorrect password. Please try again.</p>
@@ -30,7 +30,7 @@
       <form id="survey-form" novalidate>
         <section id="identity-section" class="card">
           <h2>Respondent Information</h2>
-          <p class="hint">All fields are required to submit.</p>
+          <p class="hint">Name, role, pilot and country are required. Responses are stored in the private repository <code>entrance-survey-responses</code> (analysis team only).</p>
           <div class="form-grid">
             <div class="form-group">
               <label for="input-name">Name *</label>
@@ -47,6 +47,13 @@
             <div class="form-group">
               <label for="input-country">Country *</label>
               <input type="text" id="input-country" required placeholder="e.g., Estonia" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="input-email">Email (optional, for follow-up)</label>
+              <input type="email" id="input-email" placeholder="e.g., name@example.eu" autocomplete="email">
+            </div>
+            <div class="form-group">
+              <label><input type="checkbox" id="input-consent" required> I agree my name/role/pilot/country and comparisons are stored in the private repo <code>entrance-survey-responses</code> for ENTRANCE analysis. *</label>
             </div>
           </div>
         </section>

@@ -1,0 +1,4 @@
+# Public repo no longer stores submissions.
+# Raw responses are written by Cloudflare Worker entrance-submission-api
+# to the private repo EdoardoScalera/entrance-survey-responses/data/submissions/
+# This folder is kept empty on purpose.

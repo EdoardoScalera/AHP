@@ -174,11 +174,14 @@ const UI = (() => {
   }
 
   function getIdentity() {
+    const consentEl = document.getElementById('input-consent');
     return {
       name: document.getElementById('input-name').value.trim(),
       role: document.getElementById('input-role').value.trim(),
       pilot: document.getElementById('input-pilot').value.trim(),
-      country: document.getElementById('input-country').value.trim()
+      country: document.getElementById('input-country').value.trim(),
+      email: document.getElementById('input-email') ? document.getElementById('input-email').value.trim() : '',
+      consent: consentEl ? consentEl.checked : false
     };
   }
 
@@ -191,6 +194,16 @@ const UI = (() => {
         return false;
       }
     }
+    if (identity.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identity.email)) {
+      alert('Please provide a valid email address or leave it empty.');
+      document.getElementById('input-email').focus();
+      return false;
+    }
+    if (!identity.consent) {
+      alert('Please tick the consent box to allow storing your response in the private repository.');
+      document.getElementById('input-consent').focus();
+      return false;
+    }
     return true;
   }
 
@@ -200,6 +213,11 @@ const UI = (() => {
       if (draft) {
         if (draft.identity) {
           Object.entries(draft.identity).forEach(([k, v]) => {
+            if (k === 'consent') {
+              const el = document.getElementById('input-consent');
+              if (el) el.checked = !!v;
+              return;
+            }
             const el = document.getElementById(`input-${k}`);
             if (el) el.value = v;
           });

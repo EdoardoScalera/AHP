@@ -1,18 +1,24 @@
 const Auth = (() => {
-  let passwordHash = '';
   let onUnlock = null;
+  let currentCode = null;
+  let storageRef = null;
 
-  async function sha256(message) {
-    const msgBuffer = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  function init(config, callback, storage) {
+    // config kept for signature compat; verification is server-side via Worker.
+    onUnlock = callback;
+    storageRef = storage || null;
+    attachEventListeners();
   }
 
-  function init(config, callback) {
-    passwordHash = config.passwordHash;
-    onUnlock = callback;
-    attachEventListeners();
+  // app.js passes Storage via setStorage; fallback: dynamic import to avoid cycles.
+  function setStorage(storage) {
+    storageRef = storage;
+  }
+
+  async function getStorage() {
+    if (storageRef) return storageRef;
+    const mod = await import('./storage.js');
+    return mod.Storage;
   }
 
   function attachEventListeners() {
@@ -21,18 +27,21 @@ const Auth = (() => {
     const errorEl = document.getElementById('password-error');
 
     const checkPassword = async () => {
-      const password = input.value;
-      if (!password) return;
+      const code = input.value;
+      if (!code) return;
 
       submitBtn.disabled = true;
       submitBtn.textContent = 'Checking...';
+      errorEl.classList.add('hidden');
 
-      const hash = await sha256(password);
-      if (hash === passwordHash) {
-        errorEl.classList.add('hidden');
+      try {
+        const storage = await getStorage();
+        await storage.verifyAccessCode(code);
+        currentCode = code;
         input.value = '';
         if (onUnlock) onUnlock();
-      } else {
+      } catch (e) {
+        errorEl.textContent = e.message || 'Incorrect password. Please try again.';
         errorEl.classList.remove('hidden');
         input.value = '';
         input.focus();
@@ -48,7 +57,19 @@ const Auth = (() => {
     });
   }
 
-  return { init };
+  function getPassword() {
+    return currentCode;
+  }
+
+  function getAccessCode() {
+    return currentCode;
+  }
+
+  function clearPassword() {
+    currentCode = null;
+  }
+
+  return { init, setStorage, getPassword, getAccessCode, clearPassword };
 })();
 
 if (typeof module !== 'undefined' && module.exports) {

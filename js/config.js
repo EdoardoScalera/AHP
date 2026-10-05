@@ -1,8 +1,11 @@
 const CONFIG = {
-  githubPat: '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',
-  repoOwner: 'EdoardoScalera',
-  repoName: 'AHP',
-  passwordHash: '6f5ed8ce43e1d045ae2f1a9acd1a765585eac4a7646accac73ad4b61decbbb2a'
+  // Cloudflare Worker that verifies the access code and writes to the private repo.
+  // Safe to publish: this URL is NOT a secret. The Worker holds GITHUB_TOKEN + access code privately.
+  // TODO(YOU): replace with your deployed URL from `npx wrangler deploy`, e.g.
+  // https://entrance-submission-api.YOUR-SUBDOMAIN.workers.dev
+  WORKER_URL: 'https://entrance-submission-api.edoardo-scalera.workers.dev',
+  VERIFY_PATH: '/verify',
+  SUBMIT_PATH: '/submit'
 };
 
 if (typeof module !== 'undefined' && module.exports) {

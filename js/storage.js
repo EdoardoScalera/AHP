@@ -1,133 +1,87 @@
-import { Octokit } from 'https://esm.sh/@octokit/rest@20.0.2';
-
 const Storage = (() => {
-  let config = null;
-  let octokit = null;
+  let workerBase = '';
+  let verifyPath = '/verify';
+  let submitPath = '/submit';
 
   function init(cfg) {
-    if (!cfg) {
-      throw new Error('GitHub configuration is missing');
+    if (!cfg || !cfg.WORKER_URL) {
+      throw new Error('Worker configuration is missing. Check js/config.js WORKER_URL');
     }
-
-    config = cfg;
-
-    if (!config.githubPat || !config.repoOwner || !config.repoName) {
-      throw new Error('Incomplete GitHub configuration');
+    workerBase = String(cfg.WORKER_URL).replace(/\/+$/, '');
+    if (cfg.VERIFY_PATH) verifyPath = cfg.VERIFY_PATH;
+    if (cfg.SUBMIT_PATH) submitPath = cfg.SUBMIT_PATH;
+    if (workerBase.includes('YOUR-SUBDOMAIN')) {
+      console.warn('WORKER_URL still uses placeholder – set your deployed Worker URL in js/config.js');
     }
+  }
 
-    octokit = new Octokit({
-      auth: config.githubPat
-    });
+  async function verifyAccessCode(accessCode) {
+    if (!workerBase) {
+      throw new Error('Storage not initialized. Check js/config.js');
+    }
+    let response;
+    try {
+      response = await fetch(`${workerBase}${verifyPath}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessCode })
+      });
+    } catch (e) {
+      throw new Error('Network error: unable to reach submission service');
+    }
+    if (response.ok) return { ok: true };
+    if (response.status === 403) {
+      throw new Error('The access code is not valid.');
+    }
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || `Verification failed (${response.status})`);
   }
 
   async function saveSubmission(data) {
-    if (!octokit || !config) {
-      throw new Error('GitHub client not initialized. Check config.js');
+    if (!workerBase) {
+      throw new Error('Storage not initialized. Check js/config.js');
     }
-
-    const timestamp = new Date()
-      .toISOString()
-      .replace(/[:.]/g, '-');
-
-    const nameSlug = data.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-
-    const filename = `${nameSlug}_${timestamp}.json`;
-
-    const content = {
+    const accessCode = data.accessCode || data.password;
+    if (!accessCode) {
+      throw new Error('Access code not provided');
+    }
+    const payload = {
+      accessCode,
       name: data.name,
       role: data.role,
       pilot: data.pilot,
       country: data.country,
-      timestamp: new Date().toISOString(),
+      email: data.email || '',
       matrix: data.matrix,
       weights: data.weights,
       cr: data.cr,
       consistent: data.consistent,
-      missingCriteria: data.missingCriteria || ''
+      missingCriteria: data.missingCriteria || '',
+      consent: data.consent
     };
 
-    const contentBase64 = btoa(
-      unescape(
-        encodeURIComponent(JSON.stringify(content, null, 2))
-      )
-    );
-
+    let response;
     try {
-      const response =
-        await octokit.rest.repos.createOrUpdateFileContents({
-          owner: config.repoOwner,
-          repo: config.repoName,
-          path: `data/submissions/${filename}`,
-          message: `Add AHP submission from ${data.name}`,
-          content: contentBase64,
-          branch: 'main',
-          committer: {
-            name: data.name,
-            email: 'ahp-survey@entrance.eu'
-          },
-          author: {
-            name: data.name,
-            email: 'ahp-survey@entrance.eu'
-          }
-        });
-
-      return response.data;
-    } catch (error) {
-      if (error.status === 401) {
-        throw new Error('Authentication failed');
-      }
-
-      if (error.status === 403) {
-        throw new Error(
-          'Permission denied: token needs Contents: write access'
-        );
-      }
-
-      if (error.status === 404) {
-        throw new Error(
-          'Repository unavailable: check owner, repository, token access, and branch'
-        );
-      }
-
-      throw new Error(`GitHub API error: ${error.message}`);
-    }
-  }
-
-  async function fetchCriteria() {
-    if (!octokit || !config) {
-      return null;
+      response = await fetch(`${workerBase}${submitPath}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      throw new Error('Network error: unable to reach submission service');
     }
 
-    try {
-      const response =
-        await octokit.rest.repos.getContent({
-          owner: config.repoOwner,
-          repo: config.repoName,
-          path: 'data/criteria.json',
-          ref: 'main'
-        });
-
-      const decoded = decodeURIComponent(
-        escape(atob(response.data.content))
-      );
-
-      return JSON.parse(decoded);
-    } catch (error) {
-      console.warn(
-        'Could not fetch criteria from GitHub:',
-        error.message
-      );
-      return null;
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || `Submission failed (${response.status})`);
     }
+    return { success: true, submissionId: result.submissionId, message: result.message };
   }
 
   return {
     init,
-    saveSubmission,
-    fetchCriteria
+    verifyAccessCode,
+    saveSubmission
   };
 })();
 

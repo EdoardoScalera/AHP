@@ -9,21 +9,16 @@ let currentMatrix = [];
 
 async function init() {
   Storage.init(CONFIG);
+  Auth.setStorage(Storage);
 
   try {
-    const fetchedCriteria = await Storage.fetchCriteria();
-    if (fetchedCriteria && fetchedCriteria.criteria) {
-      criteria = fetchedCriteria.criteria;
-    } else {
-      const response = await fetch('data/criteria.json');
-      const data = await response.json();
-      criteria = data.criteria;
-    }
-  } catch (e) {
-    console.warn('Using local criteria.json:', e);
     const response = await fetch('data/criteria.json');
     const data = await response.json();
     criteria = data.criteria;
+  } catch (e) {
+    console.error('Could not load local data/criteria.json:', e);
+    document.getElementById('cr-status').textContent = 'Failed to load criteria. Please reload.';
+    return;
   }
 
   UI.init(criteria, {
@@ -52,9 +47,18 @@ async function handleSubmit(data) {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Submitting...';
 
+  const accessCode = Auth.getAccessCode ? Auth.getAccessCode() : Auth.getPassword();
+  if (!accessCode) {
+    UI.showError('Session expired. Please re-enter the access code.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit';
+    return;
+  }
+
   try {
-    await Storage.saveSubmission(data);
-    UI.showSuccess(`Response saved as ${data.name} (${data.role})`);
+    const result = await Storage.saveSubmission({ ...data, accessCode });
+    Auth.clearPassword();
+    UI.showSuccess(result.submissionId ? `Response submitted successfully (ID: ${result.submissionId})` : 'Response submitted successfully');
   } catch (error) {
     console.error('Submission error:', error);
     UI.showError(error.message);
@@ -65,7 +69,7 @@ async function handleSubmit(data) {
 
 function handleSaveDraft(data) {
   UI.saveDraft(data);
-  alert('Draft saved locally');
+  alert('Draft saved locally in this browser');
 }
 
 document.addEventListener('DOMContentLoaded', init);
