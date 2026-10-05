@@ -135,12 +135,30 @@ const UI = (() => {
 
   function getTiers() { return { ...tiers }; }
 
-  function setTier(id, tier) {
+  function setTier(id, tier, opts = {}) {
     if (!TIERS.includes(tier)) return;
     if (!criteria.some(c => c.id === id)) return;
+    const board = document.getElementById('tier-board');
+    const hadFocus = !!(board && board.contains(document.activeElement));
     tiers[id] = tier;
     renderTierBoard();
     updatePairSuggestions();
+    if ((opts.focus !== false) && hadFocus) {
+      const block = board.querySelector(`.tier-block[data-id="${cssEscape(id)}"]`);
+      if (block) block.focus();
+    }
+  }
+
+  function cssEscape(s) {
+    if (typeof CSS !== 'undefined' && CSS.escape) return CSS.escape(s);
+    return String(s).replace(/["\\]/g, '\\$&');
+  }
+
+  function moveTier(id, dir) {
+    const cur = tiers[id] || 'B';
+    const i = TIERS.indexOf(cur);
+    const n = Math.min(TIERS.length - 1, Math.max(0, i + dir));
+    if (TIERS[n] !== cur) setTier(id, TIERS[n]);
   }
 
   function renderTierBoard() {
@@ -156,7 +174,7 @@ const UI = (() => {
           const btns = TIERS.map(x =>
             `<button type="button" data-move="${x}" data-id="${escapeHtml(c.id)}" class="${x === (tiers[c.id] || 'B') ? 'on' : ''}" aria-label="Move ${escapeHtml(c.shortName)} to tier ${x}">${x}</button>`
           ).join('');
-          return `<div class="tier-block" draggable="true" data-id="${escapeHtml(c.id)}"><span class="tier-label">${num}. ${escapeHtml(c.shortName)}</span><span class="tier-btns">${btns}</span></div>`;
+          return `<div class="tier-block" draggable="true" tabindex="0" data-id="${escapeHtml(c.id)}" aria-label="${escapeHtml(c.shortName)}, tier ${tiers[c.id] || 'B'}. Arrow keys or A B C to move."><span class="tier-label">${num}. ${escapeHtml(c.shortName)}</span><span class="tier-btns">${btns}</span></div>`;
         }).join('');
       col.innerHTML = blocks || '<p class="tier-empty">—</p>';
     });
@@ -248,22 +266,62 @@ const UI = (() => {
         const btn = e.target.closest('button[data-move][data-id]');
         if (btn) setTier(btn.dataset.id, btn.dataset.move);
       });
-      board.addEventListener('dragstart', e => {
-        const block = e.target.closest('.tier-block');
+      // Keyboard: arrows move between tiers, A/B/C keys jump directly.
+      board.addEventListener('keydown', e => {
+        const block = e.target.closest ? e.target.closest('.tier-block') : null;
         if (!block) return;
-        e.dataTransfer.setData('text/plain', block.dataset.id);
+        const id = block.dataset.id;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          moveTier(id, 1);
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          moveTier(id, -1);
+        } else if (e.key === 'a' || e.key === 'A' || e.key === 'b' || e.key === 'B' || e.key === 'c' || e.key === 'C') {
+          const t = e.key.toUpperCase();
+          // Ignore when typing in an input; buttons handle Enter/Space natively.
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+          e.preventDefault();
+          setTier(id, t);
+        }
+      });
+      board.addEventListener('dragstart', e => {
+        const block = e.target.closest ? e.target.closest('.tier-block') : null;
+        if (!block) return;
+        try {
+          e.dataTransfer.setData('text/plain', block.dataset.id);
+        } catch (err) { /* noop */ }
         e.dataTransfer.effectAllowed = 'move';
       });
-      board.querySelectorAll('.tier-blocks').forEach(col => {
-        col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('drop-hint'); });
-        col.addEventListener('dragleave', () => col.classList.remove('drop-hint'));
-        col.addEventListener('drop', e => {
-          e.preventDefault();
-          col.classList.remove('drop-hint');
-          const id = e.dataTransfer.getData('text/plain');
-          const tierBox = col.closest('.tier-col');
-          if (id && tierBox) setTier(id, tierBox.dataset.tier);
-        });
+      board.addEventListener('dragend', () => {
+        board.querySelectorAll('.drop-hint').forEach(el => el.classList.remove('drop-hint'));
+      });
+      // Delegated whole-column drop zones (survive re-renders; empty columns included).
+      board.addEventListener('dragover', e => {
+        const col = e.target.closest ? e.target.closest('.tier-col') : null;
+        if (!col) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        col.querySelector('.tier-blocks').classList.add('drop-hint');
+      });
+      board.addEventListener('dragleave', e => {
+        const col = e.target.closest ? e.target.closest('.tier-col') : null;
+        if (!col) return;
+        // Only clear when truly leaving the column.
+        if (!col.contains(e.relatedTarget)) {
+          col.querySelector('.tier-blocks').classList.remove('drop-hint');
+        }
+      });
+      board.addEventListener('drop', e => {
+        const col = e.target.closest ? e.target.closest('.tier-col') : null;
+        if (!col) return;
+        e.preventDefault();
+        col.querySelector('.tier-blocks').classList.remove('drop-hint');
+        let id = '';
+        try {
+          id = e.dataTransfer.getData('text/plain');
+        } catch (err) { /* noop */ }
+        if (id) setTier(id, col.dataset.tier, { focus: false });
       });
     }
 
