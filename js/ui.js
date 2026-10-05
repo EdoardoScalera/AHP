@@ -242,7 +242,8 @@ const UI = (() => {
     const identity = getIdentity();
     if (!validateIdentity(identity)) return;
 
-    const missingCriteria = document.getElementById('input-missing').value.trim();
+    const missingEl = document.getElementById('input-missing');
+    const missingCriteria = missingEl ? missingEl.value.trim() : '';
     const result = AHP.calculateAll(matrix);
     const meta = getCriteriaMeta();
 
@@ -261,7 +262,8 @@ const UI = (() => {
 
   function handleSaveDraft() {
     const identity = getIdentity();
-    const missingCriteria = document.getElementById('input-missing').value.trim();
+    const missingEl = document.getElementById('input-missing');
+    const missingCriteria = missingEl ? missingEl.value.trim() : '';
 
     if (onSaveDraft) {
       onSaveDraft({
@@ -375,7 +377,8 @@ const UI = (() => {
         if (onMatrixChange) onMatrixChange(matrix);
       }
       if (draft.missingCriteria) {
-        document.getElementById('input-missing').value = draft.missingCriteria;
+        const missingEl = document.getElementById('input-missing');
+        if (missingEl) missingEl.value = draft.missingCriteria;
       }
     } catch (e) {
       console.warn('Failed to load draft:', e);
