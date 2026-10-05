@@ -8,7 +8,10 @@ const UI = (() => {
   let allCriteria = [];
   let criteria = [];
   let excludedIds = [];
-  let customCriterion = null;
+  let customCriteria = [];
+  let customCounter = 1;
+  let tiers = {};
+  const TIERS = ['A', 'B', 'C'];
   let matrix = [];
   let onMatrixChange = null;
   let onSubmit = null;
@@ -34,14 +37,50 @@ const UI = (() => {
 
   function getCriteriaMeta() {
     const activeIds = criteria.map(c => c.id);
-    const isDefault7 = activeIds.length === 7 && !customCriterion && excludedIds.length === 0 &&
+    const hasCustom = customCriteria.length > 0;
+    const isDefault7 = activeIds.length === 7 && !hasCustom && excludedIds.length === 0 &&
       activeIds.includes('practical_implementation');
     return {
       activeIds,
       excludedIds: [...excludedIds],
-      custom: customCriterion ? { ...customCriterion } : null,
-      criteriaSet: customCriterion ? 'v3-custom' : (isDefault7 ? 'v3-7' : 'v3-subset')
+      custom: hasCustom ? { ...customCriteria[0] } : null,
+      customCriteria: customCriteria.map(c => ({ ...c })),
+      criteriaSet: hasCustom ? 'v3-custom' : (isDefault7 ? 'v3-7' : 'v3-subset')
     };
+  }
+
+  function renderCustomList() {
+    const list = document.getElementById('custom-criteria-list');
+    if (!list) return;
+    list.innerHTML = customCriteria.map(c =>
+      `<span class="custom-chip"><span>${escapeHtml(c.name)}</span><button type="button" data-remove-custom="${escapeHtml(c.id)}" aria-label="Remove ${escapeHtml(c.name)}">×</button></span>`
+    ).join('');
+  }
+
+  function addCustomCriterion() {
+    const input = document.getElementById('input-custom-criterion');
+    if (!input) return;
+    const name = input.value.trim().slice(0, 120);
+    if (!name) return;
+    if (criteria.length >= MAX_N) {
+      alert(`Maximum ${MAX_N} active criteria. Uncheck one first to add another.`);
+      return;
+    }
+    if (customCriteria.some(c => c.name.toLowerCase() === name.toLowerCase()) ||
+        allCriteria.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+      alert('This criterion is already in the list.');
+      return;
+    }
+    customCriteria.push({ id: `custom_${customCounter++}`, name, shortName: name.slice(0, 24), description: name });
+    input.value = '';
+    renderCustomList();
+    rebuildFromCriteria(true);
+  }
+
+  function removeCustomCriterion(id) {
+    customCriteria = customCriteria.filter(c => c.id !== id);
+    renderCustomList();
+    rebuildFromCriteria(true);
   }
 
   function buildCriteriaChecklist() {
@@ -58,12 +97,9 @@ const UI = (() => {
       if (cb.checked) checked.add(cb.dataset.criterionId);
     });
     excludedIds = allCriteria.filter(c => !checked.has(c.id)).map(c => c.id);
-    const customInput = document.getElementById('input-custom-criterion');
-    const customName = customInput ? customInput.value.trim().slice(0, 120) : '';
-    customCriterion = customName ? { id: 'custom_1', name: customName, shortName: customName.slice(0, 24), description: customName } : null;
 
     criteria = allCriteria.filter(c => checked.has(c.id));
-    if (customCriterion) criteria = [...criteria, customCriterion];
+    if (customCriteria.length) criteria = [...criteria, ...customCriteria];
 
     const countEl = document.getElementById('criteria-count');
     if (countEl) {
@@ -74,12 +110,68 @@ const UI = (() => {
 
   function rebuildFromCriteria(notify = true) {
     readCriteriaSelection();
+    // Preserve tiers for still-active criteria; default new ones to B (mid).
+    const next = {};
+    criteria.forEach(c => { next[c.id] = tiers[c.id] && TIERS.includes(tiers[c.id]) ? tiers[c.id] : 'B'; });
+    tiers = next;
     buildMatrixTable();
     buildCriteriaLegend();
+    renderTierBoard();
+    updatePairSuggestions();
     const submitBtn = document.getElementById('btn-submit');
     if (submitBtn) submitBtn.disabled = criteria.length < MIN_N;
     if (criteria.length < MIN_N && onMatrixChange) onMatrixChange(null, { reason: 'too-few-criteria', n: criteria.length });
     if (notify && onCriteriaChange) onCriteriaChange(getActiveCriteria(), getCriteriaMeta());
+  }
+
+  function tierRank(t) { return t === 'A' ? 0 : t === 'C' ? 2 : 1; }
+
+  function tierRangeLabel(t1, t2) {
+    const d = Math.abs(tierRank(t1) - tierRank(t2));
+    if (d === 0) return '1–3';
+    if (d === 1) return '3–5';
+    return '7–9';
+  }
+
+  function getTiers() { return { ...tiers }; }
+
+  function setTier(id, tier) {
+    if (!TIERS.includes(tier)) return;
+    if (!criteria.some(c => c.id === id)) return;
+    tiers[id] = tier;
+    renderTierBoard();
+    updatePairSuggestions();
+  }
+
+  function renderTierBoard() {
+    const board = document.getElementById('tier-board');
+    if (!board) return;
+    TIERS.forEach(t => {
+      const col = document.getElementById(`tier-col-${t}`);
+      if (!col) return;
+      const blocks = criteria
+        .filter(c => (tiers[c.id] || 'B') === t)
+        .map((c, idx) => {
+          const num = criteria.indexOf(c) + 1;
+          const btns = TIERS.map(x =>
+            `<button type="button" data-move="${x}" data-id="${escapeHtml(c.id)}" class="${x === (tiers[c.id] || 'B') ? 'on' : ''}" aria-label="Move ${escapeHtml(c.shortName)} to tier ${x}">${x}</button>`
+          ).join('');
+          return `<div class="tier-block" draggable="true" data-id="${escapeHtml(c.id)}"><span class="tier-label">${num}. ${escapeHtml(c.shortName)}</span><span class="tier-btns">${btns}</span></div>`;
+        }).join('');
+      col.innerHTML = blocks || '<p class="tier-empty">—</p>';
+    });
+  }
+
+  function updatePairSuggestions() {
+    document.querySelectorAll('#matrix-table input[data-row][data-col]').forEach(input => {
+      const i = parseInt(input.dataset.row, 10);
+      const j = parseInt(input.dataset.col, 10);
+      const a = criteria[i], b = criteria[j];
+      if (!a || !b) return;
+      const range = tierRangeLabel(tiers[a.id] || 'B', tiers[b.id] || 'B');
+      input.placeholder = range;
+      input.title = `${a.shortName} (${tiers[a.id] || 'B'}) vs ${b.shortName} (${tiers[b.id] || 'B'}) — suggested ${range}`;
+    });
   }
 
   function buildCriteriaLegend() {
@@ -127,14 +219,53 @@ const UI = (() => {
       cb.addEventListener('change', () => rebuildFromCriteria(true));
     });
     const customInput = document.getElementById('input-custom-criterion');
-    if (customInput) {
-      customInput.addEventListener('change', () => rebuildFromCriteria(true));
+    const addBtn = document.getElementById('btn-add-custom');
+    if (addBtn) {
+      addBtn.addEventListener('click', addCustomCriterion);
     }
+    if (customInput) {
+      customInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); addCustomCriterion(); }
+      });
+    }
+    const customList = document.getElementById('custom-criteria-list');
+    if (customList) {
+      customList.addEventListener('click', e => {
+        const btn = e.target.closest('button[data-remove-custom]');
+        if (btn) removeCustomCriterion(btn.dataset.removeCustom);
+      });
+    }
+    renderCustomList();
 
     document.querySelectorAll('input[name="renovation"]').forEach(r => {
       r.addEventListener('change', toggleRenovationDetails);
     });
     toggleRenovationDetails();
+
+    const board = document.getElementById('tier-board');
+    if (board) {
+      board.addEventListener('click', e => {
+        const btn = e.target.closest('button[data-move][data-id]');
+        if (btn) setTier(btn.dataset.id, btn.dataset.move);
+      });
+      board.addEventListener('dragstart', e => {
+        const block = e.target.closest('.tier-block');
+        if (!block) return;
+        e.dataTransfer.setData('text/plain', block.dataset.id);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      board.querySelectorAll('.tier-blocks').forEach(col => {
+        col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('drop-hint'); });
+        col.addEventListener('dragleave', () => col.classList.remove('drop-hint'));
+        col.addEventListener('drop', e => {
+          e.preventDefault();
+          col.classList.remove('drop-hint');
+          const id = e.dataTransfer.getData('text/plain');
+          const tierBox = col.closest('.tier-col');
+          if (id && tierBox) setTier(id, tierBox.dataset.tier);
+        });
+      });
+    }
 
     document.getElementById('btn-submit').addEventListener('click', handleSubmit);
     document.getElementById('btn-save-draft').addEventListener('click', handleSaveDraft);
@@ -251,6 +382,7 @@ const UI = (() => {
       onSubmit({
         ...identity,
         criteria: meta,
+        tiers: getTiers(),
         matrix,
         weights: result.weights,
         cr: result.CR,
@@ -269,6 +401,7 @@ const UI = (() => {
       onSaveDraft({
         identity,
         criteria: getCriteriaMeta(),
+        tiers: getTiers(),
         matrix,
         missingCriteria
       });
@@ -356,10 +489,38 @@ const UI = (() => {
         document.querySelectorAll('#criteria-checklist input[type="checkbox"]').forEach(cb => {
           cb.checked = active.has(cb.dataset.criterionId);
         });
-        if (draft.criteria.custom && draft.criteria.custom.name) {
-          document.getElementById('input-custom-criterion').value = draft.criteria.custom.name;
+        if (Array.isArray(draft.criteria.customCriteria) && draft.criteria.customCriteria.length) {
+          customCriteria = draft.criteria.customCriteria
+            .filter(c => c && typeof c.name === 'string' && c.name.trim())
+            .slice(0, MAX_N)
+            .map(c => ({
+              id: typeof c.id === 'string' && c.id ? c.id : `custom_${customCounter++}`,
+              name: c.name.trim().slice(0, 120),
+              shortName: (c.shortName || c.name).trim().slice(0, 24),
+              description: (c.description || c.name).trim().slice(0, 500)
+            }));
+          customCounter = customCriteria.reduce((m, c) => {
+            const n = parseInt(String(c.id).replace('custom_', ''), 10);
+            return isFinite(n) ? Math.max(m, n + 1) : m;
+          }, customCounter);
+        } else if (draft.criteria.custom && draft.criteria.custom.name) {
+          customCriteria = [{
+            id: 'custom_1',
+            name: String(draft.criteria.custom.name).trim().slice(0, 120),
+            shortName: String(draft.criteria.custom.name).trim().slice(0, 24),
+            description: String(draft.criteria.custom.name).trim().slice(0, 500)
+          }];
+          customCounter = 2;
         }
+        renderCustomList();
         rebuildFromCriteria(false);
+      }
+      if (draft.tiers && typeof draft.tiers === 'object') {
+        Object.entries(draft.tiers).forEach(([id, t]) => {
+          if (TIERS.includes(t) && criteria.some(c => c.id === id)) tiers[id] = t;
+        });
+        renderTierBoard();
+        updatePairSuggestions();
       }
       if (draft.matrix && draft.matrix.length === matrix.length) {
         draft.matrix.forEach((row, i) => {
@@ -415,6 +576,10 @@ const UI = (() => {
   function resetForm() {
     document.getElementById('survey-form').reset();
     document.querySelectorAll('#criteria-checklist input[type="checkbox"]').forEach(cb => { cb.checked = true; });
+    customCriteria = [];
+    customCounter = 1;
+    renderCustomList();
+    tiers = {};
     toggleRenovationDetails();
     rebuildFromCriteria(false);
     updateCRDisplay(null);
@@ -439,7 +604,9 @@ const UI = (() => {
     showError,
     saveDraft,
     getActiveCriteria,
-    getCriteriaMeta
+    getCriteriaMeta,
+    getTiers,
+    setTier
   };
 })();
 

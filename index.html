@@ -70,13 +70,36 @@
 
         <section id="criteria-section" class="card">
           <h2>Decision Criteria</h2>
-          <p class="hint">Uncheck any criterion you don't think is relevant. Optionally add one missing criterion. The matrix below adapts automatically (minimum 3 active).</p>
+          <p class="hint">Uncheck any criterion you don't think is relevant. Optionally add missing criteria (each adds a new row/column). The matrix below adapts automatically (minimum 3 active, maximum 9).</p>
           <div id="criteria-checklist" class="criteria-checklist"></div>
           <div class="form-group">
-            <label for="input-custom-criterion">Important criterion not in our list? (optional, adds a new row/column)</label>
-            <input type="text" id="input-custom-criterion" maxlength="120" placeholder="e.g., Heritage preservation" autocomplete="off">
+            <label for="input-custom-criterion">Important criteria not in our list? (optional)</label>
+            <div class="custom-add-row">
+              <input type="text" id="input-custom-criterion" maxlength="120" placeholder="e.g., Heritage preservation" autocomplete="off">
+              <button type="button" id="btn-add-custom" class="btn btn-secondary">Add criterion</button>
+            </div>
           </div>
+          <div id="custom-criteria-list" class="custom-criteria-list"></div>
           <p class="hint" id="criteria-count"></p>
+        </section>
+
+        <section id="tier-section" class="card">
+          <h2>Priority Tiers</h2>
+          <p class="hint">First pass — drag each criterion block into a tier (or use the A/B/C buttons; keyboard accessible). No numbers here, so it won't bias your numeric judgments. Tiers guide the matrix below via suggested ranges.</p>
+          <div id="tier-board" class="tier-board">
+            <div class="tier-col" data-tier="A">
+              <h3>A — Top priority</h3>
+              <div class="tier-blocks" id="tier-col-A"></div>
+            </div>
+            <div class="tier-col" data-tier="B">
+              <h3>B — Mid priority</h3>
+              <div class="tier-blocks" id="tier-col-B"></div>
+            </div>
+            <div class="tier-col" data-tier="C">
+              <h3>C — Low priority</h3>
+              <div class="tier-blocks" id="tier-col-C"></div>
+            </div>
+          </div>
         </section>
 
         <section id="matrix-section" class="card">

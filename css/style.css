@@ -184,6 +184,159 @@ header h1 {
   margin-top: 3px;
 }
 
+.custom-add-row {
+  display: flex;
+  gap: 8px;
+}
+
+.custom-add-row input {
+  flex: 1;
+}
+
+.custom-criteria-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.custom-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 10px;
+  background: var(--success-light);
+  border: 1px solid var(--success);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: var(--success);
+}
+
+.custom-chip button {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: var(--success);
+  color: #fff;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Priority tiers (P2) */
+.tier-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tier-col {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  min-height: 120px;
+}
+
+.tier-col h3 {
+  font-size: 0.9rem;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.tier-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 60px;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.tier-blocks.drop-hint {
+  outline: 2px dashed var(--primary);
+  background: var(--primary-light);
+}
+
+.tier-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  cursor: grab;
+  box-shadow: var(--shadow);
+}
+
+.tier-block:active {
+  cursor: grabbing;
+}
+
+.tier-label {
+  font-weight: 500;
+}
+
+.tier-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.tier-btns button {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.tier-btns button.on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.tier-empty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 8px;
+}
+
+.tier-ranges {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  margin-top: 8px;
+}
+
+.tier-ranges th,
+.tier-ranges td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.tier-ranges thead th {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+@media (max-width: 700px) {
+  .tier-board {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Matrix Table */
 .matrix-container {
   overflow-x: auto;
