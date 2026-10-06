@@ -489,7 +489,7 @@ const UI = (() => {
           upperTd.classList.add(user ? 'user' : 'estimated');
         }
         if (lowerCell) {
-          lowerCell.textContent = Number(matrix[i][j]).toFixed(2);
+          lowerCell.textContent = Number(matrix[j][i]).toFixed(2);
           lowerCell.classList.remove('user', 'estimated');
           lowerCell.classList.add(user ? 'user' : 'estimated');
         }
@@ -578,12 +578,20 @@ const UI = (() => {
     const p = guidedPairAt(guidedIdx);
     if (!p) { wrap.classList.add('hidden'); return; }
     const winner = guidedChoice === 'A' ? p.a : p.b;
-    label.textContent = `How much more important is ${winner.shortName}? (stored as ${guidedChoice === 'A' ? 'A over B' : 'reciprocal, B over A'})`;
+    label.textContent = `How much more important is ${winner.shortName}? Highlighted = recommended from your tiers (non-binding). (stored as ${guidedChoice === 'A' ? 'A over B' : 'reciprocal, B over A'})`;
+    // Yellow-highlight the tier-recommended magnitudes (non-binding).
+    const dist = Guided.pairDistance(tiers[p.a.id], tiers[p.b.id]);
+    const lo = dist === 0 ? 1 : dist === 1 ? 3 : 7;
+    const hi = dist === 0 ? 3 : dist === 1 ? 5 : 9;
     for (let v = 2; v <= 9; v++) {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.textContent = String(v);
       btn.dataset.scale = String(v);
+      if (v >= lo && v <= hi) {
+        btn.classList.add('suggested');
+        btn.title = 'Recommended from your tiers (non-binding)';
+      }
       scale.appendChild(btn);
     }
     wrap.classList.remove('hidden');

@@ -396,6 +396,11 @@ header h1 {
   background: var(--primary-light);
 }
 
+.guided-scale button.suggested {
+  background: #fff9c4;
+  border-color: #e0c400;
+}
+
 /* Review provenance: green = user, yellow = estimated */
 .tag {
   display: inline-block;
