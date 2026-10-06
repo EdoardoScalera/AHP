@@ -6,6 +6,7 @@
   <title>AHP Stakeholder Survey - ENTRANCE Horizon EU</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="css/style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4" crossorigin="anonymous"></script>
 </head>
 <body>
   <div class="container">
@@ -167,6 +168,20 @@
             <div class="cr-bar">
               <div class="cr-bar-fill" id="cr-bar-fill"></div>
             </div>
+          </div>
+        </section>
+
+        <section id="plot-section" class="card">
+          <h2>Your Priorities</h2>
+          <p class="hint">Live view of criteria priority scores from your answers.</p>
+          <div id="plot-empty" class="hint">Complete the guided comparisons above — the plot appears here.</div>
+          <div id="plot-wrap" class="hidden">
+            <div class="plot-canvas-wrap"><canvas id="plot-canvas"></canvas></div>
+            <p class="hint" id="plot-cr"></p>
+            <table class="plot-table">
+              <thead><tr><th>Criterion</th><th>Weight</th></tr></thead>
+              <tbody id="plot-tbody"></tbody>
+            </table>
           </div>
         </section>
 

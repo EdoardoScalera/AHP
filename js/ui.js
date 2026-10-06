@@ -1,5 +1,6 @@
 import { AHP } from './ahp-core.js';
 import { Guided } from './guided.js';
+import { Plot } from './plot.js';
 
 const UI = (() => {
   const DRAFT_KEY = 'ahp-draft-v3';
@@ -127,6 +128,7 @@ const UI = (() => {
     buildCriteriaLegend();
     renderTierBoard();
     updatePairSuggestions();
+    Plot.clear();
     startGuided(false);
     const submitBtn = document.getElementById('btn-submit');
     if (submitBtn) submitBtn.disabled = criteria.length < MIN_N;
@@ -161,6 +163,7 @@ const UI = (() => {
     estimatedFlags = criteria.map(() => criteria.map(() => false));
     buildMatrixTableFresh();
     updateMatrixDisplay();
+    Plot.clear();
     if (onMatrixChange) onMatrixChange(null);
     startGuided(false);
     if ((opts.focus !== false) && hadFocus) {
@@ -477,8 +480,24 @@ const UI = (() => {
     known.forEach(p => { userCells[p.i][p.j] = true; userCells[p.j][p.i] = true; });
     estimatedFlags = done.estimated;
     updateMatrixDisplay();
+    renderPlot();
     if (onMatrixChange) onMatrixChange(matrix);
     return true;
+  }
+
+  function renderPlot() {
+    try {
+      const full = AHP.calculateAll(matrix);
+      Plot.render(
+        criteria.map(displayName),
+        full.weights,
+        full.CR,
+        full.consistent
+      );
+    } catch (e) {
+      console.warn('Plot render failed:', e);
+      Plot.clear();
+    }
   }
 
   function updateMatrixDisplay() {
@@ -638,6 +657,7 @@ const UI = (() => {
       runCompletion();
     } else {
       updateMatrixDisplay();
+      Plot.clear();
       if (onMatrixChange) onMatrixChange(null);
     }
     renderGuided();
@@ -658,6 +678,7 @@ const UI = (() => {
     estimatedFlags = criteria.map(() => criteria.map(() => false));
     buildMatrixTableFresh();
     updateMatrixDisplay();
+    Plot.clear();
     if (onMatrixChange) onMatrixChange(null);
     renderGuided();
   }
@@ -712,6 +733,7 @@ const UI = (() => {
       runCompletion();
     } else {
       updateMatrixDisplay();
+      Plot.clear();
       if (onMatrixChange) {
         onMatrixChange(null);
       }
@@ -966,6 +988,7 @@ const UI = (() => {
         runCompletion();
       } else {
         updateMatrixDisplay();
+        Plot.clear();
         if (onMatrixChange) onMatrixChange(null);
       }
       renderGuided();

@@ -439,6 +439,48 @@ header h1 {
   color: #8d6e00;
 }
 
+/* Results plot (P4) */
+.plot-canvas-wrap {
+  position: relative;
+  height: 300px;
+  margin-bottom: 16px;
+}
+
+.plot-canvas-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.plot-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.plot-table th,
+.plot-table td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.plot-table thead th {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.plot-table td:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .plot-canvas-wrap {
+    height: 260px;
+  }
+}
+
 /* Matrix Table */
 .matrix-container {
   overflow-x: auto;
