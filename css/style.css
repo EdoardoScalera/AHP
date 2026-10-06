@@ -343,6 +343,95 @@ header h1 {
   }
 }
 
+/* Guided comparisons (P3) */
+.guided-bar {
+  height: 8px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.guided-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--primary);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.guided-q {
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.guided-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.guided-scale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.guided-scale button {
+  min-width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.guided-scale button:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+/* Review provenance: green = user, yellow = estimated */
+.tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.tag.user {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.tag.estimated {
+  background: #fff9c4;
+  color: #8d6e00;
+}
+
+.matrix-table td.upper.user input {
+  background: var(--success-light);
+}
+
+.matrix-table td.upper.estimated input {
+  background: #fff9c4;
+}
+
+.matrix-table td.lower.user {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.matrix-table td.lower.estimated {
+  color: #8d6e00;
+}
+
 /* Matrix Table */
 .matrix-container {
   overflow-x: auto;

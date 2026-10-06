@@ -56,6 +56,7 @@ const Storage = (() => {
       renovationDetails: data.renovationDetails || '',
       criteria: data.criteria || null,
       tiers: data.tiers || null,
+      pairwise: data.pairwise || null,
       matrix: data.matrix,
       weights: data.weights,
       cr: data.cr,

@@ -148,6 +148,119 @@ const AHP = (() => {
     return (w * 100).toFixed(1) + '%';
   }
 
+  // Incomplete-matrix completion via logarithmic least squares (P3).
+  // knownPairs: [{i, j, value}] with value = a_ij (i over j), 1/9..9.
+  // Returns { matrix (n×n completed), weights, estimated (n×n bool, true if inferred) }.
+  function solveLinear(A, b) {
+    const n = A.length;
+    const M = A.map((row, i) => [...row, b[i]]);
+    for (let col = 0; col < n; col++) {
+      let pivot = col;
+      for (let r = col + 1; r < n; r++) {
+        if (Math.abs(M[r][col]) > Math.abs(M[pivot][col])) pivot = r;
+      }
+      if (Math.abs(M[pivot][col]) < 1e-12) {
+        throw new Error('Singular system');
+      }
+      [M[col], M[pivot]] = [M[pivot], M[col]];
+      const div = M[col][col];
+      for (let k = col; k <= n; k++) M[col][k] /= div;
+      for (let r = 0; r < n; r++) {
+        if (r === col) continue;
+        const factor = M[r][col];
+        if (factor !== 0) {
+          for (let k = col; k <= n; k++) M[r][k] -= factor * M[col][k];
+        }
+      }
+    }
+    return M.map(row => row[n]);
+  }
+
+  function completeIncomplete(knownPairs, n) {
+    const direct = Array(n).fill(null).map(() => Array(n).fill(false));
+    const edges = [];
+    (knownPairs || []).forEach(p => {
+      if (!p || typeof p.i !== 'number' || typeof p.j !== 'number' || typeof p.value !== 'number') return;
+      if (p.i < 0 || p.j < 0 || p.i >= n || p.j >= n || p.i === p.j) return;
+      if (!isFinite(p.value) || p.value < 1 / 9 - 1e-9 || p.value > 9 + 1e-9) return;
+      if (direct[p.i][p.j]) return;
+      direct[p.i][p.j] = true;
+      direct[p.j][p.i] = true;
+      edges.push({ i: p.i, j: p.j, v: p.value });
+    });
+
+    // Ensure connectivity: bridge disconnected components with neutral 1.0 links (still flagged estimated).
+    const adj = Array(n).fill(null).map(() => []);
+    edges.forEach(e => { adj[e.i].push(e.j); adj[e.j].push(e.i); });
+    const comp = Array(n).fill(-1);
+    let nComp = 0;
+    for (let s = 0; s < n; s++) {
+      if (comp[s] !== -1) continue;
+      const stack = [s];
+      comp[s] = nComp;
+      while (stack.length) {
+        const u = stack.pop();
+        adj[u].forEach(v => { if (comp[v] === -1) { comp[v] = nComp; stack.push(v); } });
+      }
+      nComp++;
+    }
+    const bridge = [];
+    for (let c = 1; c < nComp; c++) {
+      const a = comp.indexOf(c - 1);
+      const b = comp.indexOf(c);
+      bridge.push({ i: a, j: b, v: 1 });
+      adj[a].push(b);
+      adj[b].push(a);
+    }
+    const all = edges.concat(bridge);
+
+    // LLS normal equations on log-ratios, anchored at y_0 = 0.
+    const idx = [];
+    for (let k = 1; k < n; k++) idx.push(k);
+    const m = n - 1;
+    const L = Array(m).fill(null).map(() => Array(m).fill(0));
+    const rhs = Array(m).fill(0);
+    all.forEach(e => {
+      if (e.i > 0) {
+        L[e.i - 1][e.i - 1] += 1;
+        rhs[e.i - 1] += Math.log(e.v);
+      }
+      if (e.j > 0) {
+        L[e.j - 1][e.j - 1] += 1;
+        rhs[e.j - 1] -= Math.log(e.v);
+      }
+      if (e.i > 0 && e.j > 0) {
+        L[e.i - 1][e.j - 1] -= 1;
+        L[e.j - 1][e.i - 1] -= 1;
+      }
+    });
+    const y = [0];
+    if (m > 0) {
+      const sol = solveLinear(L, rhs);
+      sol.forEach(v => y.push(v));
+    }
+
+    const matrix = Array(n).fill(null).map(() => Array(n).fill(1));
+    const estimated = Array(n).fill(null).map(() => Array(n).fill(false));
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        if (i === j) continue;
+        matrix[i][j] = Math.exp(y[i] - y[j]);
+        estimated[i][j] = !direct[i][j];
+      }
+    }
+    // Restore exact user values (avoid exp/log rounding drift).
+    edges.forEach(e => {
+      matrix[e.i][e.j] = e.v;
+      matrix[e.j][e.i] = 1 / e.v;
+    });
+
+    const exps = y.map(v => Math.exp(v));
+    const sum = exps.reduce((a, b) => a + b, 0);
+    const weights = exps.map(v => v / sum);
+    return { matrix, weights, estimated };
+  }
+
   return {
     calculateWeights,
     normalizeMatrix,
@@ -156,7 +269,9 @@ const AHP = (() => {
     validateMatrix,
     calculateAll,
     parseInput,
-    formatWeight
+    formatWeight,
+    solveLinear,
+    completeIncomplete
   };
 })();
 

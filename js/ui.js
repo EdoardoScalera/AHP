@@ -1,4 +1,5 @@
 import { AHP } from './ahp-core.js';
+import { Guided } from './guided.js';
 
 const UI = (() => {
   const DRAFT_KEY = 'ahp-draft-v3';
@@ -12,6 +13,13 @@ const UI = (() => {
   let customCounter = 1;
   let tiers = {};
   const TIERS = ['A', 'B', 'C'];
+  let guidedOrder = [];
+  let guidedHub = null;
+  let guidedAnswers = {};
+  let guidedIdx = 0;
+  let guidedChoice = null;
+  let userCells = [];
+  let estimatedFlags = [];
   let matrix = [];
   let onMatrixChange = null;
   let onSubmit = null;
@@ -118,6 +126,7 @@ const UI = (() => {
     buildCriteriaLegend();
     renderTierBoard();
     updatePairSuggestions();
+    startGuided(false);
     const submitBtn = document.getElementById('btn-submit');
     if (submitBtn) submitBtn.disabled = criteria.length < MIN_N;
     if (criteria.length < MIN_N && onMatrixChange) onMatrixChange(null, { reason: 'too-few-criteria', n: criteria.length });
@@ -143,6 +152,16 @@ const UI = (() => {
     tiers[id] = tier;
     renderTierBoard();
     updatePairSuggestions();
+    // Tier changes invalidate hub/order: restart guided Q&A (answers cleared).
+    guidedAnswers = {};
+    guidedIdx = 0;
+    guidedChoice = null;
+    userCells = criteria.map(() => criteria.map(() => false));
+    estimatedFlags = criteria.map(() => criteria.map(() => false));
+    buildMatrixTableFresh();
+    updateMatrixDisplay();
+    if (onMatrixChange) onMatrixChange(null);
+    startGuided(false);
     if ((opts.focus !== false) && hadFocus) {
       const block = board.querySelector(`.tier-block[data-id="${cssEscape(id)}"]`);
       if (block) block.focus();
@@ -203,6 +222,8 @@ const UI = (() => {
   function buildMatrixTable() {
     const n = criteria.length;
     matrix = Array(n).fill(null).map(() => Array(n).fill(1));
+    userCells = Array(n).fill(null).map(() => Array(n).fill(false));
+    estimatedFlags = Array(n).fill(null).map(() => Array(n).fill(false));
 
     const thead = document.querySelector('#matrix-table thead tr');
     if (thead) {
@@ -326,6 +347,15 @@ const UI = (() => {
     }
 
     document.getElementById('btn-submit').addEventListener('click', handleSubmit);
+    document.getElementById('guided-yes').addEventListener('click', () => chooseGuided('A'));
+    document.getElementById('guided-no').addEventListener('click', () => chooseGuided('B'));
+    document.getElementById('guided-equal').addEventListener('click', () => chooseGuided('Eq'));
+    document.getElementById('guided-scale').addEventListener('click', e => {
+      const btn = e.target.closest('button[data-scale]');
+      if (btn) selectGuidedScale(parseInt(btn.dataset.scale, 10));
+    });
+    document.getElementById('guided-back').addEventListener('click', guidedBack);
+    document.getElementById('guided-restart').addEventListener('click', guidedRestart);
     document.getElementById('btn-save-draft').addEventListener('click', handleSaveDraft);
     document.getElementById('survey-form').addEventListener('submit', e => e.preventDefault());
     document.getElementById('btn-new-response').addEventListener('click', resetForm);
@@ -374,18 +404,257 @@ const UI = (() => {
     return `1/${den}`;
   }
 
-  function updateMatrix(row, col, val) {
+  function pairKey(i, j) {
+    return i < j ? `${i}|${j}` : `${j}|${i}`;
+  }
+
+  function idToIndex(id) {
+    return criteria.findIndex(c => c.id === id);
+  }
+
+  function guidedKnownPairs() {
+    return Object.values(guidedAnswers);
+  }
+
+  function guidedIsComplete() {
+    if (!guidedOrder.length || criteria.length < MIN_N) return false;
+    return guidedOrder.every(([a, b]) => {
+      const i = idToIndex(a), j = idToIndex(b);
+      if (i < 0 || j < 0) return false;
+      return !!guidedAnswers[pairKey(i, j)];
+    });
+  }
+
+  function recordKnown(row, col, val) {
     matrix[row][col] = val;
     matrix[col][row] = 1 / val;
+    userCells[row][col] = true;
+    userCells[col][row] = true;
+    const ui = Math.min(row, col), uj = Math.max(row, col);
+    guidedAnswers[pairKey(ui, uj)] = { i: ui, j: uj, value: matrix[ui][uj] };
+  }
 
-    const lowerCell = document.querySelector(`#matrix-table tbody tr:nth-child(${col + 1}) td:nth-child(${row + 2})`);
-    if (lowerCell) {
-      lowerCell.textContent = val.toFixed(2);
+  function startGuided(keepAnswers = false) {
+    const ids = criteria.map(c => c.id);
+    const built = Guided.generateOrder(ids, tiers);
+    guidedOrder = built.order;
+    guidedHub = built.hub;
+    guidedChoice = null;
+    if (!keepAnswers) {
+      guidedAnswers = {};
+      guidedIdx = 0;
+    } else {
+      guidedIdx = Math.min(guidedIdx, guidedOrder.length);
+    }
+    renderGuided();
+  }
+
+  function runCompletion() {
+    const n = criteria.length;
+    const known = guidedKnownPairs();
+    if (!known.length) return false;
+    let done;
+    try {
+      done = AHP.completeIncomplete(known, n);
+    } catch (e) {
+      console.warn('Completion failed:', e);
+      return false;
+    }
+    matrix = done.matrix;
+    userCells = Array(n).fill(null).map(() => Array(n).fill(false));
+    known.forEach(p => { userCells[p.i][p.j] = true; userCells[p.j][p.i] = true; });
+    estimatedFlags = done.estimated;
+    updateMatrixDisplay();
+    if (onMatrixChange) onMatrixChange(matrix);
+    return true;
+  }
+
+  function updateMatrixDisplay() {
+    const n = criteria.length;
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        if (i >= j) continue;
+        const input = document.querySelector(`#matrix-table input[data-row="${i}"][data-col="${j}"]`);
+        const lowerCell = document.querySelector(`#matrix-table tbody tr:nth-child(${j + 1}) td:nth-child(${i + 2})`);
+        const upperTd = input ? input.closest('td') : null;
+        const user = !!(userCells[i] && userCells[i][j]);
+        const txt = formatInputDisplay(matrix[i][j]);
+        if (input) {
+          input.value = txt;
+          input.classList.remove('valid', 'invalid', 'user', 'estimated');
+          input.classList.add(user ? 'user' : 'estimated');
+        }
+        if (upperTd) {
+          upperTd.classList.remove('user', 'estimated');
+          upperTd.classList.add(user ? 'user' : 'estimated');
+        }
+        if (lowerCell) {
+          lowerCell.textContent = Number(matrix[i][j]).toFixed(2);
+          lowerCell.classList.remove('user', 'estimated');
+          lowerCell.classList.add(user ? 'user' : 'estimated');
+        }
+      }
+    }
+  }
+
+  function guidedPairAt(idx) {
+    const pair = guidedOrder[idx];
+    if (!pair) return null;
+    const i = idToIndex(pair[0]), j = idToIndex(pair[1]);
+    if (i < 0 || j < 0) return null;
+    return { a: criteria[i], b: criteria[j], i, j };
+  }
+
+  function renderGuided() {
+    const section = document.getElementById('guided-section');
+    const progress = document.getElementById('guided-progress');
+    const barFill = document.getElementById('guided-bar-fill');
+    const card = document.getElementById('guided-card');
+    const done = document.getElementById('guided-done');
+    if (!section || !progress || !card || !done) return;
+
+    if (criteria.length < MIN_N) {
+      progress.textContent = `Activate at least ${MIN_N} criteria to start guided comparisons.`;
+      if (barFill) barFill.style.width = '0%';
+      card.classList.add('hidden');
+      done.classList.add('hidden');
+      return;
+    }
+    if (!guidedOrder.length) startGuided(false);
+    const m = guidedOrder.length;
+    const pct = m ? Math.round((Math.min(guidedIdx, m) / m) * 100) : 0;
+    if (barFill) barFill.style.width = `${pct}%`;
+
+    if (guidedIdx >= m) {
+      progress.textContent = `All ${m} guided comparisons answered — review the matrix below.`;
+      card.classList.add('hidden');
+      done.classList.remove('hidden');
+      return;
+    }
+    done.classList.add('hidden');
+    card.classList.remove('hidden');
+    progress.textContent = `Question ${guidedIdx + 1} of ${m}${guidedHub ? ` — reference: ${nameOf(guidedHub)}` : ''}`;
+
+    const p = guidedPairAt(guidedIdx);
+    if (!p) return;
+    const range = Guided.suggestedRange(tiers[p.a.id] || 'B', tiers[p.b.id] || 'B');
+    document.getElementById('guided-qtext').innerHTML =
+      `Do you find <strong>${escapeHtml(p.a.name)}</strong> more important than <strong>${escapeHtml(p.b.name)}</strong>?`;
+    document.getElementById('guided-suggest').textContent =
+      `Suggested range from tiers (${tiers[p.a.id] || 'B'} vs ${tiers[p.b.id] || 'B'}): ${range}. Equal importance = 1.`;
+
+    const hintEl = document.getElementById('guided-hint');
+    const implied = Guided.impliedValue(p.i, p.j, guidedKnownPairs(), criteria.length);
+    if (implied !== null) {
+      const band = Guided.suggestedRange(tiers[p.a.id] || 'B', tiers[p.b.id] || 'B');
+      hintEl.textContent =
+        `Based on your answers so far, ~${Guided.formatValue(implied)} (band ${band}) would preserve consistency. Non-binding — your call.`;
+    } else {
+      hintEl.textContent = '';
     }
 
-    if (onMatrixChange) {
-      onMatrixChange(matrix);
+    const yesBtn = document.getElementById('guided-yes');
+    const noBtn = document.getElementById('guided-no');
+    yesBtn.innerHTML = `<strong>${escapeHtml(p.a.shortName)}</strong> more important`;
+    noBtn.innerHTML = `<strong>${escapeHtml(p.b.shortName)}</strong> more important`;
+    renderGuidedScale();
+  }
+
+  function nameOf(id) {
+    const c = criteria.find(x => x.id === id);
+    return c ? c.shortName : id;
+  }
+
+  function renderGuidedScale() {
+    const wrap = document.getElementById('guided-scale-wrap');
+    const label = document.getElementById('guided-scale-label');
+    const scale = document.getElementById('guided-scale');
+    if (!wrap || !scale) return;
+    scale.innerHTML = '';
+    if (!guidedChoice || guidedChoice === 'Eq') {
+      wrap.classList.add('hidden');
+      return;
     }
+    const p = guidedPairAt(guidedIdx);
+    if (!p) { wrap.classList.add('hidden'); return; }
+    const winner = guidedChoice === 'A' ? p.a : p.b;
+    label.textContent = `How much more important is ${winner.shortName}? (stored as ${guidedChoice === 'A' ? 'A over B' : 'reciprocal, B over A'})`;
+    for (let v = 2; v <= 9; v++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = String(v);
+      btn.dataset.scale = String(v);
+      scale.appendChild(btn);
+    }
+    wrap.classList.remove('hidden');
+  }
+
+  function chooseGuided(dir) {
+    if (dir === 'Eq') {
+      answerGuided(1);
+      return;
+    }
+    guidedChoice = dir;
+    renderGuidedScale();
+  }
+
+  function selectGuidedScale(v) {
+    const p = guidedPairAt(guidedIdx);
+    if (!p || !guidedChoice || guidedChoice === 'Eq') return;
+    const val = guidedChoice === 'A' ? v : 1 / v;
+    answerGuided(val);
+  }
+
+  function answerGuided(aOverB) {
+    const p = guidedPairAt(guidedIdx);
+    if (!p) return;
+    recordKnown(p.i, p.j, aOverB);
+    guidedChoice = null;
+    guidedIdx += 1;
+    if (guidedIsComplete()) {
+      runCompletion();
+    } else {
+      updateMatrixDisplay();
+      if (onMatrixChange) onMatrixChange(null);
+    }
+    renderGuided();
+  }
+
+  function guidedBack() {
+    if (guidedIdx <= 0) return;
+    guidedIdx -= 1;
+    guidedChoice = null;
+    renderGuided();
+  }
+
+  function guidedRestart() {
+    guidedAnswers = {};
+    guidedIdx = 0;
+    guidedChoice = null;
+    userCells = criteria.map(() => criteria.map(() => false));
+    estimatedFlags = criteria.map(() => criteria.map(() => false));
+    buildMatrixTableFresh();
+    updateMatrixDisplay();
+    if (onMatrixChange) onMatrixChange(null);
+    renderGuided();
+  }
+
+  function buildMatrixTableFresh() {
+    const n = criteria.length;
+    matrix = Array(n).fill(null).map(() => Array(n).fill(1));
+  }
+
+  function updateMatrix(row, col, val) {
+    recordKnown(row, col, val);
+    if (guidedIsComplete()) {
+      runCompletion();
+    } else {
+      updateMatrixDisplay();
+      if (onMatrixChange) {
+        onMatrixChange(null);
+      }
+    }
+    renderGuided();
   }
 
   function updateCRDisplay(result) {
@@ -428,6 +697,11 @@ const UI = (() => {
       alert(`Please activate at least ${MIN_N} criteria.`);
       return;
     }
+    if (!guidedIsComplete()) {
+      const answered = Object.keys(guidedAnswers).length;
+      alert(`Please answer all guided comparisons (${answered} of ${guidedOrder.length}). Manual matrix entries count too.`);
+      return;
+    }
     const identity = getIdentity();
     if (!validateIdentity(identity)) return;
 
@@ -441,6 +715,7 @@ const UI = (() => {
         ...identity,
         criteria: meta,
         tiers: getTiers(),
+        pairwise: getPairwisePayload(),
         matrix,
         weights: result.weights,
         cr: result.CR,
@@ -448,6 +723,18 @@ const UI = (() => {
         missingCriteria
       });
     }
+  }
+
+  function getPairwisePayload() {
+    return {
+      order: guidedOrder.map(([a, b]) => [a, b]),
+      answers: guidedKnownPairs().map(p => ({
+        a: criteria[p.i] ? criteria[p.i].id : null,
+        b: criteria[p.j] ? criteria[p.j].id : null,
+        value: p.value
+      })).filter(a => a.a && a.b),
+      estimated: estimatedFlags.map(row => [...row])
+    };
   }
 
   function handleSaveDraft() {
@@ -460,6 +747,10 @@ const UI = (() => {
         identity,
         criteria: getCriteriaMeta(),
         tiers: getTiers(),
+        guided: {
+          answers: guidedKnownPairs(),
+          idx: guidedIdx
+        },
         matrix,
         missingCriteria
       });
@@ -580,21 +871,42 @@ const UI = (() => {
         renderTierBoard();
         updatePairSuggestions();
       }
+      if (draft.guided && Array.isArray(draft.guided.answers)) {
+        guidedAnswers = {};
+        draft.guided.answers.forEach(p => {
+          if (!p || !Number.isInteger(p.i) || !Number.isInteger(p.j) || typeof p.value !== 'number') return;
+          if (p.i < 0 || p.j < 0 || p.i >= matrix.length || p.j >= matrix.length || p.i === p.j) return;
+          if (!isFinite(p.value) || p.value < 1 / 9 - 1e-9 || p.value > 9 + 1e-9) return;
+          const ui = Math.min(p.i, p.j), uj = Math.max(p.i, p.j);
+          const v = p.i === ui ? p.value : 1 / p.value;
+          guidedAnswers[pairKey(ui, uj)] = { i: ui, j: uj, value: v };
+        });
+        if (Number.isInteger(draft.guided.idx)) {
+          guidedIdx = Math.max(0, Math.min(draft.guided.idx, guidedOrder.length));
+        }
+      }
       if (draft.matrix && draft.matrix.length === matrix.length) {
         draft.matrix.forEach((row, i) => {
+          if (!Array.isArray(row)) return;
           row.forEach((val, j) => {
-            if (i < j && val !== 1) {
+            if (i < j && typeof val === 'number' && isFinite(val) && val !== 1 &&
+                val >= 1 / 9 - 1e-9 && val <= 9 + 1e-9) {
               matrix[i][j] = val;
               matrix[j][i] = 1 / val;
-              const input = document.querySelector(`#matrix-table input[data-row="${i}"][data-col="${j}"]`);
-              const lowerCell = document.querySelector(`#matrix-table tbody tr:nth-child(${j + 1}) td:nth-child(${i + 2})`);
-              if (input) input.value = formatInputDisplay(val);
-              if (lowerCell) lowerCell.textContent = Number(val).toFixed(2);
+              userCells[i][j] = true;
+              userCells[j][i] = true;
+              guidedAnswers[pairKey(i, j)] = { i, j, value: val };
             }
           });
         });
-        if (onMatrixChange) onMatrixChange(matrix);
       }
+      if (guidedIsComplete()) {
+        runCompletion();
+      } else {
+        updateMatrixDisplay();
+        if (onMatrixChange) onMatrixChange(null);
+      }
+      renderGuided();
       if (draft.missingCriteria) {
         const missingEl = document.getElementById('input-missing');
         if (missingEl) missingEl.value = draft.missingCriteria;
