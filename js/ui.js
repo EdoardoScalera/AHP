@@ -192,9 +192,9 @@ const UI = (() => {
         .map((c, idx) => {
           const num = criteria.indexOf(c) + 1;
           const btns = TIERS.map(x =>
-            `<button type="button" data-move="${x}" data-id="${escapeHtml(c.id)}" class="${x === (tiers[c.id] || 'B') ? 'on' : ''}" aria-label="Move ${escapeHtml(c.shortName)} to tier ${x}">${x}</button>`
+            `<button type="button" data-move="${x}" data-id="${escapeHtml(c.id)}" class="${x === (tiers[c.id] || 'B') ? 'on' : ''}" aria-label="Move ${escapeHtml(displayName(c))} to tier ${x}">${x}</button>`
           ).join('');
-          return `<div class="tier-block" draggable="true" tabindex="0" data-id="${escapeHtml(c.id)}" aria-label="${escapeHtml(c.shortName)}, tier ${tiers[c.id] || 'B'}. Arrow keys or A B C to move."><span class="tier-label">${num}. ${escapeHtml(c.shortName)}</span><span class="tier-btns">${btns}</span></div>`;
+          return `<div class="tier-block" draggable="true" tabindex="0" data-id="${escapeHtml(c.id)}" aria-label="${escapeHtml(displayName(c))}, tier ${tiers[c.id] || 'B'}. Arrow keys or A B C to move."><span class="tier-label">${num}. ${escapeHtml(displayName(c))}</span><span class="tier-btns">${btns}</span></div>`;
         }).join('');
       col.innerHTML = blocks || '<p class="tier-empty">—</p>';
     });
@@ -208,7 +208,7 @@ const UI = (() => {
       if (!a || !b) return;
       const range = tierRangeLabel(tiers[a.id] || 'B', tiers[b.id] || 'B');
       input.placeholder = range;
-      input.title = `${a.shortName} (${tiers[a.id] || 'B'}) vs ${b.shortName} (${tiers[b.id] || 'B'}) — suggested ${range}`;
+      input.title = `${displayName(a)} (${tiers[a.id] || 'B'}) vs ${displayName(b)} (${tiers[b.id] || 'B'}) — suggested ${range}`;
     });
   }
 
@@ -216,7 +216,7 @@ const UI = (() => {
     const container = document.getElementById('criteria-legend');
     if (!container) return;
     container.innerHTML = criteria.map((c, i) =>
-      `<span class="criteria-legend-item" title="${escapeHtml(c.description || c.name)}"><span class="criteria-legend-num">${i + 1}.</span>${escapeHtml(c.shortName)}</span>`
+      `<span class="criteria-legend-item" title="${escapeHtml(c.name)}"><span class="criteria-legend-num">${i + 1}.</span>${escapeHtml(displayName(c))}</span>`
     ).join('');
   }
 
@@ -229,13 +229,13 @@ const UI = (() => {
     const thead = document.querySelector('#matrix-table thead tr');
     if (thead) {
       thead.innerHTML = '<th class="corner">Criteria</th>' +
-        criteria.map((c) => `<th title="${escapeHtml(c.name)}">${escapeHtml(c.shortName)}</th>`).join('');
+        criteria.map((c) => `<th title="${escapeHtml(c.name)}">${escapeHtml(displayName(c))}</th>`).join('');
     }
 
     const tbody = document.querySelector('#matrix-table tbody');
     if (!tbody) return;
     tbody.innerHTML = criteria.map((c, i) => {
-      const row = [`<th title="${escapeHtml(c.name)}">${i + 1}. ${escapeHtml(c.shortName)}</th>`];
+      const row = [`<th title="${escapeHtml(c.name)}">${i + 1}. ${escapeHtml(displayName(c))}</th>`];
       for (let j = 0; j < n; j++) {
         if (i === j) {
           row.push('<td class="diagonal">1.00</td>');
@@ -570,14 +570,14 @@ const UI = (() => {
 
     const yesBtn = document.getElementById('guided-yes');
     const noBtn = document.getElementById('guided-no');
-    yesBtn.innerHTML = `<strong>${escapeHtml(p.a.shortName)}</strong> more important`;
-    noBtn.innerHTML = `<strong>${escapeHtml(p.b.shortName)}</strong> more important`;
+    yesBtn.innerHTML = `<strong>${escapeHtml(displayName(p.a))}</strong> more important`;
+    noBtn.innerHTML = `<strong>${escapeHtml(displayName(p.b))}</strong> more important`;
     renderGuidedScale();
   }
 
   function nameOf(id) {
     const c = criteria.find(x => x.id === id);
-    return c ? c.shortName : id;
+    return c ? displayName(c) : id;
   }
 
   function renderGuidedScale() {
@@ -593,7 +593,7 @@ const UI = (() => {
     const p = guidedPairAt(guidedIdx);
     if (!p) { wrap.classList.add('hidden'); return; }
     const winner = guidedChoice === 'A' ? p.a : p.b;
-    label.textContent = `How much more important is ${winner.shortName}? Highlighted = recommended from your tiers (non-binding). (stored as ${guidedChoice === 'A' ? 'A over B' : 'reciprocal, B over A'})`;
+    label.textContent = `How much more important is ${displayName(winner)}? Highlighted = recommended from your tiers (non-binding). (stored as ${guidedChoice === 'A' ? 'A over B' : 'reciprocal, B over A'})`;
     // Yellow-highlight the tier-recommended magnitudes (non-binding).
     const dist = Guided.pairDistance(tiers[p.a.id], tiers[p.b.id]);
     const lo = dist === 0 ? 1 : dist === 1 ? 3 : 7;
@@ -686,9 +686,9 @@ const UI = (() => {
     if (Math.abs(v - 1) < 1e-9) {
       verdict = 'Equal importance (1)';
     } else if (v > 1) {
-      verdict = `${a.shortName} more important — ${Guided.formatValue(v)}`;
+      verdict = `${displayName(a)} more important — ${Guided.formatValue(v)}`;
     } else {
-      verdict = `${b.shortName} more important — ${Guided.formatValue(1 / v)}`;
+      verdict = `${displayName(b)} more important — ${Guided.formatValue(1 / v)}`;
     }
     text.innerHTML =
       `<strong>Question ${k + 1} of ${m}:</strong> ${escapeHtml(a.name)} vs ${escapeHtml(b.name)}<br>Your answer: <strong>${escapeHtml(verdict)}</strong>`;
@@ -1026,6 +1026,14 @@ const UI = (() => {
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  }
+
+  // Full display name everywhere; truncate only long free-text customs (full in tooltip).
+  function displayName(c) {
+    if (c.id && c.id.indexOf('custom_') === 0 && c.name.length > 60) {
+      return `${c.name.slice(0, 60)}…`;
+    }
+    return c.name;
   }
 
   return {
