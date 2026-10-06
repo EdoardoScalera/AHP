@@ -725,6 +725,24 @@ header h1 {
   margin: 60px auto;
 }
 
+#password-screen .card .about {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+#password-screen .card .about h3 {
+  font-size: 1rem;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+#password-screen .card .about p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
 @media (max-width: 600px) {
   body {
     padding: 12px;
