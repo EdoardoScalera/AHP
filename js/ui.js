@@ -18,6 +18,7 @@ const UI = (() => {
   let guidedAnswers = {};
   let guidedIdx = 0;
   let guidedChoice = null;
+  let guidedReviewIdx = -1;
   let userCells = [];
   let estimatedFlags = [];
   let matrix = [];
@@ -228,7 +229,7 @@ const UI = (() => {
     const thead = document.querySelector('#matrix-table thead tr');
     if (thead) {
       thead.innerHTML = '<th class="corner">Criteria</th>' +
-        criteria.map((c, i) => `<th title="${escapeHtml(c.name)}">${i + 1}</th>`).join('');
+        criteria.map((c) => `<th title="${escapeHtml(c.name)}">${escapeHtml(c.shortName)}</th>`).join('');
     }
 
     const tbody = document.querySelector('#matrix-table tbody');
@@ -355,7 +356,17 @@ const UI = (() => {
       if (btn) selectGuidedScale(parseInt(btn.dataset.scale, 10));
     });
     document.getElementById('guided-back').addEventListener('click', guidedBack);
+    document.getElementById('guided-review').addEventListener('click', enterGuidedReview);
     document.getElementById('guided-restart').addEventListener('click', guidedRestart);
+    document.getElementById('guided-review-prev').addEventListener('click', () => {
+      guidedReviewIdx = Math.max(0, guidedReviewIdx - 1);
+      renderGuidedReview();
+    });
+    document.getElementById('guided-review-next').addEventListener('click', () => {
+      guidedReviewIdx = Math.min(guidedOrder.length - 1, guidedReviewIdx + 1);
+      renderGuidedReview();
+    });
+    document.getElementById('guided-review-exit').addEventListener('click', exitGuidedReview);
     document.getElementById('btn-save-draft').addEventListener('click', handleSaveDraft);
     document.getElementById('survey-form').addEventListener('submit', e => e.preventDefault());
     document.getElementById('btn-new-response').addEventListener('click', resetForm);
@@ -440,6 +451,7 @@ const UI = (() => {
     guidedOrder = built.order;
     guidedHub = built.hub;
     guidedChoice = null;
+    guidedReviewIdx = -1;
     if (!keepAnswers) {
       guidedAnswers = {};
       guidedIdx = 0;
@@ -511,7 +523,10 @@ const UI = (() => {
     const barFill = document.getElementById('guided-bar-fill');
     const card = document.getElementById('guided-card');
     const done = document.getElementById('guided-done');
+    const pane = document.getElementById('guided-review-pane');
     if (!section || !progress || !card || !done) return;
+    if (pane) pane.classList.add('hidden');
+    guidedReviewIdx = -1;
 
     if (criteria.length < MIN_N) {
       progress.textContent = `Activate at least ${MIN_N} criteria to start guided comparisons.`;
@@ -644,6 +659,45 @@ const UI = (() => {
     buildMatrixTableFresh();
     updateMatrixDisplay();
     if (onMatrixChange) onMatrixChange(null);
+    renderGuided();
+  }
+
+  function enterGuidedReview() {
+    if (!guidedIsComplete()) return;
+    guidedReviewIdx = 0;
+    document.getElementById('guided-card').classList.add('hidden');
+    document.getElementById('guided-done').classList.add('hidden');
+    document.getElementById('guided-review-pane').classList.remove('hidden');
+    renderGuidedReview();
+  }
+
+  function renderGuidedReview() {
+    const text = document.getElementById('guided-review-text');
+    if (!text) return;
+    const m = guidedOrder.length;
+    const k = Math.max(0, Math.min(guidedReviewIdx, m - 1));
+    guidedReviewIdx = k;
+    const [aId, bId] = guidedOrder[k];
+    const i = idToIndex(aId), j = idToIndex(bId);
+    const a = criteria[i], b = criteria[j];
+    const ans = guidedAnswers[pairKey(i, j)];
+    const v = ans ? (i <= j ? ans.value : 1 / ans.value) : 1;
+    let verdict;
+    if (Math.abs(v - 1) < 1e-9) {
+      verdict = 'Equal importance (1)';
+    } else if (v > 1) {
+      verdict = `${a.shortName} more important — ${Guided.formatValue(v)}`;
+    } else {
+      verdict = `${b.shortName} more important — ${Guided.formatValue(1 / v)}`;
+    }
+    text.innerHTML =
+      `<strong>Question ${k + 1} of ${m}:</strong> ${escapeHtml(a.name)} vs ${escapeHtml(b.name)}<br>Your answer: <strong>${escapeHtml(verdict)}</strong>`;
+    document.getElementById('guided-review-prev').disabled = k <= 0;
+    document.getElementById('guided-review-next').disabled = k >= m - 1;
+  }
+
+  function exitGuidedReview() {
+    guidedReviewIdx = -1;
     renderGuided();
   }
 

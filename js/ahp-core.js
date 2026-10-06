@@ -255,9 +255,22 @@ const AHP = (() => {
       matrix[e.j][e.i] = 1 / e.v;
     });
 
-    const exps = y.map(v => Math.exp(v));
-    const sum = exps.reduce((a, b) => a + b, 0);
-    const weights = exps.map(v => v / sum);
+    // Constrain inferred values to the 1/9..9 response scale, symmetric per
+    // pair (user values are never clamped). Weights/CR derive from the
+    // clamped matrix, so displayed values match the analysis.
+    const LO = 1 / 9, HI = 9;
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        if (direct[i][j]) continue;
+        let v = matrix[i][j];
+        if (v > HI) v = HI;
+        else if (v < LO) v = LO;
+        matrix[i][j] = v;
+        matrix[j][i] = 1 / v;
+      }
+    }
+
+    const weights = calculateWeights(matrix);
     return { matrix, weights, estimated };
   }
 

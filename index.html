@@ -108,6 +108,7 @@
           <div class="guided-bar"><div class="guided-bar-fill" id="guided-bar-fill"></div></div>
           <div id="guided-card">
             <p id="guided-qtext" class="guided-q"></p>
+            <p class="hint">Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.</p>
             <p class="hint" id="guided-suggest"></p>
             <p class="hint" id="guided-hint"></p>
             <div class="guided-choices">
@@ -125,7 +126,17 @@
           </div>
           <div id="guided-done" class="hidden">
             <p>All guided comparisons answered. Review the matrix below — <span class="tag user">green</span> = your judgment, <span class="tag estimated">yellow</span> = estimated for consistency (click any yellow value to set your own).</p>
-            <button type="button" id="guided-restart" class="btn btn-secondary">Revise guided answers</button>
+            <p class="hint">Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.</p>
+            <button type="button" id="guided-review" class="btn btn-secondary">Review guided answers</button>
+            <button type="button" id="guided-restart" class="btn btn-secondary">Restart guided comparison</button>
+          </div>
+          <div id="guided-review-pane" class="hidden">
+            <p id="guided-review-text" class="guided-q"></p>
+            <div class="form-actions">
+              <button type="button" id="guided-review-prev" class="btn btn-secondary">Previous</button>
+              <button type="button" id="guided-review-next" class="btn btn-secondary">Next</button>
+              <button type="button" id="guided-review-exit" class="btn btn-secondary">Exit review</button>
+            </div>
           </div>
         </section>
 
