@@ -743,6 +743,44 @@ header h1 {
   margin-bottom: 8px;
 }
 
+/* Phase 2 (KPI scoring): criterion tabs */
+.phase2-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.phase2-tabs button {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.phase2-tabs button.on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.phase2-tabs button.done:not(.on) {
+  border-color: var(--success);
+  color: var(--success);
+  background: var(--success-light);
+}
+
+#phase2-crit-title {
+  font-size: 1rem;
+  color: var(--primary);
+  margin: 12px 0 8px;
+}
+
 @media (max-width: 600px) {
   body {
     padding: 12px;

@@ -2,7 +2,9 @@ import { AHP } from './ahp-core.js';
 
 // P3 guided pairwise helpers (pure functions; Q&A state lives in UI).
 // Order: spanning-tree-first from hub (first Tier-A else first active),
-// then top tier-contrast pairs up to round(n(n-1)/4).
+// then top tier-contrast pairs up to round(n(n-1)/divisor).
+// Phase 1 uses divisor 4; Phase 2 (KPIs) uses divisor 8 to minimise questions
+// while keeping the graph connected (spanning tree = n-1 minimal links).
 const Guided = (() => {
   function tierRank(t) {
     return t === 'A' ? 0 : t === 'C' ? 2 : 1;
@@ -19,12 +21,13 @@ const Guided = (() => {
     return '7–9';
   }
 
-  function targetCount(n) {
+  function targetCount(n, divisor = 4) {
     if (n <= 2) return 1;
-    return Math.max(n - 1, Math.round((n * (n - 1)) / 4));
+    const d = typeof divisor === 'number' && divisor > 0 ? divisor : 4;
+    return Math.max(n - 1, Math.round((n * (n - 1)) / d));
   }
 
-  function generateOrder(activeIds, tiers) {
+  function generateOrder(activeIds, tiers, divisor = 4) {
     const ids = [...activeIds];
     const n = ids.length;
     if (n < 2) return { order: [], hub: ids[0] || null, target: 0 };
@@ -37,7 +40,7 @@ const Guided = (() => {
       order.push([hub, id]);
       seen.add(key(hub, id));
     });
-    const target = targetCount(n);
+    const target = targetCount(n, divisor);
     if (order.length < target) {
       const idx = new Map(ids.map((id, i) => [id, i]));
       const cands = [];

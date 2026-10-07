@@ -1,0 +1,62 @@
+{
+  "version": "sample-7-v1",
+  "note": "Phase-2 sample: 1 KPI per group (G1-G7). Same shortlist is compared under each active criterion.",
+  "indicators": [
+    {
+      "id": "primary_energy",
+      "code": "G1.1",
+      "name": "Primary Energy",
+      "group": "G1",
+      "groupName": "Energy performance",
+      "description": "Total primary energy use of the building (overall energy performance, easy comparison across buildings)."
+    },
+    {
+      "id": "flexibility_factor",
+      "code": "G2.5",
+      "name": "Flexibility Factor",
+      "group": "G2",
+      "groupName": "Grid interaction",
+      "description": "Ability of the building to shift or modulate load in response to grid/market signals."
+    },
+    {
+      "id": "res_self_consumption",
+      "code": "G3.2",
+      "name": "RES Self-consumption (Supply Cover Factor)",
+      "group": "G3",
+      "groupName": "Renewable energy and storage",
+      "description": "Share of on-site renewable generation consumed in the building (energy independence proxy)."
+    },
+    {
+      "id": "increased_reliability",
+      "code": "G4.4",
+      "name": "Increased reliability",
+      "group": "G4",
+      "groupName": "Technical losses and failures",
+      "description": "Reliability of the energy system after renovation (fewer failures and supply interruptions)."
+    },
+    {
+      "id": "consumer_engagement",
+      "code": "G5.3",
+      "name": "Consumer Engagement",
+      "group": "G5",
+      "groupName": "User involvement",
+      "description": "Extent to which users are informed, involved and able to act on building performance."
+    },
+    {
+      "id": "co2_concentration",
+      "code": "G6.6",
+      "name": "CO2 concentration",
+      "group": "G6",
+      "groupName": "Indoor environmental quality",
+      "description": "Indoor CO2 concentration as a practical proxy for indoor air quality and ventilation."
+    },
+    {
+      "id": "npv",
+      "code": "G7.4",
+      "name": "Net Present Value (NPV)",
+      "group": "G7",
+      "groupName": "Economics",
+      "description": "Life-cycle economic value of the renovation (discounted benefits minus costs)."
+    }
+  ]
+}

@@ -148,6 +148,77 @@ const AHP = (() => {
     return (w * 100).toFixed(1) + '%';
   }
 
+  // Phase 2 (options/KPIs): global priority ranking, Eq.9 Pi = sum_k w_k * p_ik.
+  // criteriaWeights: array length q (sums to 1). scoresPerCriterion: array length q,
+  // each an array length m of option scores p_ik for that criterion (each sums to 1
+  // over its evaluated options). Entries may be null/undefined = NA (option removed
+  // under that criterion): the option then gets NO contribution from that criterion,
+  // and its own applicable criteria weights are renormalized:
+  //   G_i = sum_{k: scored} w_k*p_ik / sum_{k: scored} w_k.
+  // Options NA everywhere get { score: null, scored: false } and rank last (rank null).
+  // Returns { scores: [Pi|null], ranking: [{ index, score, rank|null, scored,
+  //   evaluatedIn, weightBase }] } sorted scored-first by score desc.
+  function calculateGlobalPriorities(criteriaWeights, scoresPerCriterion) {
+    if (!Array.isArray(criteriaWeights) || !criteriaWeights.length) {
+      throw new Error('criteriaWeights must be a non-empty array');
+    }
+    if (!Array.isArray(scoresPerCriterion) || scoresPerCriterion.length !== criteriaWeights.length) {
+      throw new Error('scoresPerCriterion must match criteriaWeights length');
+    }
+    const m = scoresPerCriterion[0] ? scoresPerCriterion[0].length : 0;
+    if (!m) throw new Error('scoresPerCriterion entries must be non-empty arrays');
+    scoresPerCriterion.forEach((s, k) => {
+      if (!Array.isArray(s) || s.length !== m) {
+        throw new Error(`scoresPerCriterion[${k}] must have ${m} entries`);
+      }
+      s.forEach((v, i) => {
+        if (v === null || v === undefined) return; // NA: excluded under this criterion
+        if (typeof v !== 'number' || !isFinite(v) || v < 0 || v > 1) {
+          throw new Error(`scoresPerCriterion[${k}][${i}] must be a number 0..1 or null (NA)`);
+        }
+      });
+    });
+    criteriaWeights.forEach((w, k) => {
+      if (typeof w !== 'number' || !isFinite(w) || w < 0 || w > 1) {
+        throw new Error(`criteriaWeights[${k}] must be a number 0..1`);
+      }
+    });
+    const scores = new Array(m).fill(null);
+    const evaluatedIn = new Array(m).fill(0);
+    const weightBase = new Array(m).fill(0);
+    for (let i = 0; i < m; i++) {
+      let num = 0, den = 0, n = 0;
+      for (let k = 0; k < criteriaWeights.length; k++) {
+        const v = scoresPerCriterion[k][i];
+        if (v === null || v === undefined) continue;
+        num += criteriaWeights[k] * v;
+        den += criteriaWeights[k];
+        n += 1;
+      }
+      evaluatedIn[i] = n;
+      weightBase[i] = den;
+      scores[i] = n > 0 ? num / den : null;
+    }
+    const ranking = scores
+      .map((score, index) => ({
+        index, score,
+        scored: score !== null,
+        evaluatedIn: evaluatedIn[index],
+        weightBase: weightBase[index]
+      }))
+      .sort((a, b) => {
+        if (a.scored !== b.scored) return a.scored ? -1 : 1;
+        if (!a.scored) return a.index - b.index;
+        return b.score - a.score;
+      })
+      .map((r, pos, arr) => {
+        if (!r.scored) return { ...r, rank: null };
+        const scoredBefore = arr.slice(0, pos).filter(x => x.scored).length;
+        return { ...r, rank: scoredBefore + 1 };
+      });
+    return { scores, ranking };
+  }
+
   // Incomplete-matrix completion via logarithmic least squares (P3).
   // knownPairs: [{i, j, value}] with value = a_ij (i over j), 1/9..9.
   // Returns { matrix (n×n completed), weights, estimated (n×n bool, true if inferred) }.
@@ -284,7 +355,8 @@ const AHP = (() => {
     parseInput,
     formatWeight,
     solveLinear,
-    completeIncomplete
+    completeIncomplete,
+    calculateGlobalPriorities
   };
 })();
 

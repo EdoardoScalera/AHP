@@ -47,6 +47,7 @@ const Storage = (() => {
     }
     const payload = {
       accessCode,
+      phase: 1,
       name: data.name,
       role: data.role,
       pilot: data.pilot,
@@ -62,7 +63,8 @@ const Storage = (() => {
       cr: data.cr,
       consistent: data.consistent,
       missingCriteria: data.missingCriteria || '',
-      consent: data.consent
+      consent: data.consent,
+      phasesSelected: data.phasesSelected || null
     };
 
     let response;
@@ -83,10 +85,64 @@ const Storage = (() => {
     return { success: true, submissionId: result.submissionId, message: result.message };
   }
 
+  async function savePhase2Submission(data) {
+    if (!workerBase) {
+      throw new Error('Storage not initialized. Check js/config.js');
+    }
+    const accessCode = data.accessCode;
+    if (!accessCode) {
+      throw new Error('Access code not provided');
+    }
+    // Scenario C links to the Phase-1 submission; scenario B (Phase 2 only)
+    // carries a client-generated responseId with phase1Skipped: true.
+    if (!data.phase1SubmissionId && !(data.phase1Skipped === true && data.responseId)) {
+      throw new Error('Phase-1 submission link is missing. Please complete Phase 1 first.');
+    }
+    const payload = {
+      accessCode,
+      phase: 2,
+      phase1SubmissionId: data.phase1SubmissionId || null,
+      phase1Skipped: data.phase1Skipped === true,
+      responseId: data.responseId || null,
+      weightsSource: data.weightsSource || null,
+      phasesSelected: data.phasesSelected || null,
+      name: data.name,
+      role: data.role,
+      pilot: data.pilot,
+      country: data.country,
+      email: data.email || '',
+      indicatorSet: data.indicatorSet || 'sample-7-v1',
+      indicatorIds: data.indicatorIds,
+      criteriaIds: data.criteriaIds,
+      criteriaWeights: data.criteriaWeights,
+      options: data.options,
+      globalScores: data.globalScores,
+      consent: data.consent
+    };
+
+    let response;
+    try {
+      response = await fetch(`${workerBase}${submitPath}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      throw new Error('Network error: unable to reach submission service');
+    }
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || `Phase-2 submission failed (${response.status})`);
+    }
+    return { success: true, submissionId: result.submissionId, message: result.message };
+  }
+
   return {
     init,
     verifyAccessCode,
-    saveSubmission
+    saveSubmission,
+    savePhase2Submission
   };
 })();
 

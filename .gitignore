@@ -1,0 +1,5 @@
+# Local-only artifacts (never commit test submissions or secrets)
+tools/offline-submissions/
+.dev.vars
+.env
+.env.*

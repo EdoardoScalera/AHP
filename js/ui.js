@@ -39,6 +39,7 @@ const UI = (() => {
     rebuildFromCriteria(false);
     attachEventListeners();
     loadDraft();
+    loadStart();
   }
 
   function getActiveCriteria() {
@@ -1030,6 +1031,8 @@ const UI = (() => {
 
   function resetForm() {
     document.getElementById('survey-form').reset();
+    const startForm = document.getElementById('start-form');
+    if (startForm) startForm.reset();
     document.querySelectorAll('#criteria-checklist input[type="checkbox"]').forEach(cb => { cb.checked = true; });
     customCriteria = [];
     customCounter = 1;
@@ -1044,7 +1047,63 @@ const UI = (() => {
         void Ahp;
       } catch (e) { /* noop */ }
     }
-    showScreen('survey-screen');
+    // Back to login for a fresh response (access code is cleared at thank-you).
+    const pwdInput = document.getElementById('password-input');
+    if (pwdInput) pwdInput.value = '';
+    showScreen('password-screen');
+  }
+
+  // Start screen (respondent info + phase selection) persistence.
+  const START_DRAFT_KEY = 'ahp-start-v1';
+
+  function getSelection() {
+    const p1 = document.getElementById('input-phase1-select');
+    const p2 = document.getElementById('input-phase2-select');
+    return {
+      phase1: !!(p1 && p1.checked),
+      phase2: !!(p2 && p2.checked)
+    };
+  }
+
+  function saveStart() {
+    try {
+      localStorage.setItem(START_DRAFT_KEY, JSON.stringify({
+        identity: getIdentity(),
+        selection: getSelection()
+      }));
+    } catch (e) { /* noop */ }
+  }
+
+  function loadStart() {
+    try {
+      const d = JSON.parse(localStorage.getItem(START_DRAFT_KEY));
+      if (!d) return;
+      if (d.identity) {
+        ['name', 'role', 'pilot', 'country', 'email'].forEach(k => {
+          const el = document.getElementById(`input-${k}`);
+          if (el && d.identity[k]) el.value = d.identity[k];
+        });
+        if (d.identity.consent) {
+          const el = document.getElementById('input-consent');
+          if (el) el.checked = true;
+        }
+        if (d.identity.renovationUnderConsideration === true) {
+          document.getElementById('input-renovation-yes').checked = true;
+        } else if (d.identity.renovationUnderConsideration === false) {
+          document.getElementById('input-renovation-no').checked = true;
+        }
+        if (d.identity.renovationDetails) {
+          document.getElementById('input-renovation-details').value = d.identity.renovationDetails;
+        }
+        toggleRenovationDetails();
+      }
+      if (d.selection) {
+        const p1 = document.getElementById('input-phase1-select');
+        const p2 = document.getElementById('input-phase2-select');
+        if (p1) p1.checked = d.selection.phase1 !== false;
+        if (p2) p2.checked = d.selection.phase2 !== false;
+      }
+    } catch (e) { /* noop */ }
   }
 
   function escapeHtml(s) {
@@ -1069,7 +1128,12 @@ const UI = (() => {
     getActiveCriteria,
     getCriteriaMeta,
     getTiers,
-    setTier
+    setTier,
+    getIdentity,
+    validateIdentity,
+    getSelection,
+    saveStart,
+    loadStart
   };
 })();
 

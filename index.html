@@ -34,8 +34,8 @@
       </div>
     </div>
 
-    <div id="survey-screen" class="screen hidden">
-      <form id="survey-form" novalidate>
+    <div id="start-screen" class="screen hidden">
+      <form id="start-form" novalidate>
         <section id="identity-section" class="card">
           <h2>Respondent Information</h2>
           <p class="hint">Name, role, pilot and country are required. Responses are stored in the private repository <code>entrance-survey-responses</code> (analysis team only).</p>
@@ -75,6 +75,25 @@
           </div>
         </section>
 
+        <section id="phases-section" class="card">
+          <h2>Survey Phases</h2>
+          <p class="hint">Choose which parts to complete. Phase 1 scores the decision criteria (~10 min). Phase 2 scores 7 sample performance indicators under each criterion (~20–30 min, optional).</p>
+          <div class="form-group">
+            <label><input type="checkbox" id="input-phase1-select" checked> Phase 1 — Criteria priorities</label>
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" id="input-phase2-select" checked> Phase 2 — Indicator scoring (optional)</label>
+          </div>
+          <p id="start-error" class="error hidden">Please select at least one phase.</p>
+          <div class="form-actions">
+            <button type="button" id="btn-start" class="btn btn-primary">Start Survey</button>
+          </div>
+        </section>
+      </form>
+    </div>
+
+    <div id="survey-screen" class="screen hidden">
+      <form id="survey-form" novalidate>
         <section id="criteria-section" class="card">
           <h2>Decision Criteria</h2>
           <p class="hint">Uncheck any criterion you don't think is relevant. Optionally add missing criteria.</p>
@@ -196,6 +215,112 @@
           <button type="submit" id="btn-submit" class="btn btn-primary" disabled>Submit</button>
         </div>
       </form>
+    </div>
+
+    <div id="phase2-invite-screen" class="screen hidden">
+      <div class="card success">
+        <h2>Thank You — Phase 1 Submitted!</h2>
+        <p id="phase2-invite-detail"></p>
+        <p class="hint">Continue to Phase 2 when ready: score 7 sample performance indicators under each of your criteria (about 11 quick comparisons per criterion, ~20–30 min). Your Phase-1 weights are reused to compute the final KPI ranking. You may remove KPIs unrelated to a criterion; removed KPIs are marked NA and simply skipped in the final scores.</p>
+        <div class="form-actions" style="justify-content:center">
+          <button id="btn-phase2-finish" class="btn btn-secondary">Finish</button>
+          <button id="btn-phase2-proceed" class="btn btn-primary">Proceed to Phase 2</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="phase2-screen" class="screen hidden">
+      <section class="card">
+        <h2>Phase 2 — Indicator Scoring (optional)</h2>
+        <p class="hint">For each criterion, complete the guided comparisons between the KPIs. Remaining pairs are estimated for consistency (<span class="tag estimated">yellow</span>); click any matrix value to override (<span class="tag user">green</span> = your score).</p>
+        <div id="phase2-tabs" class="phase2-tabs"></div>
+        <div class="form-group">
+          <span class="label">KPIs evaluated under this criterion (uncheck KPIs not related to it; minimum 2)</span>
+          <div id="phase2-kpi-checklist" class="criteria-checklist"></div>
+        </div>
+        <h3>Priority tiers — how well does each KPI measure this criterion?</h3>
+        <p class="hint">Rank the evaluated KPIs into tiers (or use the A/B/C buttons). Tiers guide the comparison suggestions below.</p>
+        <div id="phase2-tier-board" class="tier-board">
+          <div class="tier-col" data-tier="A">
+            <h3>A — Measures best</h3>
+            <div class="tier-blocks" id="phase2-tier-col-A"></div>
+          </div>
+          <div class="tier-col" data-tier="B">
+            <h3>B — Measures moderately</h3>
+            <div class="tier-blocks" id="phase2-tier-col-B"></div>
+          </div>
+          <div class="tier-col" data-tier="C">
+            <h3>C — Measures least</h3>
+            <div class="tier-blocks" id="phase2-tier-col-C"></div>
+          </div>
+        </div>
+        <h3 id="phase2-crit-title"></h3>
+        <p class="hint" id="phase2-progress"></p>
+        <div class="guided-bar"><div class="guided-bar-fill" id="phase2-bar-fill"></div></div>
+        <div id="phase2-guided-card">
+          <p id="phase2-qtext" class="guided-q"></p>
+          <p class="hint">Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.</p>
+          <p class="hint" id="phase2-suggest"></p>
+          <p class="hint" id="phase2-hint"></p>
+          <div class="guided-choices">
+            <button type="button" id="phase2-yes" class="btn btn-secondary"></button>
+            <button type="button" id="phase2-no" class="btn btn-secondary"></button>
+            <button type="button" id="phase2-equal" class="btn btn-secondary">Equal</button>
+          </div>
+          <div id="phase2-scale-wrap" class="hidden">
+            <p class="hint" id="phase2-scale-label"></p>
+            <div id="phase2-scale" class="guided-scale"></div>
+          </div>
+          <div class="form-actions">
+            <button type="button" id="phase2-back" class="btn btn-secondary">Back</button>
+            <button type="button" id="phase2-restart" class="btn btn-secondary">Restart this criterion</button>
+          </div>
+        </div>
+        <div id="phase2-done" class="hidden">
+          <p>All guided comparisons for this criterion answered. Review the matrix below — <span class="tag user">green</span> = your judgment, <span class="tag estimated">yellow</span> = estimated.</p>
+        </div>
+        <div id="phase2-legend" class="criteria-legend"></div>
+        <div class="matrix-container">
+          <table id="phase2-matrix" class="matrix-table">
+            <thead>
+              <tr>
+                <th class="corner">KPI</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="cr-display">
+          <div class="cr-value" id="phase2-cr-value">CR: —</div>
+          <div class="cr-status" id="phase2-cr-status"></div>
+          <div class="cr-bar">
+            <div class="cr-bar-fill" id="phase2-cr-bar-fill"></div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" id="phase2-prev" class="btn btn-secondary">Previous criterion</button>
+          <button type="button" id="phase2-next" class="btn btn-secondary">Next criterion</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Final KPI Ranking</h2>
+        <p class="hint">Global scores P<sub>i</sub> = Σ w<sub>k</sub> · p<sub>ik</sub> (Eq.9), updated live as you complete criteria. KPIs removed under a criterion are marked NA and skipped there: their score is a weighted sum over only the criteria where they were evaluated (those weights renormalized), never a zero penalty.</p>
+        <div id="phase2-ranking-empty" class="hint">Complete at least one criterion to see the ranking.</div>
+        <div id="phase2-ranking-wrap" class="hidden">
+          <div class="plot-canvas-wrap"><canvas id="phase2-plot-canvas"></canvas></div>
+          <p class="hint" id="phase2-plot-cr"></p>
+          <table class="plot-table">
+            <thead><tr><th>Rank</th><th>KPI</th><th>Global score</th><th>Evaluated in</th></tr></thead>
+            <tbody id="phase2-ranking-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <button type="button" id="btn-phase2-save" class="btn btn-secondary">Save Phase-2 Draft</button>
+        <button type="button" id="btn-phase2-submit" class="btn btn-primary" disabled>Submit Phase 2</button>
+      </div>
     </div>
 
     <div id="success-screen" class="screen hidden">
