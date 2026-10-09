@@ -1,62 +1,136 @@
 {
-  "version": "sample-7-v1",
-  "note": "Phase-2 sample: 1 KPI per group (G1-G7). Same shortlist is compared under each active criterion.",
+  "version": "real-13-v1",
+  "note": "Phase-2 real KPI set: 13 KPIs. Same shortlist is compared under each active criterion.",
   "indicators": [
     {
       "id": "primary_energy",
       "code": "G1.1",
-      "name": "Primary Energy",
+      "name": "Primary Energy [kWh/m2]",
       "group": "G1",
-      "groupName": "Energy performance",
-      "description": "Total primary energy use of the building (overall energy performance, easy comparison across buildings)."
+      "groupName": "Building energy performance",
+      "description": "Annual total primary energy at building level; measure of overall energy efficiency.",
+      "info": "Total primary energy used by the building over a year, combining renewable, delivered and exported energy flows.",
+      "direction": "lower"
     },
     {
-      "id": "flexibility_factor",
-      "code": "G2.5",
-      "name": "Flexibility Factor",
+      "id": "demand_response",
+      "code": "G2.1",
+      "name": "Demand Response [%]",
       "group": "G2",
-      "groupName": "Grid interaction",
-      "description": "Ability of the building to shift or modulate load in response to grid/market signals."
+      "groupName": "Flexibility",
+      "description": "Reduction of hourly power consumption achieved through demand response strategies (e.g., price signals, variable setpoints).",
+      "info": "How much hourly power consumption can be reduced through demand response strategies such as price signals or adjusted temperature setpoints.",
+      "direction": "higher"
     },
     {
-      "id": "res_self_consumption",
-      "code": "G3.2",
-      "name": "RES Self-consumption (Supply Cover Factor)",
+      "id": "energy_shift_flexibility",
+      "code": "G2.4",
+      "name": "Energy Shift Flexibility Factor [%]",
+      "group": "G2",
+      "groupName": "Flexibility",
+      "description": "Flexibility of energy use with respect to electricity pricing periods; ratio of shifted energy between low- and high-price periods.",
+      "info": "How much energy use is shifted to low electricity-price periods instead of high-price periods.",
+      "direction": "higher"
+    },
+    {
+      "id": "no_grid_interaction",
+      "code": "G2.12",
+      "name": "No Grid Interaction Probability [--]",
+      "group": "G2",
+      "groupName": "Flexibility",
+      "description": "Probability that the building is acting autonomously of the grid over the evaluation period.",
+      "info": "How often the building can operate autonomously, without exchanging energy with the grid.",
+      "direction": "higher"
+    },
+    {
+      "id": "load_cover_factor",
+      "code": "G3.1",
+      "name": "Load Cover Factor [--]",
       "group": "G3",
-      "groupName": "Renewable energy and storage",
-      "description": "Share of on-site renewable generation consumed in the building (energy independence proxy)."
+      "groupName": "RES penetration",
+      "description": "Percentage of load demand covered by on-site renewable generation, including storage effects and losses.",
+      "info": "Share of the building load covered by on-site renewable generation, including storage effects and losses.",
+      "direction": "higher"
     },
     {
-      "id": "increased_reliability",
-      "code": "G4.4",
-      "name": "Increased reliability",
-      "group": "G4",
-      "groupName": "Technical losses and failures",
-      "description": "Reliability of the energy system after renovation (fewer failures and supply interruptions)."
+      "id": "load_matching_index",
+      "code": "G3.7",
+      "name": "Load Matching Index [%]",
+      "group": "G3",
+      "groupName": "RES penetration",
+      "description": "Average coincidence between building load and on-site renewable generation across all time steps.",
+      "info": "How well building load and on-site renewable generation coincide over time.",
+      "direction": "higher"
     },
     {
-      "id": "consumer_engagement",
-      "code": "G5.3",
-      "name": "Consumer Engagement",
+      "id": "saidi",
+      "code": "G5.1",
+      "name": "SAIDI [h/year·customer]",
       "group": "G5",
-      "groupName": "User involvement",
-      "description": "Extent to which users are informed, involved and able to act on building performance."
+      "groupName": "Reliability",
+      "description": "Average total duration of supply interruptions experienced per customer per year.",
+      "info": "Average total duration of energy supply interruptions experienced per customer in a year.",
+      "direction": "lower"
     },
     {
-      "id": "co2_concentration",
-      "code": "G6.6",
-      "name": "CO2 concentration",
+      "id": "ppd",
+      "code": "G6.2",
+      "name": "Predicted Percentage Dissatisfied (PPD) [%]",
       "group": "G6",
       "groupName": "Indoor environmental quality",
-      "description": "Indoor CO2 concentration as a practical proxy for indoor air quality and ventilation."
+      "description": "Percentage of people predicted to be thermally dissatisfied; derived from the PMV index.",
+      "info": "Predicted share of occupants dissatisfied with the thermal environment.",
+      "direction": "lower"
+    },
+    {
+      "id": "indoor_overheating_degree",
+      "code": "G6.3",
+      "name": "Indoor Overheating Degree [--]",
+      "group": "G6",
+      "groupName": "Indoor environmental quality",
+      "description": "Degree-hours weighted measure of overheating across all occupied building zones.",
+      "info": "Accumulated overheating above comfort limits across all occupied zones.",
+      "direction": "lower"
+    },
+    {
+      "id": "investment_cost",
+      "code": "G7.1",
+      "name": "Investment cost [euro]",
+      "group": "G7",
+      "groupName": "Economic performance",
+      "description": "Capital expenditure (CAPEX) for the implementation of ENTRANCE technologies and solutions at the building or district level.",
+      "info": "Upfront capital expenditure to implement the renovation technologies and solutions.",
+      "direction": "lower"
+    },
+    {
+      "id": "specific_cost_flexibility",
+      "code": "G7.2",
+      "name": "Specific cost of flexibility [c euro/kWh]",
+      "group": "G7",
+      "groupName": "Economic performance",
+      "description": "Ratio between the extra cost incurred by load shifting and the amount of electricity shifted relative to the reference scenario.",
+      "info": "Extra cost of load shifting per unit of electricity moved away from peak periods.",
+      "direction": "lower"
     },
     {
       "id": "npv",
       "code": "G7.4",
-      "name": "Net Present Value (NPV)",
+      "name": "Net Present Value (NPV) [euro]",
       "group": "G7",
-      "groupName": "Economics",
-      "description": "Life-cycle economic value of the renovation (discounted benefits minus costs)."
+      "groupName": "Economic performance",
+      "description": "Present value of future cash flows including the initial investment.",
+      "info": "Overall economic value of the renovation: future earnings discounted to today, minus the initial investment.",
+      "direction": "higher"
+    },
+    {
+      "id": "spp",
+      "code": "G7.5",
+      "name": "Simple Payback Period (SPP) [years]",
+      "group": "G7",
+      "groupName": "Economic performance",
+      "description": "Time for cash inflows to equal the initial cost.",
+      "info": "Number of years until the renovation pays for itself through savings and earnings.",
+      "direction": "lower"
     }
   ]
 }

@@ -3,7 +3,7 @@ import { AHP } from './ahp-core.js';
 // P3 guided pairwise helpers (pure functions; Q&A state lives in UI).
 // Order: spanning-tree-first from hub (first Tier-A else first active),
 // then top tier-contrast pairs up to round(n(n-1)/divisor).
-// Phase 1 uses divisor 4; Phase 2 (KPIs) uses divisor 8 to minimise questions
+// Phase 1 uses divisor 4; Phase 2 (KPIs) uses divisor 4 to minimise questions
 // while keeping the graph connected (spanning tree = n-1 minimal links).
 const Guided = (() => {
   function tierRank(t) {

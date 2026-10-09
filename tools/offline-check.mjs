@@ -77,15 +77,15 @@ check('ahp-core: completeIncomplete 6 pairs -> 7x7', () => {
   assert(r.weights.length === 7 && Math.abs(r.weights.reduce((a, b) => a + b, 0) - 1) < 1e-9, 'weights sum 1');
 });
 
-// 6. indicators.json: 7 unique KPIs, one per group G1..G7
-check('data: indicators.json has 7 unique KPIs (G1..G7)', () => {
+// 6. indicators.json: 13 unique real KPIs (G1x1, G2x3, G3x2, G5x1, G6x2, G7x4)
+check('data: indicators.json has 13 unique KPIs (real-13-v1)', () => {
   const data = JSON.parse(readFileSync(new URL('../data/indicators.json', import.meta.url), 'utf8'));
-  assert(data.version === 'sample-7-v1', 'version');
-  assert(data.indicators.length === 7, 'should list 7');
+  assert(data.version === 'real-13-v1', 'version');
+  assert(data.indicators.length === 13, 'should list 13');
   const groups = data.indicators.map(k => k.group).sort();
-  assert(JSON.stringify(groups) === JSON.stringify(['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7']), `groups: ${groups}`);
-  assert(new Set(data.indicators.map(k => k.id)).size === 7, 'ids unique');
-  assert(new Set(data.indicators.map(k => k.code)).size === 7, 'codes unique');
+  assert(JSON.stringify(groups) === JSON.stringify(['G1', 'G2', 'G2', 'G2', 'G3', 'G3', 'G5', 'G6', 'G6', 'G7', 'G7', 'G7', 'G7']), `groups: ${groups}`);
+  assert(new Set(data.indicators.map(k => k.id)).size === 13, 'ids unique');
+  assert(new Set(data.indicators.map(k => k.code)).size === 13, 'codes unique');
 });
 
 // 7. End-to-end math simulation: 2 criteria x 7 KPIs -> Pi sums to 1
@@ -100,12 +100,16 @@ check('phase2: simulated global ranking sums to 1', () => {
   assert(Math.abs(sum - 1) < 1e-9, `Pi sum should be 1, got ${sum}`);
 });
 
-// 8. Phase-2 guided divisor is 4 -> 11 questions for 7 KPIs
-check('guided: phase-2 divisor 4 gives 11 for n=7', () => {
+// 8. Phase-2 guided divisor is 4 -> 11 questions for 7 KPIs, 39 for 13 KPIs
+check('guided: phase-2 divisor 4 gives 11 for n=7, 39 for n=13', () => {
   assert(Guided.targetCount(7, 4) === 11, `expected 11, got ${Guided.targetCount(7, 4)}`);
   const ids = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
   const { order } = Guided.generateOrder(ids, null, 4);
   assert(order.length === 11, `order should be 11, got ${order.length}`);
+  assert(Guided.targetCount(13, 4) === 39, `expected 39, got ${Guided.targetCount(13, 4)}`);
+  const ids13 = Array.from({ length: 13 }, (_, i) => `k${i}`);
+  const built13 = Guided.generateOrder(ids13, null, 4);
+  assert(built13.order.length === 39, `order should be 39, got ${built13.order.length}`);
 });
 
 // 9. Tiered order starts from the Tier-A hub
@@ -180,8 +184,22 @@ check('matcher: pairs, orphans and folder anomalies', () => {
   }
 });
 
-if (failures) {
-  console.error(`\n${failures} check(s) FAILED`);
+// 13. Info overlay content: every criterion and KPI has a non-empty info
+// text, and every KPI declares its direction (higher/lower is better).
+check('data: criteria + indicators carry info overlay text', () => {
+  const crit = JSON.parse(readFileSync(new URL('../data/criteria.json', import.meta.url), 'utf8'));
+  assert(crit.criteria.length === 7, 'should list 7 criteria');
+  crit.criteria.forEach(c => {
+    assert(typeof c.info === 'string' && c.info.trim().length > 10, `criterion ${c.id} needs info text`);
+  });
+  const data = JSON.parse(readFileSync(new URL('../data/indicators.json', import.meta.url), 'utf8'));
+  data.indicators.forEach(k => {
+    assert(typeof k.info === 'string' && k.info.trim().length > 10, `KPI ${k.id} needs info text`);
+    assert(k.direction === 'higher' || k.direction === 'lower', `KPI ${k.id} needs direction`);
+  });
+});
+
+if (failures) {  console.error(`\n${failures} check(s) FAILED`);
   process.exit(1);
 } else {
   console.log('\nAll offline checks passed.');

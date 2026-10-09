@@ -4,43 +4,50 @@
       "id": "energy_performance",
       "name": "Energy performance",
       "shortName": "Energy",
-      "description": "Primary energy consumption, energy savings, CO2 emissions reduction, and energy labeling of the building."
+      "description": "Primary energy consumption, energy savings, CO2 emissions reduction, and energy labeling of the building.",
+      "info": "Overall energy efficiency of the building: energy consumption, energy savings, CO2 emissions and energy labeling."
     },
     {
       "id": "water_use",
       "name": "Water use",
       "shortName": "Water",
-      "description": "Water consumption efficiency, wastewater reduction, and water reuse systems in building renovation."
+      "description": "Water consumption efficiency, wastewater reduction, and water reuse systems in building renovation.",
+      "info": "Efficient use of water in the renovated building: consumption efficiency, wastewater reduction and water reuse systems."
     },
     {
       "id": "climate_impact",
       "name": "Climate impact",
       "shortName": "Climate",
-      "description": "Greenhouse gas emissions, carbon footprint, and climate resilience of the renovated building."
+      "description": "Greenhouse gas emissions, carbon footprint, and climate resilience of the renovated building.",
+      "info": "Effect of the building on the climate: greenhouse gas emissions, carbon footprint and resilience to climate change."
     },
     {
       "id": "economic_performance",
       "name": "Economic performance",
       "shortName": "Economic",
-      "description": "Investment costs, operational savings, payback period, NPV, IRR, and life-cycle cost analysis."
+      "description": "Investment costs, operational savings, payback period, NPV, IRR, and life-cycle cost analysis.",
+      "info": "Financial viability of the renovation: investment costs, operational savings, payback period, net present value and life-cycle costs."
     },
     {
       "id": "ieq",
       "name": "Indoor Environmental Quality (IEQ)",
       "shortName": "IEQ",
-      "description": "Thermal comfort, indoor air quality, visual comfort, and acoustic comfort for building occupants."
+      "description": "Thermal comfort, indoor air quality, visual comfort, and acoustic comfort for building occupants.",
+      "info": "Quality of the indoor environment for occupants: thermal comfort, indoor air quality, visual comfort and acoustic comfort."
     },
     {
       "id": "energy_system_integration",
       "name": "Energy system integration",
       "shortName": "Energy System",
-      "description": "Demand response, peak load reduction, load shifting, grid interaction, flexibility, and smart readiness indicators."
+      "description": "Demand response, peak load reduction, load shifting, grid interaction, flexibility, and smart readiness indicators.",
+      "info": "How well the building interacts with the energy system: demand response, peak load reduction, load shifting, grid interaction, flexibility and smart readiness."
     },
     {
       "id": "practical_implementation",
       "name": "Practical implementation",
       "shortName": "Practical",
-      "description": "Practical implementation combining technical feasibility (constructability, technical complexity, maintenance requirements, technology readiness) with social impact (occupant satisfaction, social acceptance, equity, accessibility, and community benefits)."
+      "description": "Practical implementation combining technical feasibility (constructability, technical complexity, maintenance requirements, technology readiness) with social impact (occupant satisfaction, social acceptance, equity, accessibility, and community benefits).",
+      "info": "Feasibility in practice: technical aspects (constructability, complexity, maintenance, technology readiness) together with social impact (occupant satisfaction, acceptance, equity, accessibility, community benefits)."
     }
   ]
 }

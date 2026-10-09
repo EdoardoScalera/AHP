@@ -799,3 +799,64 @@ header h1 {
     font-size: 2rem;
   }
 }
+
+/* (i) info overlay */
+.info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15em;
+  height: 1.15em;
+  margin-left: 0.35em;
+  border: 1px solid var(--primary);
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 0.8em;
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: baseline;
+  transition: background var(--transition);
+}
+
+.info-btn:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.info-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.info-modal-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hover);
+  max-width: 32rem;
+  width: 100%;
+  padding: 24px;
+}
+
+.info-modal-card h3 {
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+
+.info-modal-card p {
+  margin-bottom: 10px;
+}
+
+.info-modal-card .form-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}

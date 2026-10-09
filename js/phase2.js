@@ -9,11 +9,12 @@
 // Own DOM namespace (phase2-*) so Phase-1 ui.js is untouched.
 import { AHP } from './ahp-core.js';
 import { Guided } from './guided.js';
+import { Info } from './info.js';
 
 const Phase2 = (() => {
   const DIVISOR = 4;
   const MIN_EVAL = 2;
-  const DRAFT_KEY = 'ahp-phase2-v3';
+  const DRAFT_KEY = 'ahp-phase2-v4';
   const TIERS = ['A', 'B', 'C'];
 
   let indicators = [];
@@ -29,6 +30,13 @@ const Phase2 = (() => {
     indicators = opts.indicators || [];
     criteria = opts.criteria || [];
     criteriaWeights = opts.criteriaWeights || [];
+    Info.setup();
+    Info.registerCriteria(criteria);
+    Info.registerKpis(indicators);
+    Info.register('phase2-na', 'What does N/A mean?', [
+      'Marking a KPI as not applicable under a criterion means it cannot be meaningfully compared there — not that it is the worst option.',
+      'An N/A KPI simply receives no score under that criterion: its final score is averaged only over the criteria where it was evaluated.'
+    ]);
     onSubmit = opts.onSubmit || null;
     onSaveDraft = opts.onSaveDraft || null;
     current = 0;
@@ -261,7 +269,7 @@ const Phase2 = (() => {
       const locked = checked && nEval <= MIN_EVAL; // floor: cannot go below 2
       return `<label class="criteria-check-item" title="${escapeHtml(k.code + ' — ' + k.description)}">` +
         `<input type="checkbox" data-kpi-id="${escapeHtml(k.id)}" ${checked ? 'checked' : ''} ${locked ? 'disabled' : ''}> ` +
-        `<span>${escapeHtml(k.name)}${locked ? ' (min 2)' : ''}</span></label>`;
+        `<span>${escapeHtml(k.name)}${locked ? ' (min 2)' : ''}</span>${Info.button(`kpi:${k.id}`, k.name)}</label>`;
     }).join('');
   }
 
@@ -279,7 +287,7 @@ const Phase2 = (() => {
           const btns = TIERS.map(x =>
             `<button type="button" data-move="${x}" data-id="${escapeHtml(id)}" class="${x === (st.tiers[id] || 'B') ? 'on' : ''}" aria-label="Move ${escapeHtml(k.name)} to tier ${x}">${x}</button>`
           ).join('');
-          return `<div class="tier-block" draggable="true" tabindex="0" data-id="${escapeHtml(id)}" aria-label="${escapeHtml(k.name)}, tier ${st.tiers[id] || 'B'}. Arrow keys or A B C to move."><span class="tier-label">${escapeHtml(k.code)} ${escapeHtml(k.name)}</span><span class="tier-btns">${btns}</span></div>`;
+          return `<div class="tier-block" draggable="true" tabindex="0" data-id="${escapeHtml(id)}" aria-label="${escapeHtml(k.name)}, tier ${st.tiers[id] || 'B'}. Arrow keys or A B C to move."><span class="tier-label">${escapeHtml(k.code)} ${escapeHtml(k.name)}${Info.button(`kpi:${k.id}`, k.name)}</span><span class="tier-btns">${btns}</span></div>`;
         }).join('');
       col.innerHTML = blocks || '<p class="tier-empty">—</p>';
     });
@@ -295,7 +303,7 @@ const Phase2 = (() => {
       return;
     }
     const ids = evalIds(c.id);
-    if (title) title.textContent = `${current + 1}. ${c.name} — how well does each evaluated KPI measure this criterion?`;
+    if (title) title.innerHTML = `${current + 1}. ${escapeHtml(c.name)} ${Info.button(`crit:${c.id}`, c.name)} — how well does each evaluated KPI measure this criterion?`;
     const m = st.order.length;
     if (progress) progress.textContent = `Criterion ${current + 1} of ${criteria.length} — evaluating ${ids.length} of ${indicators.length} KPIs — question ${Math.min(st.idx + 1, m)} of ${m}${st.hub ? ` — reference: ${nameOf(st.hub)}` : ''}`;
     if (barFill) barFill.style.width = `${m ? Math.round((Math.min(st.idx, m) / m) * 100) : 0}%`;
@@ -306,7 +314,7 @@ const Phase2 = (() => {
     if (legend) {
       legend.innerHTML = ids.map(id => {
         const k = indicatorById(id);
-        return `<span class="criteria-legend-item" title="${escapeHtml(k.code + ' — ' + k.description)}"><span class="criteria-legend-num">${escapeHtml(k.code)}</span>${escapeHtml(k.name)}</span>`;
+        return `<span class="criteria-legend-item" title="${escapeHtml(k.code + ' — ' + k.description)}"><span class="criteria-legend-num">${escapeHtml(k.code)}</span>${escapeHtml(k.name)}${Info.button(`kpi:${k.id}`, k.name)}</span>`;
       }).join('');
     }
     renderMatrix();
@@ -805,7 +813,7 @@ const Phase2 = (() => {
       };
     });
     return {
-      indicatorSet: 'sample-7-v1',
+      indicatorSet: 'real-13-v1',
       indicatorIds: indicators.map(k => k.id),
       criteriaIds: criteria.map(c => c.id),
       criteriaWeights: [...criteriaWeights],
@@ -834,7 +842,7 @@ const Phase2 = (() => {
       };
     });
     return {
-      indicatorSet: 'sample-7-v1',
+      indicatorSet: 'real-13-v1',
       criteriaIds: criteria.map(c => c.id),
       current,
       state: dump

@@ -111,7 +111,7 @@ const Storage = (() => {
       pilot: data.pilot,
       country: data.country,
       email: data.email || '',
-      indicatorSet: data.indicatorSet || 'sample-7-v1',
+      indicatorSet: data.indicatorSet || 'real-13-v1',
       indicatorIds: data.indicatorIds,
       criteriaIds: data.criteriaIds,
       criteriaWeights: data.criteriaWeights,

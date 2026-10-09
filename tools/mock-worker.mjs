@@ -101,7 +101,7 @@ const server = createServer((req, res) => {
         if (body.weightsSource !== 'phase1' && body.weightsSource !== 'equal-default') {
           return send(res, 400, { error: 'Criteria weight source is invalid.' });
         }
-        if (m < 2 || m > 9 || q < MIN_N || q > MAX_N) return send(res, 400, { error: 'Phase-2 indicator/criteria lists invalid.' });
+        if (m < 2 || m > 16 || q < MIN_N || q > MAX_N) return send(res, 400, { error: 'Phase-2 indicator/criteria lists invalid.' });
         if (!checkWeights(body.criteriaWeights, q)) return send(res, 400, { error: 'Criteria weights must sum to 1.' });
         for (const cid of body.criteriaIds) {
           const o = body.options && body.options[cid];

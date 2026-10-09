@@ -1,6 +1,7 @@
 import { AHP } from './ahp-core.js';
 import { Guided } from './guided.js';
 import { Plot } from './plot.js';
+import { Info } from './info.js';
 
 const UI = (() => {
   const DRAFT_KEY = 'ahp-draft-v3';
@@ -30,6 +31,8 @@ const UI = (() => {
 
   function init(criteriaData, callbacks) {
     allCriteria = criteriaData;
+    Info.setup();
+    Info.registerCriteria(allCriteria);
     onMatrixChange = callbacks.onMatrixChange;
     onSubmit = callbacks.onSubmit;
     onSaveDraft = callbacks.onSaveDraft;
@@ -83,6 +86,7 @@ const UI = (() => {
       return;
     }
     customCriteria.push({ id: `custom_${customCounter++}`, name, shortName: name.slice(0, 24), description: name });
+    Info.registerCriteria([customCriteria[customCriteria.length - 1]]);
     input.value = '';
     renderCustomList();
     rebuildFromCriteria(true);
@@ -98,7 +102,7 @@ const UI = (() => {
     const container = document.getElementById('criteria-checklist');
     if (!container) return;
     container.innerHTML = allCriteria.map(c =>
-      `<label class="criteria-check-item"><input type="checkbox" data-criterion-id="${c.id}" checked> <span title="${escapeHtml(c.description)}">${escapeHtml(c.name)}</span></label>`
+      `<label class="criteria-check-item"><input type="checkbox" data-criterion-id="${c.id}" checked> <span title="${escapeHtml(c.description)}">${escapeHtml(c.name)}</span>${Info.button(`crit:${c.id}`, c.name)}</label>`
     ).join('');
   }
 
@@ -198,7 +202,7 @@ const UI = (() => {
           const btns = TIERS.map(x =>
             `<button type="button" data-move="${x}" data-id="${escapeHtml(c.id)}" class="${x === (tiers[c.id] || 'B') ? 'on' : ''}" aria-label="Move ${escapeHtml(displayName(c))} to tier ${x}">${x}</button>`
           ).join('');
-          return `<div class="tier-block" draggable="true" tabindex="0" data-id="${escapeHtml(c.id)}" aria-label="${escapeHtml(displayName(c))}, tier ${tiers[c.id] || 'B'}. Arrow keys or A B C to move."><span class="tier-label">${num}. ${escapeHtml(displayName(c))}</span><span class="tier-btns">${btns}</span></div>`;
+          return `<div class="tier-block" draggable="true" tabindex="0" data-id="${escapeHtml(c.id)}" aria-label="${escapeHtml(displayName(c))}, tier ${tiers[c.id] || 'B'}. Arrow keys or A B C to move."><span class="tier-label">${num}. ${escapeHtml(displayName(c))}${Info.button(`crit:${c.id}`, displayName(c))}</span><span class="tier-btns">${btns}</span></div>`;
         }).join('');
       col.innerHTML = blocks || '<p class="tier-empty">—</p>';
     });
@@ -220,7 +224,7 @@ const UI = (() => {
     const container = document.getElementById('criteria-legend');
     if (!container) return;
     container.innerHTML = criteria.map((c, i) =>
-      `<span class="criteria-legend-item" title="${escapeHtml(c.name)}"><span class="criteria-legend-num">${i + 1}.</span>${escapeHtml(displayName(c))}</span>`
+      `<span class="criteria-legend-item" title="${escapeHtml(c.name)}"><span class="criteria-legend-num">${i + 1}.</span>${escapeHtml(displayName(c))}${Info.button(`crit:${c.id}`, displayName(c))}</span>`
     ).join('');
   }
 

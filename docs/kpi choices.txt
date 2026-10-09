@@ -1,0 +1,13 @@
+﻿g1.1
+g2.1 g2.2 just different time frame. 2.1 is normalized -> choose g2.1
+g2.4 g2.5 flexible operation compared to prices or demand respectively -> choose g2.4
+g2.11 g2.12 info on grid import -> choose g2.12
+g3.1 g3.2 load covered by res more important than self consumption of res (should be sized to self consume)-> choose g3.1
+g3.7 instantaneous consumption (temporal match)
+g6.1 g6.2 data regarding duration of interruption difficult to obtain-> choose g6.1 
+g7.1 g7.2 ppd is final metric that defines thermal comfort -> choose g7.2
+g7.3 indoor overcooling/heating degree
+g7.7 investment costs
+g7.2 specific cost of flex
+g7.4 npv
+g7.5 spp

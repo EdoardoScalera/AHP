@@ -77,7 +77,7 @@
 
         <section id="phases-section" class="card">
           <h2>Survey Phases</h2>
-          <p class="hint">Choose which parts to complete. Phase 1 scores the decision criteria (~10 min). Phase 2 scores 7 sample performance indicators under each criterion (~20–30 min, optional).</p>
+          <p class="hint">Choose which parts to complete. Phase 1 scores the decision criteria (~10 min). Phase 2 scores 13 performance indicators under each criterion (optional; the number of questions depends on how many KPIs you keep per criterion).</p>
           <div class="form-group">
             <label><input type="checkbox" id="input-phase1-select" checked> Phase 1 — Criteria priorities</label>
           </div>
@@ -221,7 +221,7 @@
       <div class="card success">
         <h2>Thank You — Phase 1 Submitted!</h2>
         <p id="phase2-invite-detail"></p>
-        <p class="hint">Continue to Phase 2 when ready: score 7 sample performance indicators under each of your criteria (about 11 quick comparisons per criterion, ~20–30 min). Your Phase-1 weights are reused to compute the final KPI ranking. You may remove KPIs unrelated to a criterion; removed KPIs are marked NA and simply skipped in the final scores.</p>
+        <p class="hint">Continue to Phase 2 when ready: score 13 performance indicators under each of your criteria (up to 39 quick comparisons per criterion when all KPIs are evaluated). Your Phase-1 weights are reused to compute the final KPI ranking. You may remove KPIs unrelated to a criterion; removed KPIs are marked NA and simply skipped in the final scores.</p>
         <div class="form-actions" style="justify-content:center">
           <button id="btn-phase2-finish" class="btn btn-secondary">Finish</button>
           <button id="btn-phase2-proceed" class="btn btn-primary">Proceed to Phase 2</button>
@@ -235,7 +235,7 @@
         <p class="hint">For each criterion, complete the guided comparisons between the KPIs. Remaining pairs are estimated for consistency (<span class="tag estimated">yellow</span>); click any matrix value to override (<span class="tag user">green</span> = your score).</p>
         <div id="phase2-tabs" class="phase2-tabs"></div>
         <div class="form-group">
-          <span class="label">KPIs evaluated under this criterion (uncheck KPIs not related to it; minimum 2)</span>
+          <span class="label">KPIs evaluated under this criterion (uncheck KPIs not related to it; minimum 2)</span> <button type="button" class="info-btn" data-info-key="phase2-na" aria-label="More information about marking KPIs as not applicable" title="More information">i</button>
           <div id="phase2-kpi-checklist" class="criteria-checklist"></div>
         </div>
         <h3>Priority tiers — how well does each KPI measure this criterion?</h3>
@@ -337,6 +337,16 @@
         <h2>Submission Failed</h2>
         <p id="error-message">An error occurred while saving your response.</p>
         <button id="btn-retry" class="btn btn-primary">Try Again</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="info-modal" class="info-modal hidden" role="dialog" aria-modal="true" aria-labelledby="info-modal-title">
+    <div class="info-modal-card">
+      <h3 id="info-modal-title"></h3>
+      <div id="info-modal-body"></div>
+      <div class="form-actions">
+        <button type="button" id="info-modal-close" class="btn btn-secondary">Close</button>
       </div>
     </div>
   </div>

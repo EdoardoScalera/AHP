@@ -1,0 +1,210 @@
+\begin{sidewaystable}[p]
+    \centering
+    \caption{KPI list: building energy performance, flexibility, RES penetration, reliability, indoor comfort, and economics.}
+    \label{tab:kpis_review}
+
+    \fontsize{9.5pt}{11pt}\selectfont
+    \setlength{\tabcolsep}{2pt}
+    \renewcommand{\arraystretch}{0.95}
+    \begin{tabularx}{\textheight}{%
+        >{\centering\arraybackslash}m{1.0cm}
+        >{\centering\arraybackslash}p{2.2cm}
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X
+        }
+        \hline
+        \textbf{Identifier} & \textbf{Indicator name} & \textbf{Description} & \textbf{Equation} & \textbf{Data required} & \textbf{References}\\
+        \hline
+        G1.1 & Primary energy {[}kWh/m$^2${]} &
+        Annual total primary energy at building level; measure of overall energy efficiency. &
+        \(\displaystyle E_{P,tot} = \sum_i \left(E_{\mathrm{ren},i} + E_{\mathrm{del},i} f_{\mathrm{del,tot},i} - E_{\mathrm{exp},i} f_{\mathrm{exp,tot},i}\right)\) &
+        Annual renewable energy produced on site or nearby by carrier ($E_{\mathrm{ren},i}$), annual delivered energy by carrier ($E_{\mathrm{del},i}$), primary energy factors ($f_{\mathrm{del,tot},i}$, $f_{\mathrm{exp,tot},i}$), annual exported energy by carrier ($E_{\mathrm{exp},i}$). \\
+        \hline
+        G2.1 & Demand Response {[}\%{]} &
+        Reduction of hourly power consumption achieved through demand response strategies (e.g., price signals, variable setpoints). &
+        \(\displaystyle P = P_{h,\mathrm{base}} - P_{h,\mathrm{LS}}\) &
+        Baseline hourly power consumption ($P_{h,\mathrm{base}}$) and hourly power consumption under DR profile ($P_{h,\mathrm{LS}}$). \\
+        \hline
+        G2.2 & Peak Load reduction {[}MW{]} &
+        Reduction in peak demand compared to baseline design capacity. &
+        \(\displaystyle \Delta P_{\mathrm{peak}} = P_{\mathrm{base,peak}} - P_{\mathrm{actual,peak}}\) &
+        Baseline peak load (design capacity) and actual measured peak demand over the evaluation period. \\
+        \hline
+        G2.4 & Energy Shift Flexibility Factor {[}\%{]} &
+        Flexibility of energy use with respect to electricity pricing periods; ratio of shifted energy between low- and high-price periods. &
+        \(\displaystyle FS=\frac{\int_{\mathrm{low}} q(t)\,dt - \int_{\mathrm{high}} q(t)\,dt}{\int_{\mathrm{low}} q(t)\,dt + \int_{\mathrm{high}} q(t)\,dt}\) &
+        Energy use or flow over time $q(t)$, and low-price/high-price period labels or time intervals. \\
+        \hline
+        G2.5 & Flexibility Factor {[}\%{]} &
+        Flexibility of energy use with respect to grid demand level; ratio of energy consumption in peak vs.\ off-peak periods. &
+        \(\displaystyle FF=\frac{\int_{\mathrm{off\text{-}peak}} q(t)\,dt - \int_{\mathrm{peak}} q(t)\,dt}{\int_{\mathrm{off\text{-}peak}} q(t)\,dt + \int_{\mathrm{peak}} q(t)\,dt}\) &
+        Relevant energy quantity over time $q(t)$, and peak/off-peak period definitions. \\
+        \hline
+        G2.11 & Grid Interaction Index {[}\%{]} &
+        Average grid stress, based on net grid metering relative to contractual grid power. &
+        \(\displaystyle f_{\mathrm{grid},i}=\frac{\mathrm{netgrid}_i}{P_{\mathrm{contract}}}\) &
+        Net grid metering over the evaluation period ($\mathrm{netgrid}_i$) and maximum nominal contractual grid power ($P_{\mathrm{contract}}$). \\
+        \hline
+        G2.12 & No Grid Interaction Probability {[}--{]} &
+        Probability that the building is acting autonomously of the grid over the evaluation period. &
+        \(\displaystyle P_{E\approx 0}=\frac{1}{\tau_2-\tau_1}\int_{\tau_1}^{\tau_2}\mathbf{1}\!\left(n_e(t)\approx 0\right)\,dt\) &
+        Normalized net exported energy $n_e(t)=(\text{export}-\text{import})/P_{\mathrm{contract}}$, energy delivered to meters, energy exported to grid, and evaluation period bounds $\tau_1, \tau_2$. \\
+        \hline
+        G2.15 & Energy Efficiency of DR Action {[}\%{]} &
+        Ratio between energy consumption during a DR event and baseline energy consumption, normalised by DR event duration. &
+        \(\displaystyle \eta_{\mathrm{ADR}} = \frac{Q_{\mathrm{adr}} - Q_{\mathrm{ref}}}{\mathrm{length}}\) &
+        Energy consumption during DR event ($Q_{\mathrm{adr}}$), baseline energy consumption ($Q_{\mathrm{ref}}$), and duration of the DR action. \\
+        \hline
+    \end{tabularx}
+\end{sidewaystable}
+
+%% =========================================================
+%% PAGE 2  –  G3 / G6  (RES penetration & reliability)
+%% =========================================================
+\begin{sidewaystable}[p]
+    \ContinuedFloat                          % same counter, no new LOT entry
+    \centering
+    \caption[]{KPI list (continued).}
+
+    \fontsize{9.5pt}{11pt}\selectfont
+    \setlength{\tabcolsep}{2pt}
+    \renewcommand{\arraystretch}{0.95}
+
+    \begin{tabularx}{\textheight}{%
+        >{\centering\arraybackslash}m{1.0cm}
+        >{\centering\arraybackslash}p{2.2cm}
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X}
+        \hline
+        \textbf{Identifier} & \textbf{Indicator name} & \textbf{Description} & \textbf{Equation} & \textbf{Data required} & \textbf{References}\\
+        \hline
+        G3.1 & Load Cover Factor {[}--{]} &
+        Percentage of load demand covered by on-site renewable generation, including storage effects and losses. &
+        \(\displaystyle \gamma_{\mathrm{load}}=\frac{\int_{\tau_1}^{\tau_2}\!\left(g(t)+S(t)-\zeta(t)\right)dt}{\int_{\tau_1}^{\tau_2} l(t)\,dt},\quad S(t)=S_c-S_{dc}\) &
+        On-site generation $g(t)$, storage charging $S_c$ and discharging $S_{dc}$, storage losses $\zeta(t)$, building load $l(t)$, and evaluation period bounds $\tau_1, \tau_2$. \\
+        \hline
+        G3.2 & RES Self-consumption / Supply Cover Factor {[}\%{]} &
+        Percentage of renewable generation that is instantaneously consumed on site. &
+        \(\displaystyle \phi_{\mathrm{SC}}=\frac{\int_{\tau_1}^{\tau_2} M(t)\,dt}{\int_{\tau_1}^{\tau_2} L(t)\,dt},\quad M(t)=\min\{L(t),P(t)\}\) &
+        Instantaneous building load $L(t)$, instantaneous on-site RES power generation $P(t)$, and evaluation period bounds $\tau_1, \tau_2$. \\
+        \hline
+        G3.7 & Load Matching Index {[}\%{]} &
+        Average coincidence between building load and on-site renewable generation across all time steps. &
+        \(\displaystyle f_{\mathrm{load}}=\frac{1}{N}\sum_{t=1}^{N}\frac{g(t)+S(t)-\zeta(t)}{l(t)}\) &
+        Local RES generation $g(t)$, storage energy balance $S(t)$, energy losses $\zeta(t)$, building load $l(t)$, number of samples $N$ (e.g.\ 8760 for hourly annual data), and data granularity. \\
+        \hline
+        G6.1 & SAIDI {[}h/year$\cdot$customer{]} &
+        Average total duration of supply interruptions experienced per customer per year. &
+        \(\displaystyle SAIDI=\frac{\sum_i N_i \, r_i}{N_T}\) &
+        Number of customers affected by each interruption ($N_i$), total average downtime per event ($r_i$ [h/year]), and total number of customers served ($N_T$). \\
+        \hline
+        G6.2 & SAIFI {[}failures/year$\cdot$customer{]} &
+        Total number of interruption events per customer in a calendar year. &
+        \(\displaystyle SAIFI=\frac{\sum_i \lambda_i N_i}{N_T}\) &
+        Average failure frequency per event ($\lambda_i$), number of customers affected ($N_i$), and total number of customers served ($N_T$). \\
+        \hline
+    \end{tabularx}
+\end{sidewaystable}
+
+%% =========================================================
+%% PAGE 3  –  G7  (indoor environmental quality)
+%% =========================================================
+\begin{sidewaystable}[p]
+    \ContinuedFloat
+    \centering
+    \caption[]{KPI list (continued).}
+
+    \fontsize{9.5pt}{11pt}\selectfont
+    \setlength{\tabcolsep}{2pt}
+    \renewcommand{\arraystretch}{0.95}
+
+    \begin{tabularx}{\textheight}{%
+        >{\centering\arraybackslash}m{1.0cm}
+        >{\centering\arraybackslash}p{2.2cm}
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X}
+        \hline
+        \textbf{Identifier} & \textbf{Indicator name} & \textbf{Description} & \textbf{Equation} & \textbf{Data required} & \textbf{References} \\
+        \hline
+        G7.1 & Thermal comfort: Predicted Mean Vote (PMV) {[}--{]} &
+        ISO~7730 index predicting the mean thermal sensation vote of a large group of persons; ranges from $-3$ (cold) to $+3$ (hot). &
+        \(\displaystyle PMV = f(M, W, t_a, \bar{t}_r, f_{cl}, h_c, p_a)\) &
+        Metabolic rate $M$, mechanical work rate $W$, air temperature $t_a$, mean radiant temperature $\bar{t}_r$, clothing area factor $f_{cl}$, convective heat transfer coefficient $h_c$, and water vapour pressure $p_a$. \\
+        \hline
+        G7.2 & Thermal comfort: Predicted Percentage Dissatisfied (PPD) {[}\%{]} &
+        Percentage of people predicted to be thermally dissatisfied; derived from PMV. &
+        \(\displaystyle PPD = 100 - 95\,\exp\!\left(-0.03353\,PMV^4 - 0.2179\,PMV^2\right)\) &
+        Predicted Mean Vote (PMV) from G7.1. \\
+        \hline
+        G7.3 & Indoor Overheating Degree {[}--{]} &
+        Degree-hours weighted measure of overheating across all occupied building zones. &
+        \(\displaystyle IOD = \frac{1}{Z}\sum_{z=1}^{Z}\frac{\sum_{i=1}^{N_{\mathrm{occ}}(z)}\max\!\left(0,\,T_{\mathrm{op},i,z}-T_{L,\mathrm{comf},i,z}\right)}{N_{\mathrm{occ}}(z)}\) &
+        Total number of zones $Z$, occupied hours per zone $N_{\mathrm{occ}}(z)$, operative temperature $T_{\mathrm{op},i,z}$, and upper comfort temperature limit $T_{L,\mathrm{comf},i,z}$. \\
+        \hline
+        G7.4 & Operative temperature {[}$^\circ$C{]} &
+        Combined index of air and radiant temperature weighted by heat transfer coefficients. &
+        \(\displaystyle T_o = \frac{h_r \bar{t}_r + h_c t_a}{h_r + h_c}\) &
+        Mean radiant temperature $\bar{t}_r$, air temperature $t_a$, radiant heat transfer coefficient $h_r$, convective heat transfer coefficient $h_c$, and room design data. \\
+        \hline
+        G7.6 & CO$_2$ concentration {[}ppm{]} &
+        Indoor CO$_2$ level as proxy for ventilation adequacy; calculated from occupancy and ventilation rates. &
+        \(\displaystyle C = \frac{q_{\mathrm{CO_2}} \cdot n_{\mathrm{occ}}}{q_s \cdot 0.8},\quad q_{\mathrm{sp}} = \frac{q_s}{n}\) &
+        CO$_2$ generation rate per person $q_{\mathrm{CO_2}}$ [L/h], ventilation rate $q_s$, ventilation rate per person $q_{\mathrm{sp}}$, and number of occupants $n$. \\
+        \hline
+        G7.7 & Indoor Climate Class (IDCC) {[}--{]} &
+        Classification of indoor climate based on equilibrium CO$_2$ concentration above ambient level. &
+        \(\displaystyle c^{*} = \frac{m}{L}\) &
+        Emissions from occupants $m$ [l/(s$\cdot$m$^2$)], total air flow $L$ [l/(s$\cdot$m$^2$)], and occupancy profile (static or dynamic). \\
+        \hline
+        G7.8 & Unified Glare Rating (UGR) {[}--{]} &
+        Measure of discomfort glare from luminaires in an interior, as defined by CIE. &
+        \(\displaystyle UGR = 8\log\!\left(\frac{0.25}{L_b}\sum_i \frac{L_i^2\,\omega_i}{P_i^2}\right)\) &
+        Background luminance $L_b$ [cd/m$^2$], luminance of each luminaire $L_i$ [cd/m$^2$], solid angle $\omega_i$ [sr], and position index $P_i$ for each luminaire. \\
+        \hline
+    \end{tabularx}
+\end{sidewaystable}
+
+%% =========================================================
+%% PAGE 4  –  G8  (economic performance)
+%% =========================================================
+\begin{sidewaystable}[p]
+    \ContinuedFloat
+    \centering
+    \caption[]{KPI list (continued).}
+
+    \fontsize{9.5pt}{11pt}\selectfont
+    \setlength{\tabcolsep}{2pt}
+    \renewcommand{\arraystretch}{0.95}
+
+    \begin{tabularx}{\textheight}{%
+        >{\centering\arraybackslash}m{1.0cm}
+        >{\centering\arraybackslash}p{2.2cm}
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X}
+        \hline
+        \textbf{Identifier} & \textbf{Indicator name} & \textbf{Description} & \textbf{Equation} & \textbf{Data required} & \textbf{References}\\
+        \hline
+        G8.1 & Investment cost {[}\euro{]} &
+        Capital expenditure (CAPEX) for the implementation of ENTRANCE technologies and solutions at the building or district level. &
+        --- &
+        Technology implementation costs (equipment, installation, commissioning). \\
+        \hline
+        G8.2 & Specific cost of flexibility {[}c\euro/kWh{]} &
+        Ratio between the extra cost incurred by load shifting and the amount of electricity shifted relative to the reference scenario. &
+        \(\displaystyle C_{\mathrm{sp}} = \frac{\Delta C}{|\Delta E|}\) &
+        Extra cost due to load shifting $\Delta C$ [c\euro] and amount of energy shifted from peak $\Delta E$ [kWh] compared to the reference scenario. \\
+        \hline
+        G8.3 & Flexibility Spread (Flexibility Saving Index) {[}\euro/kWh{]} &
+        Ratio expressing the economic convenience of flexible operations compared to the baseline scenario. &
+        \(\displaystyle FSI = \frac{\text{Cost of flexible operations}}{\text{Cost of baseline operations}}\) &
+        Operational costs before ENTRANCE actions (baseline) and operational costs after ENTRANCE actions (flexible scenario). \\
+        \hline
+    \end{tabularx}
+\end{sidewaystable}
