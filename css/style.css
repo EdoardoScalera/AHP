@@ -583,27 +583,21 @@ header h1 {
   border-color: var(--danger);
 }
 
-.criteria-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
-  font-size: 0.75rem;
+.contact-footer {
+  margin-top: 32px;
+  padding: 16px 8px 8px;
+  border-top: 1px solid #e0e0e0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #888;
 }
 
-.criteria-legend-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  background: var(--primary-light);
-  border-radius: 4px;
-  color: var(--primary);
+.contact-footer p {
+  margin: 0;
 }
 
-.criteria-legend-num {
-  font-weight: 700;
-  min-width: 18px;
+.contact-footer a {
+  color: #888;
 }
 
 /* CR Display */

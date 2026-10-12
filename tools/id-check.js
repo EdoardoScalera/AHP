@@ -8,7 +8,7 @@ const need = ['start-screen', 'start-form', 'identity-section', 'phases-section'
   'phase2-tier-col-C', 'phase2-crit-title', 'phase2-progress', 'phase2-bar-fill',
   'phase2-guided-card', 'phase2-qtext', 'phase2-suggest', 'phase2-hint', 'phase2-yes',
   'phase2-no', 'phase2-equal', 'phase2-scale-wrap', 'phase2-scale-label', 'phase2-scale',
-   'phase2-back', 'phase2-restart', 'phase2-done', 'phase2-legend', 'phase2-matrix',
+   'phase2-back', 'phase2-restart', 'phase2-done', 'phase2-matrix',
    'phase2-cr-value', 'phase2-cr-status', 'phase2-cr-bar-fill', 'phase2-prev',
    'phase2-next', 'phase2-ranking-empty', 'phase2-ranking-wrap', 'phase2-plot-canvas',
    'phase2-plot-cr', 'phase2-ranking-tbody', 'btn-phase2-save', 'btn-phase2-submit',

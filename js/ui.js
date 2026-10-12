@@ -130,7 +130,6 @@ const UI = (() => {
     criteria.forEach(c => { next[c.id] = tiers[c.id] && TIERS.includes(tiers[c.id]) ? tiers[c.id] : 'B'; });
     tiers = next;
     buildMatrixTable();
-    buildCriteriaLegend();
     renderTierBoard();
     updatePairSuggestions();
     Plot.clear();
@@ -220,14 +219,6 @@ const UI = (() => {
     });
   }
 
-  function buildCriteriaLegend() {
-    const container = document.getElementById('criteria-legend');
-    if (!container) return;
-    container.innerHTML = criteria.map((c, i) =>
-      `<span class="criteria-legend-item" title="${escapeHtml(c.name)}"><span class="criteria-legend-num">${i + 1}.</span>${escapeHtml(displayName(c))}${Info.button(`crit:${c.id}`, displayName(c))}</span>`
-    ).join('');
-  }
-
   function buildMatrixTable() {
     const n = criteria.length;
     matrix = Array(n).fill(null).map(() => Array(n).fill(1));
@@ -237,7 +228,7 @@ const UI = (() => {
     const thead = document.querySelector('#matrix-table thead tr');
     if (thead) {
       thead.innerHTML = '<th class="corner">Criteria</th>' +
-        criteria.map((c) => `<th title="${escapeHtml(c.name)}">${escapeHtml(displayName(c))}</th>`).join('');
+        criteria.map((c) => `<th title="${escapeHtml(c.name)}">${escapeHtml(displayName(c))}${Info.button(`crit:${c.id}`, displayName(c))}</th>`).join('');
     }
 
     const tbody = document.querySelector('#matrix-table tbody');

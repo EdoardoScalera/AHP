@@ -310,13 +310,6 @@ const Phase2 = (() => {
 
     renderGuidedCard();
 
-    const legend = document.getElementById('phase2-legend');
-    if (legend) {
-      legend.innerHTML = ids.map(id => {
-        const k = indicatorById(id);
-        return `<span class="criteria-legend-item" title="${escapeHtml(k.code + ' — ' + k.description)}"><span class="criteria-legend-num">${escapeHtml(k.code)}</span>${escapeHtml(k.name)}${Info.button(`kpi:${k.id}`, k.name)}</span>`;
-      }).join('');
-    }
     renderMatrix();
     renderCriterionCR();
     const prev = document.getElementById('phase2-prev');
@@ -406,7 +399,7 @@ const Phase2 = (() => {
     thead.innerHTML = '<th class="corner">KPI</th>' +
       ids.map(id => {
         const k = indicatorById(id);
-        return `<th title="${escapeHtml(k.code + ' — ' + k.name)}">${escapeHtml(k.code)}</th>`;
+        return `<th title="${escapeHtml(k.code + ' — ' + k.name)}">${escapeHtml(k.code)}${Info.button(`kpi:${k.id}`, k.name)}</th>`;
       }).join('');
     tbody.innerHTML = ids.map((id, i) => {
       const k = indicatorById(id);

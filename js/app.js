@@ -165,7 +165,7 @@ async function handleSubmit(data) {
       // Scenario C: transition screen, then Phase 2 on Phase-1 criteria.
       const detail = document.getElementById('phase2-invite-detail');
       if (detail) {
-        detail.textContent = 'Phase-1 response saved. Continue when ready — your answers are kept in this browser.';
+        detail.textContent = 'Phase-1 response saved. Continue when ready.';
       }
       UI.showScreen('phase2-invite-screen');
     } else {
