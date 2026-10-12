@@ -31,7 +31,7 @@ const Plot = (() => {
 
     const crEl = document.getElementById('plot-cr');
     if (crEl && typeof cr === 'number') {
-      crEl.textContent = `Consistency ratio: ${cr.toFixed(4)} ${consistent ? '(acceptable)' : '(exceeds 0.10 — flagged for analysis)'}`;
+      crEl.textContent = `Consistency ratio: ${(cr * 100).toFixed(1)}% ${consistent ? '(acceptable)' : '(exceeds 10% — flagged for analysis)'}`;
     }
 
     if (!available()) return;

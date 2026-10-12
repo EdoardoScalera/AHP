@@ -86,6 +86,8 @@ check('data: indicators.json has 14 unique KPIs (real-14-v1)', () => {
   assert(JSON.stringify(groups) === JSON.stringify(['G1', 'G1', 'G2', 'G2', 'G2', 'G3', 'G3', 'G4', 'G5', 'G5', 'G6', 'G6', 'G6', 'G6']), `groups: ${groups}`);
   assert(new Set(data.indicators.map(k => k.id)).size === 14, 'ids unique');
   assert(new Set(data.indicators.map(k => k.code)).size === 14, 'codes unique');
+  const iod = data.indicators.find(k => k.id === 'indoor_overheating_degree');
+  assert(iod && iod.name.includes('[°Ch]'), 'IOD unit should be [°Ch]');
 });
 
 // 7. End-to-end math simulation: 2 criteria x 7 KPIs -> Pi sums to 1

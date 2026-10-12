@@ -555,11 +555,11 @@ const Phase2 = (() => {
       return;
     }
     const cr = st.result.CR;
-    vEl.textContent = `CR: ${cr.toFixed(4)}`;
+    vEl.textContent = `CR: ${(cr * 100).toFixed(1)}%`;
     vEl.className = `cr-value ${st.result.consistent ? 'acceptable' : 'unacceptable'}`;
     sEl.textContent = st.result.consistent
-      ? '✓ Acceptable (CR ≤ 0.10)'
-      : '✗ Exceeds 0.10 — you can still continue (flagged for analysis)';
+      ? '✓ Acceptable (CR ≤ 10%)'
+      : '✗ Exceeds 10% — you can still continue (flagged for analysis)';
     bar.style.width = `${Math.min(100, (cr / 0.2) * 100)}%`;
     bar.className = `cr-bar-fill ${st.result.consistent ? '' : 'unacceptable'}`;
   }
@@ -617,8 +617,8 @@ const Phase2 = (() => {
     ).join('');
     const bad = criteria.filter(c => state[c.id] && state[c.id].result && !state[c.id].result.consistent).length;
     if (crEl) crEl.textContent = bad
-      ? `${bad} of ${criteria.length} KPI matrices exceed CR 0.10 (flagged, submission still allowed).`
-      : `All completed KPI matrices are consistent (CR ≤ 0.10).`;
+      ? `${bad} of ${criteria.length} KPI matrices exceed CR 10% (flagged, submission still allowed).`
+      : `All completed KPI matrices are consistent (CR ≤ 10%).`;
     const canvas = document.getElementById('phase2-plot-canvas');
     if (canvas && typeof window !== 'undefined' && window.Chart) {
       if (chart) { chart.destroy(); chart = null; }

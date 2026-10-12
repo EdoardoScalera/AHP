@@ -95,7 +95,7 @@
     {
       "id": "indoor_overheating_degree",
       "code": "G5.2",
-      "name": "Indoor Overheating Degree [--]",
+      "name": "Indoor Overheating Degree [°Ch]",
       "group": "G5",
       "groupName": "Indoor environmental quality",
       "description": "Degree-hours weighted measure of overheating across all occupied building zones.",

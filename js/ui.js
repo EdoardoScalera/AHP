@@ -770,12 +770,12 @@ const UI = (() => {
     const cr = result.CR;
     const percent = Math.min(100, (cr / 0.2) * 100);
 
-    crValue.textContent = `CR: ${cr.toFixed(4)}`;
+    crValue.textContent = `CR: ${(cr * 100).toFixed(1)}%`;
     crValue.className = `cr-value ${result.consistent ? 'acceptable' : 'unacceptable'}`;
-    // Warn-but-allow: never disable submit for CR>0.10 (frozen decision).
+    // Warn-but-allow: never disable submit for CR>10% (frozen decision).
     crStatus.textContent = result.consistent
-      ? '✓ Consistency is acceptable (CR ≤ 0.10)'
-      : '✗ CR exceeds 0.10 — consider revising, but you can still submit (flagged for analysis)';
+      ? '✓ Consistency is acceptable (CR ≤ 10%)'
+      : '✗ CR exceeds 10% — consider revising, but you can still submit (flagged for analysis)';
     crBarFill.style.width = `${percent}%`;
     crBarFill.className = `cr-bar-fill ${result.consistent ? '' : 'unacceptable'}`;
     submitBtn.disabled = criteria.length < MIN_N;
