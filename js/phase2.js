@@ -813,7 +813,7 @@ const Phase2 = (() => {
       };
     });
     return {
-      indicatorSet: 'real-13-v1',
+      indicatorSet: 'real-14-v1',
       indicatorIds: indicators.map(k => k.id),
       criteriaIds: criteria.map(c => c.id),
       criteriaWeights: [...criteriaWeights],
@@ -842,7 +842,7 @@ const Phase2 = (() => {
       };
     });
     return {
-      indicatorSet: 'real-13-v1',
+      indicatorSet: 'real-14-v1',
       criteriaIds: criteria.map(c => c.id),
       current,
       state: dump
