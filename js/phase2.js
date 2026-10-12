@@ -565,7 +565,7 @@ const Phase2 = (() => {
         } catch (e) { prov = null; }
       }
       if (!prov) { showBlank(); return; }
-      vEl.textContent = `CR: ${(prov.CR * 100).toFixed(1)}% (preliminary)`;
+      vEl.textContent = `CR: ${(prov.CR * 100).toFixed(1)}%`;
       vEl.className = `cr-value ${prov.consistent ? 'acceptable' : 'unacceptable'}`;
       sEl.textContent = prov.consistent
         ? '✓ Acceptable (CR ≤ 10%)'
@@ -639,11 +639,9 @@ const Phase2 = (() => {
       : `<tr><td>—</td><td>${escapeHtml(r.kpi.name)} <span class="hint">${escapeHtml(r.kpi.code)}</span></td><td>NA</td><td>0/${q} (not evaluated)</td></tr>`
     ).join('');
     const bad = criteria.filter(c => state[c.id] && state[c.id].result && !state[c.id].result.consistent).length;
-    const doneCount = criteria.filter(c => state[c.id] && state[c.id].result).length;
-    const prelim = doneCount < criteria.length ? ` (preliminary — ${doneCount} of ${criteria.length} criteria)` : '';
     if (crEl) crEl.textContent = bad
-      ? `${bad} of ${criteria.length} KPI matrices exceed CR 10% (flagged, submission still allowed).${prelim}`
-      : `All completed KPI matrices are consistent (CR ≤ 10%).${prelim}`;
+      ? `${bad} of ${criteria.length} KPI matrices exceed CR 10% (flagged, submission still allowed).`
+      : `All completed KPI matrices are consistent (CR ≤ 10%).`;
     const canvas = document.getElementById('phase2-plot-canvas');
     if (canvas && typeof window !== 'undefined' && window.Chart) {
       if (chart) { chart.destroy(); chart = null; }

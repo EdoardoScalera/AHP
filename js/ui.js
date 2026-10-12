@@ -490,15 +490,14 @@ const UI = (() => {
     return true;
   }
 
-  function renderPlot(matrixOverride, provisional = false) {
+  function renderPlot(matrixOverride) {
     try {
       const full = AHP.calculateAll(matrixOverride || matrix);
       Plot.render(
         criteria.map(displayName),
         full.weights,
         full.CR,
-        full.consistent,
-        provisional
+        full.consistent
       );
     } catch (e) {
       console.warn('Plot render failed:', e);
@@ -666,8 +665,8 @@ const UI = (() => {
       if (onMatrixChange) onMatrixChange(null);
       const prov = provisionalResult();
       if (prov) {
-        updateCRDisplay(prov, true);
-        renderPlot(prov.matrix, true);
+        updateCRDisplay(prov);
+        renderPlot(prov.matrix);
       } else {
         Plot.clear();
       }
@@ -750,8 +749,8 @@ const UI = (() => {
       }
       const prov = provisionalResult();
       if (prov) {
-        updateCRDisplay(prov, true);
-        renderPlot(prov.matrix, true);
+        updateCRDisplay(prov);
+        renderPlot(prov.matrix);
       } else {
         Plot.clear();
       }
@@ -775,7 +774,7 @@ const UI = (() => {
     }
   }
 
-  function updateCRDisplay(result, provisional = false) {
+  function updateCRDisplay(result) {
     const crValue = document.getElementById('cr-value');
     const crStatus = document.getElementById('cr-status');
     const crBarFill = document.getElementById('cr-bar-fill');
@@ -799,7 +798,7 @@ const UI = (() => {
     const cr = result.CR;
     const percent = Math.min(100, (cr / 0.2) * 100);
 
-    crValue.textContent = `CR: ${(cr * 100).toFixed(1)}%${provisional ? ' (preliminary)' : ''}`;
+    crValue.textContent = `CR: ${(cr * 100).toFixed(1)}%`;
     crValue.className = `cr-value ${result.consistent ? 'acceptable' : 'unacceptable'}`;
     // Warn-but-allow: never disable submit for CR>10% (frozen decision).
     crStatus.textContent = result.consistent

@@ -20,7 +20,7 @@ const Plot = (() => {
     ).join('');
   }
 
-  function render(labels, weights, cr, consistent, provisional = false) {
+  function render(labels, weights, cr, consistent) {
     const empty = document.getElementById('plot-empty');
     const wrap = document.getElementById('plot-wrap');
     if (!wrap) return;
@@ -31,7 +31,7 @@ const Plot = (() => {
 
     const crEl = document.getElementById('plot-cr');
     if (crEl && typeof cr === 'number') {
-      crEl.textContent = `Consistency ratio: ${(cr * 100).toFixed(1)}%${provisional ? ' (preliminary)' : ''} ${consistent ? '(acceptable)' : '(exceeds 10% — flagged for analysis)'}`;
+      crEl.textContent = `Consistency ratio: ${(cr * 100).toFixed(1)}% ${consistent ? '(acceptable)' : '(exceeds 10% — flagged for analysis)'}`;
     }
 
     if (!available()) return;
