@@ -1039,6 +1039,14 @@ const UI = (() => {
     if (!el) return;
     el.classList.remove('hidden');
     el.classList.add('active');
+    // Secondary title beneath the survey header: phase name only.
+    const phaseTitle = document.getElementById('phase-title');
+    if (phaseTitle) {
+      const title = screenId === 'survey-screen' ? 'Criteria scoring'
+        : screenId === 'phase2-screen' ? 'Indicator scoring' : '';
+      phaseTitle.textContent = title;
+      phaseTitle.classList.toggle('hidden', !title);
+    }
   }
 
   function showSuccess(detail) {

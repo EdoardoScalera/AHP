@@ -34,8 +34,8 @@ const Phase2 = (() => {
     Info.registerCriteria(criteria);
     Info.registerKpis(indicators);
     Info.register('phase2-na', 'What does N/A mean?', [
-      'Marking a KPI as not applicable under a criterion means it cannot be meaningfully compared there — not that it is the worst option.',
-      'An N/A KPI simply receives no score under that criterion: its final score is averaged only over the criteria where it was evaluated.'
+      'Marking a KPI as not applicable under a criterion means it cannot be meaningfully compared, not that it is the worst option.',
+      'The final indicator score is averaged only over the criteria where it was evaluated.'
     ]);
     onSubmit = opts.onSubmit || null;
     onSaveDraft = opts.onSaveDraft || null;

@@ -57,6 +57,13 @@ header h1 {
   margin-top: 6px;
 }
 
+.phase-title {
+  color: var(--primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
 .screen {
   display: none;
 }

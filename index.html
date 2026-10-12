@@ -13,6 +13,7 @@
     <header>
       <h1>Analytic Hierarchy Process Survey</h1>
       <p class="subtitle">ENTRANCE Horizon EU — KPI Selection for Building Renovation</p>
+      <h2 id="phase-title" class="phase-title hidden"></h2>
     </header>
 
     <div id="password-screen" class="screen active">
@@ -94,14 +95,9 @@
 
     <div id="survey-screen" class="screen hidden">
       <form id="survey-form" novalidate>
-        <section id="criteria-intro" class="card">
-          <h2>Criteria scoring</h2>
-          <p class="hint">Assess the importance of decision criteria.</p>
-        </section>
-
         <section id="criteria-section" class="card">
           <h2>Decision Criteria</h2>
-          <p class="hint">Uncheck any criterion you don't think is relevant. Optionally add missing criteria.</p>
+          <p class="hint">To assess the importance of decision criteria, start by unchecking any criterion you don't think is relevant for building operations and when planning a renovation. Optionally add missing criteria.</p>
           <div id="criteria-checklist" class="criteria-checklist"></div>
           <div class="form-group">
             <label for="input-custom-criterion">Important criteria not in our list? (optional)</label>
@@ -235,15 +231,14 @@
 
     <div id="phase2-screen" class="screen hidden">
       <section class="card">
-        <h2>Indicator Scoring</h2>
         <p class="hint">Score performance indicators relatively to each criterion. You may remove KPIs unrelated to a criterion; if applicable, responses from Phase-1 are used to compute the final KPI ranking, otherwise equal weight is assigned to all criteria.</p>
-        <div id="phase2-tabs" class="phase2-tabs"></div>
       </section>
 
       <section class="card">
         <h2>Performance indicators</h2>
         <div class="form-group">
-          <span class="label">KPIs evaluated under this criterion (uncheck KPIs not related to it; minimum 2)</span> <button type="button" class="info-btn" data-info-key="phase2-na" aria-label="More information about marking KPIs as not applicable" title="More information">i</button>
+          <span class="label">Uncheck indicators not related to this criterion; select a minimum of 2 indicators <button type="button" class="info-btn" data-info-key="phase2-na" aria-label="More information about marking KPIs as not applicable" title="More information">i</button></span>
+          <div id="phase2-tabs" class="phase2-tabs"></div>
           <div id="phase2-kpi-checklist" class="criteria-checklist"></div>
         </div>
       </section>
