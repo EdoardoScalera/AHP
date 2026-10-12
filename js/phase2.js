@@ -659,7 +659,7 @@ const Phase2 = (() => {
     if (!btn) return;
     const doneCount = criteria.filter(c => isCriterionComplete(state[c.id])).length;
     btn.disabled = !isAllComplete();
-    btn.textContent = isAllComplete() ? 'Submit Phase 2' : `Submit Phase 2 (${doneCount}/${criteria.length} criteria)`;
+    btn.textContent = isAllComplete() ? 'Submit indicators grading' : `Submit indicators grading (${doneCount}/${criteria.length} criteria)`;
   }
 
   // ---------- events (attached once) ----------
@@ -791,7 +791,7 @@ const Phase2 = (() => {
 
   function handleSubmit() {
     if (!isAllComplete()) {
-      alert('Please complete all criteria (guided questions for each tab) before submitting Phase 2.');
+      alert('Please complete all criteria (guided questions for each tab) before submitting indicators grading.');
       return;
     }
     if (onSubmit) onSubmit(buildPayload());
@@ -869,7 +869,7 @@ const Phase2 = (() => {
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(getDraft()));
     } catch (e) { /* noop */ }
-    if (announce) alert('Phase-2 draft saved locally in this browser');
+    if (announce) alert('Indicators grading draft saved locally in this browser');
   }
 
   function loadDraft() {

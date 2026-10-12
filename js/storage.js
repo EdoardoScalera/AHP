@@ -96,7 +96,7 @@ const Storage = (() => {
     // Scenario C links to the Phase-1 submission; scenario B (Phase 2 only)
     // carries a client-generated responseId with phase1Skipped: true.
     if (!data.phase1SubmissionId && !(data.phase1Skipped === true && data.responseId)) {
-      throw new Error('Phase-1 submission link is missing. Please complete Phase 1 first.');
+      throw new Error('Criteria priorities link is missing. Please complete that part first.');
     }
     const payload = {
       accessCode,
@@ -133,7 +133,7 @@ const Storage = (() => {
 
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(result.error || `Phase-2 submission failed (${response.status})`);
+      throw new Error(result.error || `Indicators grading submission failed (${response.status})`);
     }
     return { success: true, submissionId: result.submissionId, message: result.message };
   }

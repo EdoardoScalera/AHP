@@ -165,13 +165,13 @@ async function handleSubmit(data) {
       // Scenario C: transition screen, then Phase 2 on Phase-1 criteria.
       const detail = document.getElementById('phase2-invite-detail');
       if (detail) {
-        detail.textContent = 'Phase-1 response saved. Continue when ready.';
+        detail.textContent = 'Criteria priorities saved. Continue when ready.';
       }
       UI.showScreen('phase2-invite-screen');
     } else {
       // Scenario A: done after Phase 1.
       Auth.clearPassword();
-      UI.showSuccess('Phase-1 response submitted. Thank you!');
+      UI.showSuccess('Criteria priorities submitted. Thank you!');
     }
   } catch (error) {
     console.error('Submission error:', error);
@@ -188,14 +188,14 @@ function wireTransition() {
   if (finish) {
     finish.addEventListener('click', () => {
       Auth.clearPassword();
-      UI.showSuccess('Phase-1 response submitted. Thank you!');
+      UI.showSuccess('Criteria priorities submitted. Thank you!');
       phase1Link = null;
     });
   }
   if (proceed) {
     proceed.addEventListener('click', async () => {
       if (!phase1Link) {
-        alert('Phase-1 link missing. Please submit Phase 1 first.');
+        alert('Criteria priorities data missing. Please submit that part first.');
         UI.showScreen('survey-screen');
         return;
       }
@@ -216,7 +216,7 @@ function wireTransition() {
         alert('Could not load indicators: ' + e.message);
       }
       proceed.disabled = false;
-      proceed.textContent = 'Proceed to Phase 2';
+      proceed.textContent = 'Proceed to Indicators grading';
     });
   }
 }
@@ -226,7 +226,7 @@ async function handlePhase2Submit(phase2payload) {
   const btn = document.getElementById('btn-phase2-submit');
   btn.disabled = true;
   const prev = btn.textContent;
-  btn.textContent = 'Submitting Phase 2...';
+  btn.textContent = 'Submitting indicators grading...';
 
   const accessCode = Auth.getAccessCode ? Auth.getAccessCode() : Auth.getPassword();
   if (!accessCode || !startIdentity) {
@@ -264,7 +264,7 @@ async function handlePhase2Submit(phase2payload) {
     Auth.clearPassword();
     phase1Link = null;
     standaloneResponseId = null;
-    UI.showSuccess('Phase-2 response submitted. Thank you!');
+    UI.showSuccess('Indicators grading submitted. Thank you!');
   } catch (error) {
     console.error('Phase-2 submission error:', error);
     alert(error.message);

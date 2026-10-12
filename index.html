@@ -78,12 +78,12 @@
 
         <section id="phases-section" class="card">
           <h2>Survey Phases</h2>
-          <p class="hint">Choose which parts to complete. Phase 1 scores the decision criteria (~10 min). Phase 2 scores 14 performance indicators under each criterion (optional; the number of questions depends on how many KPIs you keep per criterion).</p>
+          <p class="hint">Choose which parts to complete. Define criteria priorities (~10 min): score the decision criteria. Grade performance indicators (optional): score 14 performance indicators under each criterion; the number of questions depends on how many KPIs you keep per criterion.</p>
           <div class="form-group">
-            <label><input type="checkbox" id="input-phase1-select" checked> Phase 1 — Criteria priorities</label>
+            <label><input type="checkbox" id="input-phase1-select" checked> Define criteria priorities</label>
           </div>
           <div class="form-group">
-            <label><input type="checkbox" id="input-phase2-select" checked> Phase 2 — Indicator scoring (optional)</label>
+            <label><input type="checkbox" id="input-phase2-select" checked> Grade performance indicators (optional)</label>
           </div>
           <p id="start-error" class="error hidden">Please select at least one phase.</p>
           <div class="form-actions">
@@ -219,23 +219,20 @@
 
     <div id="phase2-invite-screen" class="screen hidden">
       <div class="card success">
-        <h2>Thank You — Phase 1 Submitted!</h2>
+        <h2>Thank You — Criteria priorities submitted!</h2>
         <p id="phase2-invite-detail"></p>
-        <p class="hint">Continue to Phase 2: score performance indicators under each criterion. Expected completion time 20-30min.</p>
+        <p class="hint">Continue to Indicators grading: score performance indicators under each criterion. Expected completion time 20-30min.</p>
         <div class="form-actions" style="justify-content:center">
           <button id="btn-phase2-finish" class="btn btn-secondary">Finish</button>
-          <button id="btn-phase2-proceed" class="btn btn-primary">Proceed to Phase 2</button>
+          <button id="btn-phase2-proceed" class="btn btn-primary">Proceed to Indicators grading</button>
         </div>
       </div>
     </div>
 
     <div id="phase2-screen" class="screen hidden">
       <section class="card">
-        <p class="hint">Score performance indicators relatively to each criterion. You may remove KPIs unrelated to a criterion; if applicable, responses from Phase-1 are used to compute the final KPI ranking, otherwise equal weight is assigned to all criteria.</p>
-      </section>
-
-      <section class="card">
         <h2>Performance indicators</h2>
+        <p class="hint">Score performance indicators relatively to each criterion. You may remove KPIs unrelated to a criterion; if applicable, responses from Criteria priorities are used to compute the final KPI ranking, otherwise equal weight is assigned to all criteria.</p>
         <div class="form-group">
           <span class="label">Uncheck indicators not related to this criterion; select a minimum of 2 indicators <button type="button" class="info-btn" data-info-key="phase2-na" aria-label="More information about marking KPIs as not applicable" title="More information">i</button></span>
           <div id="phase2-tabs" class="phase2-tabs"></div>
@@ -332,8 +329,8 @@
       </section>
 
       <div class="form-actions">
-        <button type="button" id="btn-phase2-save" class="btn btn-secondary">Save Phase-2 Draft</button>
-        <button type="button" id="btn-phase2-submit" class="btn btn-primary" disabled>Submit Phase 2</button>
+        <button type="button" id="btn-phase2-save" class="btn btn-secondary">Save indicators grading draft</button>
+        <button type="button" id="btn-phase2-submit" class="btn btn-primary" disabled>Submit indicators grading</button>
       </div>
     </div>
 
