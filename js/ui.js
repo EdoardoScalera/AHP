@@ -490,14 +490,15 @@ const UI = (() => {
     return true;
   }
 
-  function renderPlot() {
+  function renderPlot(matrixOverride, provisional = false) {
     try {
-      const full = AHP.calculateAll(matrix);
+      const full = AHP.calculateAll(matrixOverride || matrix);
       Plot.render(
         criteria.map(displayName),
         full.weights,
         full.CR,
-        full.consistent
+        full.consistent,
+        provisional
       );
     } catch (e) {
       console.warn('Plot render failed:', e);
@@ -662,8 +663,14 @@ const UI = (() => {
       runCompletion();
     } else {
       updateMatrixDisplay();
-      Plot.clear();
       if (onMatrixChange) onMatrixChange(null);
+      const prov = provisionalResult();
+      if (prov) {
+        updateCRDisplay(prov, true);
+        renderPlot(prov.matrix, true);
+      } else {
+        Plot.clear();
+      }
     }
     renderGuided();
   }
@@ -738,15 +745,37 @@ const UI = (() => {
       runCompletion();
     } else {
       updateMatrixDisplay();
-      Plot.clear();
       if (onMatrixChange) {
         onMatrixChange(null);
+      }
+      const prov = provisionalResult();
+      if (prov) {
+        updateCRDisplay(prov, true);
+        renderPlot(prov.matrix, true);
+      } else {
+        Plot.clear();
       }
     }
     renderGuided();
   }
 
-  function updateCRDisplay(result) {
+  // Live provisional scores from the current (possibly partial) answers.
+  // LLS-completes a COPY: estimates never leak into the visible matrix,
+  // so the remaining guided answers stay unbiased.
+  function provisionalResult() {
+    if (criteria.length < MIN_N) return null;
+    const known = guidedKnownPairs();
+    if (!known.length) return null;
+    try {
+      const done = AHP.completeIncomplete(known, criteria.length);
+      const full = AHP.calculateAll(done.matrix);
+      return { ...full, matrix: done.matrix };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function updateCRDisplay(result, provisional = false) {
     const crValue = document.getElementById('cr-value');
     const crStatus = document.getElementById('cr-status');
     const crBarFill = document.getElementById('cr-bar-fill');
@@ -770,7 +799,7 @@ const UI = (() => {
     const cr = result.CR;
     const percent = Math.min(100, (cr / 0.2) * 100);
 
-    crValue.textContent = `CR: ${(cr * 100).toFixed(1)}%`;
+    crValue.textContent = `CR: ${(cr * 100).toFixed(1)}%${provisional ? ' (preliminary)' : ''}`;
     crValue.className = `cr-value ${result.consistent ? 'acceptable' : 'unacceptable'}`;
     // Warn-but-allow: never disable submit for CR>10% (frozen decision).
     crStatus.textContent = result.consistent

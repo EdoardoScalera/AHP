@@ -205,6 +205,33 @@ check('data: criteria + indicators carry info overlay text', () => {
   });
 });
 
+// 14. Partial pair sets complete to valid reciprocal matrices (live provisional CR).
+check('phase2: partial LLS completion is valid (1 and 3 pairs, n=7)', () => {
+  for (const known of [
+    [{ i: 0, j: 1, value: 3 }],
+    [{ i: 0, j: 1, value: 3 }, { i: 2, j: 5, value: 1 / 5 }, { i: 3, j: 4, value: 7 }]
+  ]) {
+    const done = AHP.completeIncomplete(known, 7);
+    assert(done.matrix.length === 7, 'matrix 7x7');
+    for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) {
+      assert(Math.abs(done.matrix[i][j] - 1 / done.matrix[j][i]) < 1e-9, 'reciprocal');
+      assert(done.matrix[i][j] >= 1 / 9 - 1e-9 && done.matrix[i][j] <= 9 + 1e-9, 'range');
+    }
+    const r = AHP.calculateAll(done.matrix);
+    assert(isFinite(r.CR) && r.CR >= 0 && r.CR <= 1, `CR should be in [0,1], got ${r.CR}`);
+    assert(Math.abs(r.weights.reduce((a, b) => a + b, 0) - 1) < 1e-9, 'weights sum 1');
+  }
+});
+
+// 15. Partial-criteria global synthesis renormalizes over completed criteria.
+check('phase2: live ranking over a subset of criteria', () => {
+  // Second criterion not yet completed (all null) -> scores from the first only.
+  const g = AHP.calculateGlobalPriorities([0.6, 0.4], [[0.5, 0.5], [null, null]]);
+  assert(Math.abs(g.scores[0] - 0.5) < 1e-9 && Math.abs(g.scores[1] - 0.5) < 1e-9, `scores should be [0.5,0.5], got ${g.scores}`);
+  const rc = g.ranking.find((r) => r.index === 0);
+  assert(rc.scored && rc.evaluatedIn === 1 && Math.abs(rc.weightBase - 0.6) < 1e-9, 'coverage metadata');
+});
+
 if (failures) {  console.error(`\n${failures} check(s) FAILED`);
   process.exit(1);
 } else {

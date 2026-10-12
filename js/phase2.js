@@ -541,17 +541,37 @@ const Phase2 = (() => {
   }
 
   function renderCriterionCR() {
-    const st = curState();
+    const c = cur(), st = curState();
     const vEl = document.getElementById('phase2-cr-value');
     const sEl = document.getElementById('phase2-cr-status');
     const bar = document.getElementById('phase2-cr-bar-fill');
     if (!vEl || !sEl || !bar) return;
-    if (!st || !st.result) {
+    const showBlank = () => {
       vEl.textContent = 'CR: —';
       vEl.className = 'cr-value';
       sEl.textContent = 'Answer the guided questions (or fill the matrix) to see consistency.';
       bar.style.width = '0%';
       bar.className = 'cr-bar-fill';
+    };
+    if (!st || !st.result) {
+      // Live provisional CR from the current (possibly partial) answers.
+      // Completes a copy only: estimates never leak into the visible matrix.
+      let prov = null;
+      if (c && st && knownPairs(st).length) {
+        try {
+          const m = evalIds(c.id).length;
+          const done = AHP.completeIncomplete(knownPairs(st), m);
+          prov = AHP.calculateAll(done.matrix);
+        } catch (e) { prov = null; }
+      }
+      if (!prov) { showBlank(); return; }
+      vEl.textContent = `CR: ${(prov.CR * 100).toFixed(1)}% (preliminary)`;
+      vEl.className = `cr-value ${prov.consistent ? 'acceptable' : 'unacceptable'}`;
+      sEl.textContent = prov.consistent
+        ? '✓ Acceptable (CR ≤ 10%)'
+        : '✗ Exceeds 10% — you can still continue (flagged for analysis)';
+      bar.style.width = `${Math.min(100, (prov.CR / 0.2) * 100)}%`;
+      bar.className = `cr-bar-fill ${prov.consistent ? '' : 'unacceptable'}`;
       return;
     }
     const cr = st.result.CR;
@@ -580,10 +600,13 @@ const Phase2 = (() => {
 
   function globalScores() {
     if (!criteria.length || !indicators.length) return null;
-    for (const c of criteria) {
+    // Live from the first completed criterion: incomplete criteria contribute
+    // nulls, which the per-KPI renormalization averages out (same NA math).
+    const anyDone = criteria.some(c => {
       const st = state[c.id];
-      if (!st || !st.result) return null;
-    }
+      return st && st.result;
+    });
+    if (!anyDone) return null;
     try {
       return AHP.calculateGlobalPriorities(criteriaWeights, scoresPerCriterion());
     } catch (e) {
@@ -601,7 +624,7 @@ const Phase2 = (() => {
     if (!g) {
       if (empty) {
         empty.classList.remove('hidden');
-        empty.textContent = 'Complete all criteria to see the final ranking.';
+        empty.textContent = 'Complete at least one criterion to see the ranking.';
       }
       if (wrap) wrap.classList.add('hidden');
       if (chart) { chart.destroy(); chart = null; }
@@ -616,9 +639,11 @@ const Phase2 = (() => {
       : `<tr><td>—</td><td>${escapeHtml(r.kpi.name)} <span class="hint">${escapeHtml(r.kpi.code)}</span></td><td>NA</td><td>0/${q} (not evaluated)</td></tr>`
     ).join('');
     const bad = criteria.filter(c => state[c.id] && state[c.id].result && !state[c.id].result.consistent).length;
+    const doneCount = criteria.filter(c => state[c.id] && state[c.id].result).length;
+    const prelim = doneCount < criteria.length ? ` (preliminary — ${doneCount} of ${criteria.length} criteria)` : '';
     if (crEl) crEl.textContent = bad
-      ? `${bad} of ${criteria.length} KPI matrices exceed CR 10% (flagged, submission still allowed).`
-      : `All completed KPI matrices are consistent (CR ≤ 10%).`;
+      ? `${bad} of ${criteria.length} KPI matrices exceed CR 10% (flagged, submission still allowed).${prelim}`
+      : `All completed KPI matrices are consistent (CR ≤ 10%).${prelim}`;
     const canvas = document.getElementById('phase2-plot-canvas');
     if (canvas && typeof window !== 'undefined' && window.Chart) {
       if (chart) { chart.destroy(); chart = null; }
