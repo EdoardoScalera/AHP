@@ -1,4 +1,6 @@
 // P4 results plot (Chart.js CDN with table fallback; view-only, never blocks submit).
+import { colorsFor } from './palette.js';
+
 const Plot = (() => {
   let chart = null;
 
@@ -42,13 +44,19 @@ const Plot = (() => {
       chart.destroy();
       chart = null;
     }
+    // One categorical colour per bar, assigned by sorted rank (rank 1 ->
+    // PALETTE[0]). Custom criteria are included in `rows` like any other
+    // criterion, so they simply take the colour of their rank position.
+    const barColors = colorsFor(rows.length);
     chart = new window.Chart(canvas, {
       type: 'bar',
       data: {
         labels: rows.map(r => r.label),
         datasets: [{
           data: rows.map(r => Number((r.weight * 100).toFixed(1))),
-          backgroundColor: '#1a5c8a',
+          backgroundColor: barColors,
+          borderColor: barColors,
+          borderWidth: 1,
           borderRadius: 4
         }]
       },
@@ -72,6 +80,31 @@ const Plot = (() => {
         }
       }
     });
+    setDownloadEnabled(true);
+  }
+
+  function setDownloadEnabled(enabled) {
+    const btn = document.getElementById('btn-download-plot');
+    if (btn) btn.disabled = !enabled;
+  }
+
+  // Export the canvas as PNG (transparent background). Returns false when
+  // there is nothing to download (e.g. Chart.js unavailable).
+  function download(filename = 'criteria-priorities.png') {
+    if (!chart) return false;
+    try {
+      const url = chart.toBase64Image('image/png', 1);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      return true;
+    } catch (e) {
+      console.warn('Plot PNG download failed:', e);
+      return false;
+    }
   }
 
   function clear() {
@@ -79,6 +112,7 @@ const Plot = (() => {
       chart.destroy();
       chart = null;
     }
+    setDownloadEnabled(false);
     const empty = document.getElementById('plot-empty');
     const wrap = document.getElementById('plot-wrap');
     if (empty) empty.classList.remove('hidden');
@@ -89,7 +123,7 @@ const Plot = (() => {
     return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   }
 
-  return { available, render, clear };
+  return { available, render, clear, download };
 })();
 
 if (typeof module !== 'undefined' && module.exports) {

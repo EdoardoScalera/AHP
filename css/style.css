@@ -458,6 +458,17 @@ header h1 {
   height: 100% !important;
 }
 
+.plot-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 4px 0 12px;
+}
+
+.plot-actions .btn {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+}
+
 .plot-table {
   width: 100%;
   border-collapse: collapse;

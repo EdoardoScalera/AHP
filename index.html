@@ -203,6 +203,9 @@
           <div id="plot-wrap" class="hidden">
             <div class="plot-canvas-wrap"><canvas id="plot-canvas"></canvas></div>
             <p class="hint" id="plot-cr"></p>
+            <div class="plot-actions">
+              <button type="button" id="btn-download-plot" class="btn btn-secondary" disabled>Download PNG</button>
+            </div>
             <table class="plot-table">
               <thead><tr><th>Criterion</th><th>Weight</th></tr></thead>
               <tbody id="plot-tbody"></tbody>
@@ -321,6 +324,9 @@
         <div id="phase2-ranking-wrap" class="hidden">
           <div class="plot-canvas-wrap"><canvas id="phase2-plot-canvas"></canvas></div>
           <p class="hint" id="phase2-plot-cr"></p>
+          <div class="plot-actions">
+            <button type="button" id="btn-download-phase2-plot" class="btn btn-secondary" disabled>Download PNG</button>
+          </div>
           <table class="plot-table">
             <thead><tr><th>Rank</th><th>KPI</th><th>Global score</th><th>Evaluated in</th></tr></thead>
             <tbody id="phase2-ranking-tbody"></tbody>

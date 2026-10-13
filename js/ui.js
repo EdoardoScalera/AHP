@@ -367,6 +367,8 @@ const UI = (() => {
     });
     document.getElementById('guided-review-exit').addEventListener('click', exitGuidedReview);
     document.getElementById('btn-save-draft').addEventListener('click', handleSaveDraft);
+    const dlPlotBtn = document.getElementById('btn-download-plot');
+    if (dlPlotBtn) dlPlotBtn.addEventListener('click', () => Plot.download());
     document.getElementById('survey-form').addEventListener('submit', e => e.preventDefault());
     document.getElementById('btn-new-response').addEventListener('click', resetForm);
     document.getElementById('btn-retry').addEventListener('click', () => showScreen('survey-screen'));

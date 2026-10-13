@@ -10,6 +10,7 @@
 import { AHP } from './ahp-core.js';
 import { Guided } from './guided.js';
 import { Info } from './info.js';
+import { colorsFor } from './palette.js';
 
 const Phase2 = (() => {
   const DIVISOR = 4;
@@ -621,6 +622,7 @@ const Phase2 = (() => {
       }
       if (wrap) wrap.classList.add('hidden');
       if (chart) { chart.destroy(); chart = null; }
+      setDownloadEnabled(false);
       return;
     }
     if (empty) empty.classList.add('hidden');
@@ -639,11 +641,14 @@ const Phase2 = (() => {
     if (canvas && typeof window !== 'undefined' && window.Chart) {
       if (chart) { chart.destroy(); chart = null; }
       const scored = rows.filter(r => r.scored);
+      // One categorical colour per bar, assigned by global rank (rank 1 ->
+      // PALETTE[0]), matching the Phase-1 plot convention.
+      const barColors = colorsFor(scored.length);
       chart = new window.Chart(canvas, {
         type: 'bar',
         data: {
           labels: scored.map(r => `${r.kpi.code} ${r.kpi.name}`),
-          datasets: [{ data: scored.map(r => Number((r.score * 100).toFixed(1))), backgroundColor: '#1a5c8a', borderRadius: 4 }]
+          datasets: [{ data: scored.map(r => Number((r.score * 100).toFixed(1))), backgroundColor: barColors, borderColor: barColors, borderWidth: 1, borderRadius: 4 }]
         },
         options: {
           indexAxis: 'y', responsive: true, maintainAspectRatio: false,
@@ -651,6 +656,30 @@ const Phase2 = (() => {
           scales: { x: { beginAtZero: true, ticks: { callback: v => `${v}%` } } }
         }
       });
+      setDownloadEnabled(true);
+    }
+  }
+
+  function setDownloadEnabled(enabled) {
+    const btn = document.getElementById('btn-download-phase2-plot');
+    if (btn) btn.disabled = !enabled;
+  }
+
+  // Export the ranking canvas as PNG (transparent background).
+  function downloadRanking(filename = 'kpi-ranking.png') {
+    if (!chart) return false;
+    try {
+      const url = chart.toBase64Image('image/png', 1);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      return true;
+    } catch (e) {
+      console.warn('Phase-2 PNG download failed:', e);
+      return false;
     }
   }
 
@@ -780,6 +809,8 @@ const Phase2 = (() => {
       persistDraft(true);
       if (onSaveDraft) onSaveDraft(getDraft());
     });
+    const dlBtn = document.getElementById('btn-download-phase2-plot');
+    if (dlBtn) dlBtn.addEventListener('click', () => downloadRanking());
   }
 
   function choose(dir) {
@@ -920,6 +951,7 @@ const Phase2 = (() => {
     criteria.forEach(c => { state[c.id] = freshCriterionState([]); });
     current = 0;
     if (chart) { chart.destroy(); chart = null; }
+    setDownloadEnabled(false);
     renderAll();
   }
 
@@ -928,7 +960,7 @@ const Phase2 = (() => {
   }
 
   return {
-    init, isAllComplete, buildPayload, reset, clearDraft,
+    init, isAllComplete, buildPayload, reset, clearDraft, downloadRanking,
     DIVISOR, MIN_EVAL
   };
 })();
