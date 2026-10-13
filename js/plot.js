@@ -1,8 +1,10 @@
 // P4 results plot (Chart.js CDN with table fallback; view-only, never blocks submit).
 import { colorsFor } from './palette.js';
+import { exportBarPng, triggerDownload } from './plot-export.js';
 
 const Plot = (() => {
   let chart = null;
+  let lastExport = null; // { labels, values, colors, crText } for 3x PNG export
 
   function available() {
     return typeof window !== 'undefined' && typeof window.Chart !== 'undefined';
@@ -30,10 +32,13 @@ const Plot = (() => {
     wrap.classList.remove('hidden');
 
     renderTable(labels, weights);
+    lastExport = null;
 
     const crEl = document.getElementById('plot-cr');
+    let crText = '';
     if (crEl && typeof cr === 'number') {
-      crEl.textContent = `Consistency ratio: ${(cr * 100).toFixed(1)}% ${consistent ? '(acceptable)' : '(exceeds 10% — flagged for analysis)'}`;
+      crText = `Consistency ratio: ${(cr * 100).toFixed(1)}% ${consistent ? '(acceptable)' : '(exceeds 10% — flagged for analysis)'}`;
+      crEl.textContent = crText;
     }
 
     if (!available()) return;
@@ -48,6 +53,12 @@ const Plot = (() => {
     // PALETTE[0]). Custom criteria are included in `rows` like any other
     // criterion, so they simply take the colour of their rank position.
     const barColors = colorsFor(rows.length);
+    lastExport = {
+      labels: rows.map(r => r.label),
+      values: rows.map(r => Number((r.weight * 100).toFixed(1))),
+      colors: [...barColors],
+      crText
+    };
     chart = new window.Chart(canvas, {
       type: 'bar',
       data: {
@@ -88,18 +99,20 @@ const Plot = (() => {
     if (btn) btn.disabled = !enabled;
   }
 
-  // Export the canvas as PNG (transparent background). Returns false when
-  // there is nothing to download (e.g. Chart.js unavailable).
+  // High-resolution PNG export: re-renders off-screen at 3x (axes, bars,
+  // end-of-bar scores, CR footer; transparent background). Falls back to the
+  // on-screen canvas snapshot when there is no stored render.
   function download(filename = 'criteria-priorities.png') {
-    if (!chart) return false;
     try {
-      const url = chart.toBase64Image('image/png', 1);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      if (lastExport) {
+        const url = exportBarPng(lastExport);
+        if (url) {
+          triggerDownload(url, filename);
+          return true;
+        }
+      }
+      if (!chart) return false;
+      triggerDownload(chart.toBase64Image('image/png', 1), filename);
       return true;
     } catch (e) {
       console.warn('Plot PNG download failed:', e);
@@ -112,6 +125,7 @@ const Plot = (() => {
       chart.destroy();
       chart = null;
     }
+    lastExport = null;
     setDownloadEnabled(false);
     const empty = document.getElementById('plot-empty');
     const wrap = document.getElementById('plot-wrap');

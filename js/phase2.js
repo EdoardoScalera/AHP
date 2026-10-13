@@ -11,6 +11,7 @@ import { AHP } from './ahp-core.js';
 import { Guided } from './guided.js';
 import { Info } from './info.js';
 import { colorsFor } from './palette.js';
+import { exportBarPng, triggerDownload } from './plot-export.js';
 
 const Phase2 = (() => {
   const DIVISOR = 4;
@@ -26,6 +27,7 @@ const Phase2 = (() => {
   let onSubmit = null;
   let onSaveDraft = null;
   let chart = null;
+  let lastExport = null; // { labels, values, colors, crText } for 3x PNG export
 
   function init(opts) {
     indicators = opts.indicators || [];
@@ -622,11 +624,13 @@ const Phase2 = (() => {
       }
       if (wrap) wrap.classList.add('hidden');
       if (chart) { chart.destroy(); chart = null; }
+      lastExport = null;
       setDownloadEnabled(false);
       return;
     }
     if (empty) empty.classList.add('hidden');
     if (wrap) wrap.classList.remove('hidden');
+    lastExport = null;
     const rows = g.ranking.map(r => ({ ...r, kpi: indicators[r.index] }));
     const q = criteria.length;
     tbody.innerHTML = rows.map(r => r.scored
@@ -634,9 +638,10 @@ const Phase2 = (() => {
       : `<tr><td>—</td><td>${escapeHtml(r.kpi.name)} <span class="hint">${escapeHtml(r.kpi.code)}</span></td><td>NA</td><td>0/${q} (not evaluated)</td></tr>`
     ).join('');
     const bad = criteria.filter(c => state[c.id] && state[c.id].result && !state[c.id].result.consistent).length;
-    if (crEl) crEl.textContent = bad
+    const crText = bad
       ? `${bad} of ${criteria.length} KPI matrices exceed CR 10% (flagged, submission still allowed).`
       : `All completed KPI matrices are consistent (CR ≤ 10%).`;
+    if (crEl) crEl.textContent = crText;
     const canvas = document.getElementById('phase2-plot-canvas');
     if (canvas && typeof window !== 'undefined' && window.Chart) {
       if (chart) { chart.destroy(); chart = null; }
@@ -644,6 +649,12 @@ const Phase2 = (() => {
       // One categorical colour per bar, assigned by global rank (rank 1 ->
       // PALETTE[0]), matching the Phase-1 plot convention.
       const barColors = colorsFor(scored.length);
+      lastExport = {
+        labels: scored.map(r => `${r.kpi.code} ${r.kpi.name}`),
+        values: scored.map(r => Number((r.score * 100).toFixed(1))),
+        colors: [...barColors],
+        crText
+      };
       chart = new window.Chart(canvas, {
         type: 'bar',
         data: {
@@ -665,17 +676,20 @@ const Phase2 = (() => {
     if (btn) btn.disabled = !enabled;
   }
 
-  // Export the ranking canvas as PNG (transparent background).
+  // High-resolution PNG export: re-renders off-screen at 3x (axes, bars,
+  // end-of-bar scores, CR footer; transparent background). Falls back to the
+  // on-screen canvas snapshot when there is no stored render.
   function downloadRanking(filename = 'kpi-ranking.png') {
-    if (!chart) return false;
     try {
-      const url = chart.toBase64Image('image/png', 1);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      if (lastExport) {
+        const url = exportBarPng(lastExport);
+        if (url) {
+          triggerDownload(url, filename);
+          return true;
+        }
+      }
+      if (!chart) return false;
+      triggerDownload(chart.toBase64Image('image/png', 1), filename);
       return true;
     } catch (e) {
       console.warn('Phase-2 PNG download failed:', e);
@@ -951,6 +965,7 @@ const Phase2 = (() => {
     criteria.forEach(c => { state[c.id] = freshCriterionState([]); });
     current = 0;
     if (chart) { chart.destroy(); chart = null; }
+    lastExport = null;
     setDownloadEnabled(false);
     renderAll();
   }
