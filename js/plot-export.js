@@ -9,8 +9,9 @@ const EXPORT_SCALE = 3;
 const EXPORT_WIDTH = 900; // CSS px -> ~2700 backing px at 3x
 
 function exportHeight(n) {
-  // Taller canvas for many bars (Phase 2: up to 14 KPIs) so bars stay legible.
-  return Math.min(1000, Math.max(420, 140 + n * 48));
+  // Tall canvas with airy spacing so thin bars don't crowd the labels.
+  // 7 bars -> 660px; 14 KPIs -> 1150px.
+  return Math.min(1200, Math.max(450, 170 + n * 70));
 }
 
 // Exact score at the end of each bar, e.g. "23.4%".
@@ -86,7 +87,11 @@ function exportBarPng({ labels, values, colors, crText }) {
           backgroundColor: [...colors],
           borderColor: [...colors],
           borderWidth: 1,
-          borderRadius: 4
+          borderRadius: 6,
+          // Slim bars with breathing room: ~0.385 of the category slot
+          // (≈45% thinner than Chart.js defaults), so labels dominate.
+          categoryPercentage: 0.55,
+          barPercentage: 0.7
         }]
       },
       options: {
