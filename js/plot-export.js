@@ -23,7 +23,7 @@ function dataLabelsPlugin(values) {
       const ctx = chart.ctx;
       ctx.save();
       ctx.fillStyle = '#212121';
-      ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'left';
       meta.data.forEach((bar, i) => {
@@ -45,8 +45,8 @@ function crFooterPlugin(crText) {
       if (!area) return;
       const ctx = chart.ctx;
       ctx.save();
-      ctx.fillStyle = '#666666';
-      ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = '#333333';
+      ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'left';
       ctx.fillText(crText, area.left, area.bottom + 24);
@@ -94,7 +94,7 @@ function exportBarPng({ labels, values, colors, crText }) {
         responsive: false,
         animation: false,
         devicePixelRatio: EXPORT_SCALE,
-        layout: { padding: { top: 8, right: 64, bottom: 36, left: 8 } },
+        layout: { padding: { top: 8, right: 80, bottom: 44, left: 8 } },
         plugins: {
           legend: { display: false },
           title: { display: false },
@@ -103,11 +103,11 @@ function exportBarPng({ labels, values, colors, crText }) {
         scales: {
           x: {
             beginAtZero: true,
-            suggestedMax: maxV * 1.22,
-            ticks: { callback: v => `${v}%` }
+            suggestedMax: maxV * 1.28,
+            ticks: { callback: v => `${v}%`, font: { size: 13 }, color: '#333333' }
           },
           y: {
-            ticks: { autoSkip: false }
+            ticks: { autoSkip: false, font: { size: 15, weight: '500' }, color: '#212121' }
           }
         }
       },
