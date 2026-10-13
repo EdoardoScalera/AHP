@@ -9,9 +9,9 @@ const EXPORT_SCALE = 3;
 const EXPORT_WIDTH = 900; // CSS px -> ~2700 backing px at 3x
 
 function exportHeight(n) {
-  // Tall canvas with airy spacing so thin bars don't crowd the labels.
-  // 7 bars -> 660px; 14 KPIs -> 1150px.
-  return Math.min(1200, Math.max(450, 170 + n * 70));
+  // Screen-like density (~46px per bar incl. axes): the proportions of the
+  // on-screen chart that read well. 7 bars -> 432px; 14 KPIs -> 754px.
+  return Math.min(800, Math.max(380, 110 + n * 46));
 }
 
 // Exact score at the end of each bar, e.g. "23.4%".
@@ -24,7 +24,7 @@ function dataLabelsPlugin(values) {
       const ctx = chart.ctx;
       ctx.save();
       ctx.fillStyle = '#212121';
-      ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'left';
       meta.data.forEach((bar, i) => {
@@ -47,10 +47,10 @@ function crFooterPlugin(crText) {
       const ctx = chart.ctx;
       ctx.save();
       ctx.fillStyle = '#333333';
-      ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'left';
-      ctx.fillText(crText, area.left, area.bottom + 24);
+      ctx.fillText(crText, area.left, area.bottom + 26);
       ctx.restore();
     }
   };
@@ -87,11 +87,7 @@ function exportBarPng({ labels, values, colors, crText }) {
           backgroundColor: [...colors],
           borderColor: [...colors],
           borderWidth: 1,
-          borderRadius: 6,
-          // Slim bars with breathing room: ~0.385 of the category slot
-          // (≈45% thinner than Chart.js defaults), so labels dominate.
-          categoryPercentage: 0.55,
-          barPercentage: 0.7
+          borderRadius: 4
         }]
       },
       options: {
@@ -99,7 +95,7 @@ function exportBarPng({ labels, values, colors, crText }) {
         responsive: false,
         animation: false,
         devicePixelRatio: EXPORT_SCALE,
-        layout: { padding: { top: 8, right: 80, bottom: 44, left: 8 } },
+        layout: { padding: { top: 8, right: 90, bottom: 44, left: 8 } },
         plugins: {
           legend: { display: false },
           title: { display: false },
@@ -108,17 +104,22 @@ function exportBarPng({ labels, values, colors, crText }) {
         scales: {
           x: {
             beginAtZero: true,
-            suggestedMax: maxV * 1.28,
-            ticks: { callback: v => `${v}%`, font: { size: 13 }, color: '#333333' }
+            suggestedMax: maxV * 1.3,
+            ticks: { callback: v => `${v}%`, font: { size: 14 }, color: '#333333' }
           },
           y: {
-            ticks: { autoSkip: false, font: { size: 15, weight: '500' }, color: '#212121' }
+            ticks: { autoSkip: false, font: { size: 17, weight: '600' }, color: '#1a1a1a' }
           }
         }
       },
       plugins: [dataLabelsPlugin(values), crFooterPlugin(crText)]
     });
     url = tmp.toBase64Image('image/png', 1);
+    // Debug aid: expected backing size for 7 bars is 2700x~1296. If the
+    // downloaded PNG differs, devicePixelRatio is not applying (report it).
+    if (typeof console !== 'undefined' && console.debug) {
+      console.debug(`[plot-export] backing px: ${canvas.width}x${canvas.height} for ${n} bars`);
+    }
     tmp.destroy();
   } finally {
     canvas.remove();
