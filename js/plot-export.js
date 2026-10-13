@@ -9,9 +9,9 @@ const EXPORT_SCALE = 3;
 const EXPORT_WIDTH = 900; // CSS px -> ~2700 backing px at 3x
 
 function exportHeight(n) {
-  // Screen-like density (~46px per bar incl. axes): the proportions of the
-  // on-screen chart that read well. 7 bars -> 432px; 14 KPIs -> 754px.
-  return Math.min(800, Math.max(380, 110 + n * 46));
+  // Near-screen density (~40px per bar incl. axes). 7 bars -> 380px;
+  // 14 KPIs -> 660px.
+  return Math.min(700, Math.max(360, 100 + n * 40));
 }
 
 // Exact score at the end of each bar, e.g. "23.4%".
@@ -36,7 +36,8 @@ function dataLabelsPlugin(values) {
   };
 }
 
-// CR footer line (verbatim on-page wording), bottom-left below the axes.
+// CR footer line (verbatim on-page wording), beneath the entire x-axis
+// (axis line + tick labels), bottom-left of the canvas.
 function crFooterPlugin(crText) {
   return {
     id: 'export-cr-footer',
@@ -50,7 +51,7 @@ function crFooterPlugin(crText) {
       ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'left';
-      ctx.fillText(crText, area.left, area.bottom + 26);
+      ctx.fillText(crText, area.left, chart.height - 10);
       ctx.restore();
     }
   };
@@ -65,8 +66,12 @@ function exportBarPng({ labels, values, colors, crText }) {
   const maxV = Math.max(...values, 1);
 
   const canvas = document.createElement('canvas');
-  canvas.width = cssWidth * EXPORT_SCALE;
-  canvas.height = cssHeight * EXPORT_SCALE;
+  // Logical size only: Chart.js applies devicePixelRatio itself and owns the
+  // high-resolution backing store (900 logical px -> 2700 backing px at 3x).
+  // Never pre-multiply here, or Chart.js treats the oversized buffer as its
+  // logical drawing area and text renders tiny relative to the bars.
+  canvas.width = cssWidth;
+  canvas.height = cssHeight;
   canvas.style.width = `${cssWidth}px`;
   canvas.style.height = `${cssHeight}px`;
   // Off-screen but attached: Chart.js needs layout against a sized box.
@@ -77,8 +82,9 @@ function exportBarPng({ labels, values, colors, crText }) {
   document.body.appendChild(canvas);
 
   let url = null;
+  let tmp = null;
   try {
-    const tmp = new window.Chart(canvas, {
+    tmp = new window.Chart(canvas, {
       type: 'bar',
       data: {
         labels: [...labels],
@@ -95,7 +101,7 @@ function exportBarPng({ labels, values, colors, crText }) {
         responsive: false,
         animation: false,
         devicePixelRatio: EXPORT_SCALE,
-        layout: { padding: { top: 8, right: 90, bottom: 44, left: 8 } },
+        layout: { padding: { top: 8, right: 90, bottom: 52, left: 8 } },
         plugins: {
           legend: { display: false },
           title: { display: false },
@@ -115,13 +121,16 @@ function exportBarPng({ labels, values, colors, crText }) {
       plugins: [dataLabelsPlugin(values), crFooterPlugin(crText)]
     });
     url = tmp.toBase64Image('image/png', 1);
-    // Debug aid: expected backing size for 7 bars is 2700x~1296. If the
-    // downloaded PNG differs, devicePixelRatio is not applying (report it).
+    // Debug aid: Chart.js scales the logical canvas itself, so this must read
+    // 2700x~1140 for 7 bars. Anything else means devicePixelRatio did not
+    // apply (report it).
     if (typeof console !== 'undefined' && console.debug) {
       console.debug(`[plot-export] backing px: ${canvas.width}x${canvas.height} for ${n} bars`);
     }
-    tmp.destroy();
   } finally {
+    if (tmp) {
+      try { tmp.destroy(); } catch (e) { /* noop */ }
+    }
     canvas.remove();
   }
   return url;
