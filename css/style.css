@@ -675,6 +675,10 @@ header h1 {
   margin-top: 8px;
 }
 
+.form-actions .push-left {
+  margin-right: auto;
+}
+
 .btn {
   padding: 12px 24px;
   border: none;
@@ -791,6 +795,40 @@ header h1 {
   font-size: 1rem;
   color: var(--primary);
   margin: 12px 0 8px;
+}
+
+/* Criterion-in-object highlight in the guided question */
+.crit-highlight {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  padding: 1px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+/* Vertical Phase-2 matrix column headers: code + (i) stay horizontal on
+   top, the full indicator name runs bottom-to-top below, keeping columns
+   narrow while showing full names. */
+#phase2-matrix thead th {
+  min-width: 48px;
+  max-width: 64px;
+  vertical-align: bottom;
+  padding: 8px 4px;
+}
+
+#phase2-matrix thead th .vhead-top {
+  display: block;
+  white-space: nowrap;
+}
+
+#phase2-matrix thead th .vhead-name {
+  display: block;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  margin: 6px auto 0;
+  max-height: 240px;
+  overflow: hidden;
+  font-weight: 500;
 }
 
 @media (max-width: 600px) {

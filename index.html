@@ -265,11 +265,11 @@
       <section class="card">
         <h2>Guided Comparisons</h2>
         <h3 id="phase2-crit-title"></h3>
+        <p class="hint">How well does each performance indicator measure this criterion? Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.</p>
         <p class="hint" id="phase2-progress"></p>
         <div class="guided-bar"><div class="guided-bar-fill" id="phase2-bar-fill"></div></div>
         <div id="phase2-guided-card">
           <p id="phase2-qtext" class="guided-q"></p>
-          <p class="hint">Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.</p>
           <p class="hint" id="phase2-suggest"></p>
           <p class="hint" id="phase2-hint"></p>
           <div class="guided-choices">
@@ -288,6 +288,9 @@
         </div>
         <div id="phase2-done" class="hidden">
           <p>All guided comparisons for this criterion answered. Review the matrix below — <span class="tag user">green</span> = your judgment, <span class="tag estimated">yellow</span> = estimated.</p>
+          <div class="form-actions">
+            <button type="button" id="phase2-restart-done" class="btn btn-secondary">Restart this criterion</button>
+          </div>
         </div>
       </section>
 
@@ -312,6 +315,7 @@
           </div>
         </div>
         <div class="form-actions">
+          <button type="button" id="phase2-restart-matrix" class="btn btn-secondary push-left">Restart this criterion</button>
           <button type="button" id="phase2-prev" class="btn btn-secondary">Previous criterion</button>
           <button type="button" id="phase2-next" class="btn btn-secondary">Next criterion</button>
         </div>

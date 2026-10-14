@@ -301,7 +301,7 @@ const Phase2 = (() => {
       return;
     }
     const ids = evalIds(c.id);
-    if (title) title.innerHTML = `${current + 1}. ${escapeHtml(c.name)} ${Info.button(`crit:${c.id}`, c.name)} — how well does each evaluated KPI measure this criterion?`;
+    if (title) title.innerHTML = `${current + 1}. ${escapeHtml(c.name)} ${Info.button(`crit:${c.id}`, c.name)}`;
     const m = st.order.length;
     if (progress) progress.textContent = `Criterion ${current + 1} of ${criteria.length} — evaluating ${ids.length} of ${indicators.length} KPI`;
     if (barFill) barFill.style.width = `${m ? Math.round((Math.min(st.idx, m) / m) * 100) : 0}%`;
@@ -333,11 +333,10 @@ const Phase2 = (() => {
       const pair = st.order[st.idx];
       const a = indicatorById(pair[0]);
       const b = indicatorById(pair[1]);
-      const range = Guided.suggestedRange(st.tiers[pair[0]] || 'B', st.tiers[pair[1]] || 'B');
       document.getElementById('phase2-qtext').innerHTML =
-        `Which KPI better measures <strong>${escapeHtml(c.name)}</strong>: <strong>${escapeHtml(a.name)}</strong> or <strong>${escapeHtml(b.name)}</strong>?`;
+        `Which KPI better measures <span class="crit-highlight"><strong>${escapeHtml(c.name)}</strong></span>: <strong>${escapeHtml(a.name)}</strong> or <strong>${escapeHtml(b.name)}</strong>?`;
       document.getElementById('phase2-suggest').textContent =
-        `Suggested range from tiers (${st.tiers[pair[0]] || 'B'} vs ${st.tiers[pair[1]] || 'B'}): ${range}. Equal = 1.`;
+        'Recommended scores are highlighted for ensuring consistency (non-binding).';
       const hintEl = document.getElementById('phase2-hint');
       const idx = st.ids;
       const implied = Guided.impliedValue(idx.indexOf(pair[0]), idx.indexOf(pair[1]), knownPairs(st), idx.length);
@@ -392,11 +391,11 @@ const Phase2 = (() => {
     thead.innerHTML = '<th class="corner">KPI</th>' +
       ids.map(id => {
         const k = indicatorById(id);
-        return `<th title="${escapeHtml(k.code + ' — ' + k.name)}">${escapeHtml(k.code)}${Info.button(`kpi:${k.id}`, k.name)}</th>`;
+        return `<th title="${escapeHtml(k.code + ' — ' + k.name)}"><span class="vhead-top">${escapeHtml(k.code)}${Info.button(`kpi:${k.id}`, k.name)}</span><span class="vhead-name">${escapeHtml(k.name)}</span></th>`;
       }).join('');
     tbody.innerHTML = ids.map((id, i) => {
       const k = indicatorById(id);
-      const row = [`<th title="${escapeHtml(k.name)}">${escapeHtml(k.code)} ${escapeHtml(k.name)}</th>`];
+      const row = [`<th title="${escapeHtml(k.name)}">${escapeHtml(k.code)} ${escapeHtml(k.name)}${Info.button(`kpi:${k.id}`, k.name)}</th>`];
       for (let j = 0; j < m; j++) {
         if (i === j) {
           row.push('<td class="diagonal">1.00</td>');
@@ -795,13 +794,11 @@ const Phase2 = (() => {
       const st = curState();
       if (st && st.idx > 0) { st.idx -= 1; st.choice = null; renderAll(); }
     });
-    document.getElementById('phase2-restart').addEventListener('click', () => {
-      const c = cur();
-      if (!c) return;
-      resetAnswers(state[c.id], evalIds(c.id));
-      renderAll();
-      persistDraft();
-    });
+    document.getElementById('phase2-restart').addEventListener('click', restartCriterion);
+    const restartDone = document.getElementById('phase2-restart-done');
+    if (restartDone) restartDone.addEventListener('click', restartCriterion);
+    const restartMatrix = document.getElementById('phase2-restart-matrix');
+    if (restartMatrix) restartMatrix.addEventListener('click', restartCriterion);
     document.getElementById('phase2-prev').addEventListener('click', () => {
       if (current > 0) { current -= 1; renderAll(); }
     });
@@ -815,6 +812,14 @@ const Phase2 = (() => {
     });
     const dlBtn = document.getElementById('btn-download-phase2-plot');
     if (dlBtn) dlBtn.addEventListener('click', () => downloadRanking());
+  }
+
+  function restartCriterion() {
+    const c = cur();
+    if (!c) return;
+    resetAnswers(state[c.id], evalIds(c.id));
+    renderAll();
+    persistDraft();
   }
 
   function choose(dir) {
