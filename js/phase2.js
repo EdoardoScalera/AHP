@@ -293,15 +293,13 @@ const Phase2 = (() => {
 
   function renderCriterionPanel() {
     const c = cur(), st = curState();
-    const title = document.getElementById('phase2-crit-title');
     const progress = document.getElementById('phase2-progress');
     const barFill = document.getElementById('phase2-bar-fill');
     if (!c || !st) {
-      if (title) title.textContent = 'No criteria available';
+      if (progress) progress.textContent = 'No criteria available';
       return;
     }
     const ids = evalIds(c.id);
-    if (title) title.innerHTML = `${current + 1}. ${escapeHtml(c.name)} ${Info.button(`crit:${c.id}`, c.name)}`;
     const m = st.order.length;
     if (progress) progress.textContent = `Criterion ${current + 1} of ${criteria.length} — evaluating ${ids.length} of ${indicators.length} KPI`;
     if (barFill) barFill.style.width = `${m ? Math.round((Math.min(st.idx, m) / m) * 100) : 0}%`;
@@ -334,7 +332,7 @@ const Phase2 = (() => {
       const a = indicatorById(pair[0]);
       const b = indicatorById(pair[1]);
       document.getElementById('phase2-qtext').innerHTML =
-        `Which KPI better measures <span class="crit-highlight"><strong>${escapeHtml(c.name)}</strong></span>: <strong>${escapeHtml(a.name)}</strong> or <strong>${escapeHtml(b.name)}</strong>?`;
+        `Which KPI better measures <span class="crit-highlight"><strong>${escapeHtml(c.name)}</strong>${Info.button(`crit:${c.id}`, c.name)}</span>: <strong>${escapeHtml(a.name)}</strong> or <strong>${escapeHtml(b.name)}</strong>?`;
       document.getElementById('phase2-suggest').textContent =
         'Recommended scores are highlighted for ensuring consistency (non-binding).';
       const hintEl = document.getElementById('phase2-hint');
@@ -391,7 +389,7 @@ const Phase2 = (() => {
     thead.innerHTML = '<th class="corner">KPI</th>' +
       ids.map(id => {
         const k = indicatorById(id);
-        return `<th title="${escapeHtml(k.code + ' — ' + k.name)}"><span class="vhead-top">${escapeHtml(k.code)}${Info.button(`kpi:${k.id}`, k.name)}</span><span class="vhead-name">${escapeHtml(k.name)}</span></th>`;
+        return `<th title="${escapeHtml(k.code + ' — ' + k.name)}"><span class="vhead-name">${escapeHtml(k.name)}</span><span class="vhead-top">${escapeHtml(k.code)}${Info.button(`kpi:${k.id}`, k.name)}</span></th>`;
       }).join('');
     tbody.innerHTML = ids.map((id, i) => {
       const k = indicatorById(id);

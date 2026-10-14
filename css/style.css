@@ -791,12 +791,6 @@ header h1 {
   background: var(--success-light);
 }
 
-#phase2-crit-title {
-  font-size: 1rem;
-  color: var(--primary);
-  margin: 12px 0 8px;
-}
-
 /* Criterion-in-object highlight in the guided question */
 .crit-highlight {
   background: var(--primary-light);
@@ -825,7 +819,7 @@ header h1 {
   display: block;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
-  margin: 6px auto 0;
+  margin: 0 auto 8px;
   max-height: 240px;
   overflow: hidden;
   font-weight: 500;
