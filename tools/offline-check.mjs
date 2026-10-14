@@ -78,9 +78,9 @@ check('ahp-core: completeIncomplete 6 pairs -> 7x7', () => {
 });
 
 // 6. indicators.json: 14 unique real KPIs (G1x2, G2x3, G3x2, G4x1, G5x2, G6x4)
-check('data: indicators.json has 14 unique KPIs (real-14-v1)', () => {
+check('data: indicators.json has 14 unique KPIs (real-14-v2)', () => {
   const data = JSON.parse(readFileSync(new URL('../data/indicators.json', import.meta.url), 'utf8'));
-  assert(data.version === 'real-14-v1', 'version');
+  assert(data.version === 'real-14-v2', 'version');
   assert(data.indicators.length === 14, 'should list 14');
   const groups = data.indicators.map(k => k.group).sort();
   assert(JSON.stringify(groups) === JSON.stringify(['G1', 'G1', 'G2', 'G2', 'G2', 'G3', 'G3', 'G4', 'G5', 'G5', 'G6', 'G6', 'G6', 'G6']), `groups: ${groups}`);
@@ -88,6 +88,9 @@ check('data: indicators.json has 14 unique KPIs (real-14-v1)', () => {
   assert(new Set(data.indicators.map(k => k.code)).size === 14, 'codes unique');
   const iod = data.indicators.find(k => k.id === 'indoor_overheating_degree');
   assert(iod && iod.name.includes('[°Ch]'), 'IOD unit should be [°Ch]');
+  const sfi = data.indicators.find(k => k.id === 'saifi');
+  assert(sfi && sfi.code === 'G4.2' && sfi.group === 'G4' && sfi.direction === 'lower', 'G4.2 SAIFI entry');
+  assert(!data.indicators.some(k => k.id === 'saidi'), 'SAIDI should be replaced by SAIFI');
 });
 
 // 7. End-to-end math simulation: 2 criteria x 7 KPIs -> Pi sums to 1

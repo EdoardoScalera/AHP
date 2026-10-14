@@ -96,7 +96,7 @@
     <div id="survey-screen" class="screen hidden">
       <form id="survey-form" novalidate>
         <section id="criteria-section" class="card">
-          <h2>Decision Criteria</h2>
+          <h2>Decision Criteria <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-criteria" aria-label="Leave a comment on Decision Criteria" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
           <p class="hint">To assess the importance of decision criteria, start by unchecking any criterion you don't think is relevant for building operations and when planning a renovation. Optionally add missing criteria.</p>
           <div id="criteria-checklist" class="criteria-checklist"></div>
           <div class="form-group">
@@ -111,7 +111,7 @@
         </section>
 
         <section id="tier-section" class="card">
-          <h2>Priority levels</h2>
+          <h2>Priority levels <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-tiers" aria-label="Leave a comment on Priority levels" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
           <p class="hint">Drag each criterion block into a tier (or use the A/B/C buttons; keyboard accessible).</p>
           <div id="tier-board" class="tier-board">
             <div class="tier-col" data-tier="A">
@@ -130,7 +130,7 @@
         </section>
 
         <section id="guided-section" class="card">
-          <h2>Guided Comparisons</h2>
+          <h2>Guided Comparisons <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-guided" aria-label="Leave a comment on Guided Comparisons" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
           <p class="hint" id="guided-progress"></p>
           <div class="guided-bar"><div class="guided-bar-fill" id="guided-bar-fill"></div></div>
           <div id="guided-card">
@@ -168,7 +168,7 @@
         </section>
 
         <section id="matrix-section" class="card">
-          <h2>Pairwise Comparison Matrix</h2>
+          <h2>Pairwise Comparison Matrix <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-matrix" aria-label="Leave a comment on Pairwise Comparison Matrix" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
           <p class="hint">How important is criterion <strong>A (row)</strong> relative to criterion <strong>B (column)</strong>?<br>
           Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.<br>
           Use fractions (e.g., 1/3) for inverse comparisons. Only fill upper triangle; lower triangle fills automatically.<br>
@@ -186,7 +186,7 @@
         </section>
 
         <section id="cr-section" class="card">
-          <h2>Consistency Check</h2>
+          <h2>Consistency Check <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-cr" aria-label="Leave a comment on Consistency Check" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
           <div class="cr-display">
             <div class="cr-value" id="cr-value">CR: —</div>
             <div class="cr-status" id="cr-status">Complete the matrix to see consistency ratio</div>
@@ -197,7 +197,7 @@
         </section>
 
         <section id="plot-section" class="card">
-          <h2>Your Priorities</h2>
+          <h2>Your Priorities <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-plot" aria-label="Leave a comment on Your Priorities" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
           <p class="hint">Live view of criteria priority scores from your answers.</p>
           <div id="plot-empty" class="hint">Complete the guided comparisons above — the plot appears here.</div>
           <div id="plot-wrap" class="hidden">
@@ -214,6 +214,7 @@
         </section>
 
         <div class="form-actions">
+          <button type="button" id="btn-comments-p1" class="btn btn-secondary push-left" data-comment-phase="p1" data-comment-key="p1-general">General comments</button>
           <button type="button" id="btn-save-draft" class="btn btn-secondary">Save Draft</button>
           <button type="submit" id="btn-submit" class="btn btn-primary" disabled>Submit</button>
         </div>
@@ -234,18 +235,24 @@
 
     <div id="phase2-screen" class="screen hidden">
       <section class="card">
-        <h2>Performance indicators</h2>
+          <h2>Performance indicators <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-indicators" aria-label="Leave a comment on Performance indicators" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
         <p class="hint">Score performance indicators relatively to each criterion. You may remove KPIs unrelated to a criterion; if criteria priorities are available from the previous section of the survey, they are used to calculate the final KPI ranking; otherwise, all criteria receive equal weight.</p>
         <div class="form-group">
           <span class="label">Uncheck indicators not related to this criterion; select a minimum of 2 indicators <button type="button" class="info-btn" data-info-key="phase2-na" aria-label="More information about marking KPIs as not applicable" title="More information">i</button></span>
           <div id="phase2-tabs" class="phase2-tabs"></div>
           <div id="phase2-kpi-checklist" class="criteria-checklist"></div>
+          <div class="custom-add-row">
+            <input type="text" id="input-custom-kpi" maxlength="120" placeholder="e.g., Grid carbon intensity" autocomplete="off">
+            <button type="button" id="btn-add-custom-kpi" class="btn btn-secondary">Add indicator</button>
+          </div>
+          <div id="custom-kpi-list" class="custom-criteria-list"></div>
+          <label class="skip-check"><input type="checkbox" id="phase2-skip"> <span>None of the above — this criterion does not apply</span></label>
         </div>
       </section>
 
       <section class="card">
-        <h2>Priority levels</h2>
-        <p class="hint">Rank the evaluated KPIs into tiers (or use the A/B/C buttons). Tiers guide the comparison suggestions below.</p>
+          <h2>Priority levels <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-tiers" aria-label="Leave a comment on Priority levels" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
+          <p class="hint">Rank the evaluated KPIs into tiers (or use the A/B/C buttons). Tiers guide the comparison suggestions below.</p>
         <div id="phase2-tier-board" class="tier-board">
           <div class="tier-col" data-tier="A">
             <h3>A — Measures best</h3>
@@ -263,11 +270,12 @@
       </section>
 
       <section class="card">
-        <h2>Guided Comparisons</h2>
-        <h3 id="phase2-crit-title" class="hidden"></h3>
+          <h2>Guided Comparisons <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-guided" aria-label="Leave a comment on Guided Comparisons" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
+          <h3 id="phase2-crit-title" class="hidden"></h3>
         <p class="hint">How well does each performance indicator measure this criterion? Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.</p>
         <p class="hint" id="phase2-progress"></p>
         <div class="guided-bar"><div class="guided-bar-fill" id="phase2-bar-fill"></div></div>
+        <p id="phase2-skipped-note" class="hint hidden">This criterion is marked as not applicable (“None of the above”). Uncheck it in the selection above to evaluate KPIs.</p>
         <div id="phase2-guided-card">
           <p id="phase2-qtext" class="guided-q"></p>
           <p class="hint" id="phase2-suggest"></p>
@@ -295,7 +303,7 @@
       </section>
 
       <section class="card">
-        <h2>Pairwise Comparison Matrix</h2>
+        <h2>Pairwise Comparison Matrix <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-matrix" aria-label="Leave a comment on Pairwise Comparison Matrix" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
         <p class="hint">Complete the matrix of comparisons between the KPIs. Rate the relative importance of the row indicator relative to the column indicator. Use scale 2–9 if the row indicator is more important, or 1/9–1/2 if the column indicator is. Equal importance is set with 1. An estimate based on your responses in the guided comparison is defined for consistency (<span class="tag estimated">yellow = estimate</span>); click any matrix value to override (<span class="tag user">green = your score</span>).</p>
         <div class="matrix-container">
           <table id="phase2-matrix" class="matrix-table">
@@ -322,7 +330,7 @@
       </section>
 
       <section class="card">
-        <h2>Final KPI Ranking</h2>
+          <h2>Final KPI Ranking <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-ranking" aria-label="Leave a comment on Final KPI Ranking" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
         <p class="hint">Global scores P<sub>i</sub> = Σ w<sub>k</sub> · p<sub>ik</sub> (Eq.9), updated live as you complete criteria. KPIs removed under a criterion are marked NA and skipped there: their score is a weighted sum over only the criteria where they were evaluated (those weights renormalized), never a zero penalty.</p>
         <div id="phase2-ranking-empty" class="hint">Complete at least one criterion to see the ranking.</div>
         <div id="phase2-ranking-wrap" class="hidden">
@@ -339,6 +347,7 @@
       </section>
 
       <div class="form-actions">
+        <button type="button" id="btn-comments-p2" class="btn btn-secondary push-left" data-comment-phase="p2" data-comment-key="p2-general">General comments</button>
         <button type="button" id="btn-phase2-save" class="btn btn-secondary">Save indicators grading draft</button>
         <button type="button" id="btn-phase2-submit" class="btn btn-primary" disabled>Submit indicators grading</button>
       </div>
@@ -375,6 +384,21 @@
       </div>
     </div>
   </div>
+
+  <div id="comment-scrim" class="comment-scrim hidden"></div>
+  <aside id="comment-panel" class="comment-panel hidden" role="dialog" aria-modal="false" aria-labelledby="comment-title">
+    <div class="comment-panel-head">
+      <h3 id="comment-title"></h3>
+      <button type="button" id="comment-close" class="btn btn-secondary" aria-label="Close comments">×</button>
+    </div>
+    <p class="hint">Saved on this device with your draft; sent with your submission.</p>
+    <textarea id="comment-text" rows="6" maxlength="2000" placeholder="Write your comment..."></textarea>
+    <p class="hint" id="comment-count"></p>
+    <div class="form-actions">
+      <button type="button" id="comment-clear" class="btn btn-secondary">Clear</button>
+      <button type="button" id="comment-save" class="btn btn-primary">Save comment</button>
+    </div>
+  </aside>
 
   <script type="module" src="js/app.js"></script>
 </body>

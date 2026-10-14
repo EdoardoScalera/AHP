@@ -18,8 +18,12 @@ const Phase2 = (() => {
   const MIN_EVAL = 2;
   const DRAFT_KEY = 'ahp-phase2-v4';
   const TIERS = ['A', 'B', 'C'];
+  const INDICATOR_SET = 'real-14-v2';
+  const MAX_CUSTOM = 5;
 
   let indicators = [];
+  let customIndicators = [];
+  let customCounter = 1;
   let criteria = []; // active criteria from Phase 1 [{id,name,...}]
   let criteriaWeights = []; // parallel array, sums to 1
   let current = 0; // index into criteria
@@ -44,6 +48,8 @@ const Phase2 = (() => {
     onSaveDraft = opts.onSaveDraft || null;
     current = 0;
     state = {};
+    customIndicators = [];
+    customCounter = 1;
     criteria.forEach(c => { state[c.id] = freshCriterionState([]); });
     attachOnce();
     buildTabs();
@@ -64,6 +70,7 @@ const Phase2 = (() => {
     const st = {
       excluded: [...excluded],
       tiers,
+      skipped: false,
       order: [], hub: null, target: 0,
       answers: {}, idx: 0, choice: null,
       matrix: [], user: [], estimated: [], result: null
@@ -159,6 +166,71 @@ const Phase2 = (() => {
     return String(s).replace(/["\\]/g, '\\$&');
   }
 
+  // ---------- custom indicators (shared list, auto-N/A elsewhere) ----------
+  function indicatorSetId() {
+    return customIndicators.length ? `${INDICATOR_SET}-custom` : INDICATOR_SET;
+  }
+
+  function renderCustomKpiList() {
+    const list = document.getElementById('custom-kpi-list');
+    if (!list) return;
+    list.innerHTML = customIndicators.map(k =>
+      `<span class="custom-chip"><span>${escapeHtml(k.code)} ${escapeHtml(k.name)}</span><button type="button" data-remove-custom-kpi="${escapeHtml(k.id)}" aria-label="Remove ${escapeHtml(k.name)}">×</button></span>`
+    ).join('');
+  }
+
+  function addCustomIndicator() {
+    const input = document.getElementById('input-custom-kpi');
+    if (!input) return;
+    const name = input.value.trim().slice(0, 120);
+    if (!name) return;
+    if (customIndicators.length >= MAX_CUSTOM) {
+      alert(`Maximum ${MAX_CUSTOM} additional indicators.`);
+      return;
+    }
+    if (indicators.some(k => k.name.toLowerCase() === name.toLowerCase())) {
+      alert('This indicator is already in the list.');
+      return;
+    }
+    const c = cur();
+    if (!c) return;
+    const n = customCounter++;
+    const k = { id: `custom_kpi_${n}`, code: `CX.${n}`, name, description: name };
+    customIndicators.push(k);
+    indicators.push(k);
+    Info.registerKpis([k]);
+    // Evaluated under the current criterion, pre-excluded (N/A) elsewhere so
+    // matrix positions stay aligned across criteria. Like exclusion changes,
+    // guided answers restart.
+    Object.entries(state).forEach(([cid, st]) => {
+      if (cid !== c.id && !st.excluded.includes(k.id)) st.excluded.push(k.id);
+      if (cid === c.id) st.tiers[k.id] = 'B';
+      resetAnswers(st, evalIds(cid));
+    });
+    input.value = '';
+    renderCustomKpiList();
+    renderAll();
+    persistDraft();
+  }
+
+  function removeCustomIndicator(id) {
+    customIndicators = customIndicators.filter(k => k.id !== id);
+    indicators = indicators.filter(k => k.id !== id);
+    Object.values(state).forEach(st => {
+      st.excluded = st.excluded.filter(x => x !== id);
+      if (st.tiers) delete st.tiers[id];
+      resetAnswers(st, evalIdsForState(st));
+    });
+    renderCustomKpiList();
+    renderAll();
+    persistDraft();
+  }
+
+  function evalIdsForState(st) {
+    const excluded = new Set(st.excluded || []);
+    return indicators.filter(k => !excluded.has(k.id)).map(k => k.id);
+  }
+
   // ---------- guided per criterion ----------
   function knownPairs(st) {
     return Object.values(st.answers);
@@ -166,6 +238,7 @@ const Phase2 = (() => {
 
   function isCriterionComplete(st) {
     if (!st || !st.order.length) return false;
+    if (st.skipped) return true; // "None of the above": N/A counts as done
     return st.order.every(([a, b]) => {
       const i = st.ids.indexOf(a), j = st.ids.indexOf(b);
       if (i < 0 || j < 0) return false;
@@ -176,7 +249,7 @@ const Phase2 = (() => {
   function isAllComplete() {
     return criteria.length > 0 && criteria.every(c => {
       const st = state[c.id];
-      return st && isCriterionComplete(st) && st.result;
+      return st && (st.skipped || (isCriterionComplete(st) && st.result));
     });
   }
 
@@ -239,7 +312,8 @@ const Phase2 = (() => {
     tabs.innerHTML = criteria.map((c, i) => {
       const st = state[c.id];
       const done = st && isCriterionComplete(st);
-      return `<button type="button" data-tab="${i}" class="${i === current ? 'on' : ''} ${done ? 'done' : ''}">${escapeHtml(c.name)}${done ? ' ✓' : ''}</button>`;
+      const na = st && st.skipped ? ' (N/A)' : '';
+      return `<button type="button" data-tab="${i}" class="${i === current ? 'on' : ''} ${done ? 'done' : ''}">${escapeHtml(c.name)}${na}${done && !st.skipped ? ' ✓' : ''}</button>`;
     }).join('');
   }
 
@@ -251,6 +325,7 @@ const Phase2 = (() => {
   function renderAll() {
     buildTabs();
     renderChecklist();
+    renderCustomKpiList();
     renderTierBoard();
     renderCriterionPanel();
     renderRanking();
@@ -265,10 +340,13 @@ const Phase2 = (() => {
     box.innerHTML = indicators.map(k => {
       const checked = !st.excluded.includes(k.id);
       const locked = checked && nEval <= MIN_EVAL; // floor: cannot go below 2
+      const dis = locked || st.skipped;
       return `<label class="criteria-check-item" title="${escapeHtml(k.code + ' — ' + k.description)}">` +
-        `<input type="checkbox" data-kpi-id="${escapeHtml(k.id)}" ${checked ? 'checked' : ''} ${locked ? 'disabled' : ''}> ` +
+        `<input type="checkbox" data-kpi-id="${escapeHtml(k.id)}" ${checked ? 'checked' : ''} ${dis ? 'disabled' : ''}> ` +
         `<span>${escapeHtml(k.name)}${locked ? ' (min 2)' : ''}</span>${Info.button(`kpi:${k.id}`, k.name)}</label>`;
     }).join('');
+    const skip = document.getElementById('phase2-skip');
+    if (skip) skip.checked = !!st.skipped;
   }
 
   function renderTierBoard() {
@@ -320,7 +398,15 @@ const Phase2 = (() => {
     const c = cur(), st = curState();
     const card = document.getElementById('phase2-guided-card');
     const done = document.getElementById('phase2-done');
+    const note = document.getElementById('phase2-skipped-note');
     if (!card || !done || !c || !st) return;
+    if (st.skipped) {
+      card.classList.add('hidden');
+      done.classList.add('hidden');
+      if (note) note.classList.remove('hidden');
+      return;
+    }
+    if (note) note.classList.add('hidden');
     const m = st.order.length;
     if (st.idx >= m) {
       card.classList.add('hidden');
@@ -384,12 +470,17 @@ const Phase2 = (() => {
     const thead = document.querySelector('#phase2-matrix thead tr');
     const tbody = document.querySelector('#phase2-matrix tbody');
     if (!thead || !tbody || !c || !st) return;
+    if (st.skipped) {
+      thead.innerHTML = '<th class="corner">KPI</th>';
+      tbody.innerHTML = '';
+      return;
+    }
     const ids = evalIds(c.id);
     const m = ids.length;
     thead.innerHTML = '<th class="corner">KPI</th>' +
       ids.map(id => {
         const k = indicatorById(id);
-        return `<th title="${escapeHtml(k.code + ' — ' + k.name)}"><span class="vhead-name">${escapeHtml(k.name)}</span><span class="vhead-top">${escapeHtml(k.code)}${Info.button(`kpi:${k.id}`, k.name)}</span></th>`;
+        return `<th title="${escapeHtml(k.code + ' — ' + k.name)}"><span class="vhead-all">${escapeHtml(k.code)} ${escapeHtml(k.name)}${Info.button(`kpi:${k.id}`, k.name)}</span></th>`;
       }).join('');
     tbody.innerHTML = ids.map((id, i) => {
       const k = indicatorById(id);
@@ -529,6 +620,14 @@ const Phase2 = (() => {
     const sEl = document.getElementById('phase2-cr-status');
     const bar = document.getElementById('phase2-cr-bar-fill');
     if (!vEl || !sEl || !bar) return;
+    if (st && st.skipped) {
+      vEl.textContent = 'CR: —';
+      vEl.className = 'cr-value';
+      sEl.textContent = 'Marked as not applicable — excluded from the ranking.';
+      bar.style.width = '0%';
+      bar.className = 'cr-bar-fill';
+      return;
+    }
     const showBlank = () => {
       vEl.textContent = 'CR: —';
       vEl.className = 'cr-value';
@@ -710,6 +809,27 @@ const Phase2 = (() => {
       if (!c) return;
       setExcluded(c.id, cb.dataset.kpiId, !cb.checked);
     });
+    const skipBox = document.getElementById('phase2-skip');
+    if (skipBox) skipBox.addEventListener('change', () => {
+      const c = cur();
+      if (!c) return;
+      // "None of the above": flag only, answers underneath are preserved.
+      state[c.id].skipped = skipBox.checked;
+      renderAll();
+      persistDraft();
+    });
+    const customInput = document.getElementById('input-custom-kpi');
+    const customAdd = document.getElementById('btn-add-custom-kpi');
+    if (customAdd) customAdd.addEventListener('click', addCustomIndicator);
+    if (customInput) customInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addCustomIndicator(); }
+    });
+    const customList = document.getElementById('custom-kpi-list');
+    if (customList) customList.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-remove-custom-kpi]');
+      if (btn) removeCustomIndicator(btn.dataset.removeCustomKpi);
+    });
+    renderCustomKpiList();
     const board = document.getElementById('phase2-tier-board');
     board.addEventListener('click', e => {
       const btn = e.target.closest('button[data-move][data-id]');
@@ -842,9 +962,28 @@ const Phase2 = (() => {
       const st = state[c.id];
       const ids = evalIds(c.id);
       const excluded = indicators.filter(k => !ids.includes(k.id)).map(k => k.id);
+      if (!st || st.skipped || !st.result) {
+        options[c.id] = {
+          skipped: !!(st && st.skipped),
+          evaluatedIds: (st && st.skipped) ? [] : [...ids],
+          excludedIds: (st && st.skipped) ? indicators.map(k => k.id) : excluded,
+          tiers: {},
+          matrix: null,
+          weights: null,
+          cr: null,
+          consistent: null,
+          pairwise: {
+            order: st ? st.order.map(([a, b]) => [a, b]) : [],
+            answers: [],
+            estimated: []
+          }
+        };
+        return;
+      }
       const tiers = {};
       ids.forEach(id => { tiers[id] = st.tiers[id] || 'B'; });
       options[c.id] = {
+        skipped: false,
         evaluatedIds: [...ids],
         excludedIds: excluded,
         tiers,
@@ -867,8 +1006,9 @@ const Phase2 = (() => {
       };
     });
     return {
-      indicatorSet: 'real-14-v1',
+      indicatorSet: indicatorSetId(),
       indicatorIds: indicators.map(k => k.id),
+      customIndicators: customIndicators.map(k => ({ id: k.id, code: k.code, name: k.name })),
       criteriaIds: criteria.map(c => c.id),
       criteriaWeights: [...criteriaWeights],
       options,
@@ -891,12 +1031,14 @@ const Phase2 = (() => {
       dump[id] = {
         excluded: [...st.excluded],
         tiers: { ...st.tiers },
+        skipped: !!st.skipped,
         answers: knownPairs(st).map(p => ({ a: oids[p.i], b: oids[p.j], value: p.value })),
         idx: st.idx
       };
     });
     return {
-      indicatorSet: 'real-14-v1',
+      indicatorSet: indicatorSetId(),
+      customIndicators: customIndicators.map(k => ({ ...k })),
       criteriaIds: criteria.map(c => c.id),
       current,
       state: dump
@@ -916,11 +1058,36 @@ const Phase2 = (() => {
       const d = JSON.parse(localStorage.getItem(DRAFT_KEY));
       if (!d || !d.state) return;
       if (Array.isArray(d.criteriaIds) && d.criteriaIds.join('|') !== criteria.map(c => c.id).join('|')) return;
+      // Restore respondent-added indicators first: per-criterion state below
+      // (exclusions, tiers, answers) references them by id.
+      customIndicators = [];
+      customCounter = 1;
+      if (Array.isArray(d.customIndicators)) {
+        d.customIndicators
+          .filter(k => k && typeof k.name === 'string' && k.name.trim())
+          .slice(0, MAX_CUSTOM)
+          .forEach(k => {
+            const name = k.name.trim().slice(0, 120);
+            if (indicators.some(x => x.name.toLowerCase() === name.toLowerCase())) return;
+            const id = (typeof k.id === 'string' && k.id) ? k.id : `custom_kpi_${customCounter}`;
+            if (indicators.some(x => x.id === id)) return;
+            const code = (typeof k.code === 'string' && k.code) ? k.code : `CX.${customCounter}`;
+            const custom = { id, code, name, description: name };
+            customIndicators.push(custom);
+            indicators.push(custom);
+          });
+        customCounter = customIndicators.reduce((m, k) => {
+          const n = parseInt(String(k.id).replace('custom_kpi_', ''), 10);
+          return isFinite(n) ? Math.max(m, n + 1) : m;
+        }, 1);
+        if (customIndicators.length) Info.registerKpis(customIndicators);
+      }
       Object.entries(d.state).forEach(([id, s]) => {
         if (!state[id] || !Array.isArray(s.excluded)) return;
         const validEx = s.excluded.filter(x => indicators.some(k => k.id === x));
         if (indicators.length - validEx.length < MIN_EVAL) return;
         state[id].excluded = validEx;
+        if (s.skipped === true) state[id].skipped = true;
         if (s.tiers && typeof s.tiers === 'object') {
           Object.entries(s.tiers).forEach(([kid, t]) => {
             if (TIERS.includes(t) && indicators.some(k => k.id === kid)) state[id].tiers[kid] = t;
@@ -955,6 +1122,9 @@ const Phase2 = (() => {
   }
 
   function reset() {
+    customIndicators = [];
+    customCounter = 1;
+    indicators = indicators.filter(k => k && !String(k.id || '').startsWith('custom_kpi_'));
     criteria.forEach(c => { state[c.id] = freshCriterionState([]); });
     current = 0;
     if (chart) { chart.destroy(); chart = null; }

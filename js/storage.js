@@ -63,6 +63,7 @@ const Storage = (() => {
       cr: data.cr,
       consistent: data.consistent,
       missingCriteria: data.missingCriteria || '',
+      comments: data.comments || {},
       consent: data.consent,
       phasesSelected: data.phasesSelected || null
     };
@@ -111,12 +112,13 @@ const Storage = (() => {
       pilot: data.pilot,
       country: data.country,
       email: data.email || '',
-      indicatorSet: data.indicatorSet || 'real-14-v1',
+      indicatorSet: data.indicatorSet || 'real-14-v2',
       indicatorIds: data.indicatorIds,
       criteriaIds: data.criteriaIds,
       criteriaWeights: data.criteriaWeights,
       options: data.options,
       globalScores: data.globalScores,
+      comments: data.comments || {},
       consent: data.consent
     };
 

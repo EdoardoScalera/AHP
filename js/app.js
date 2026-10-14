@@ -4,6 +4,7 @@ import { UI } from './ui.js';
 import { Auth } from './auth.js';
 import { Storage } from './storage.js';
 import { Phase2 } from './phase2.js';
+import { Comments } from './comments.js';
 
 let criteria = []; // active Phase-1 criteria (scenario A/C)
 let allDefaultCriteria = []; // full defaults from criteria.json (scenario B)
@@ -38,6 +39,8 @@ async function init() {
     onSaveDraft: handleSaveDraft,
     onCriteriaChange: handleCriteriaChange
   });
+
+  Comments.init();
 
   wireStart();
   wireTransition();
@@ -239,6 +242,7 @@ async function handlePhase2Submit(phase2payload) {
   const base = {
     ...phase2payload,
     accessCode,
+    comments: Comments.getAll('p2'),
     name: startIdentity.name,
     role: startIdentity.role,
     pilot: startIdentity.pilot,

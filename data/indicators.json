@@ -1,6 +1,6 @@
 {
-  "version": "real-14-v1",
-  "note": "Phase-2 real KPI set: 14 KPIs, codes per docs/kpi_review.tex. Same shortlist is compared under each active criterion.",
+  "version": "real-14-v2",
+  "note": "Phase-2 real KPI set: 14 KPIs, codes per docs/kpi_review.tex. Same shortlist is compared under each active criterion. v2 replaces G4.1 SAIDI with G4.2 SAIFI.",
   "indicators": [
     {
       "id": "primary_energy",
@@ -73,13 +73,13 @@
       "direction": "higher"
     },
     {
-      "id": "saidi",
-      "code": "G4.1",
-      "name": "SAIDI [h/year·customer]",
+      "id": "saifi",
+      "code": "G4.2",
+      "name": "SAIFI [interruptions/year·customer]",
       "group": "G4",
       "groupName": "Reliability",
-      "description": "Average total duration of supply interruptions experienced per customer per year.",
-      "info": "Average total duration of energy supply interruptions experienced per customer in a year.",
+      "description": "Average number of supply interruptions experienced per customer per year.",
+      "info": "Average number of energy supply interruptions experienced per customer in a year.",
       "direction": "lower"
     },
     {

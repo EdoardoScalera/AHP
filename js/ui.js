@@ -2,6 +2,7 @@ import { AHP } from './ahp-core.js';
 import { Guided } from './guided.js';
 import { Plot } from './plot.js';
 import { Info } from './info.js';
+import { Comments } from './comments.js';
 
 const UI = (() => {
   const DRAFT_KEY = 'ahp-draft-v3';
@@ -830,7 +831,8 @@ const UI = (() => {
         weights: result.weights,
         cr: result.CR,
         consistent: result.consistent,
-        missingCriteria
+        missingCriteria,
+        comments: Comments.getAll('p1')
       });
     }
   }
@@ -1055,6 +1057,8 @@ const UI = (() => {
     document.getElementById('success-detail').textContent = detail;
     showScreen('success-screen');
     localStorage.removeItem(DRAFT_KEY);
+    Comments.clear('p1');
+    Comments.clear('p2');
   }
 
   function showError(message) {
@@ -1066,6 +1070,8 @@ const UI = (() => {
     document.getElementById('survey-form').reset();
     const startForm = document.getElementById('start-form');
     if (startForm) startForm.reset();
+    Comments.clear('p1');
+    Comments.clear('p2');
     document.querySelectorAll('#criteria-checklist input[type="checkbox"]').forEach(cb => { cb.checked = true; });
     customCriteria = [];
     customCounter = 1;
