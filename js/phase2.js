@@ -74,6 +74,11 @@ const Phase2 = (() => {
 
   function resetAnswers(st, ids) {
     const built = Guided.generateOrder(ids, st.tiers, DIVISOR);
+    // Canonical index space (Phase-1 idToIndex equivalent): every matrix
+    // position, answer key and completion index maps pair ids through this
+    // evaluated-KPI list. Never derive positions from question order — the
+    // guided order is hub-first and would permute the matrix.
+    st.ids = [...ids];
     st.order = built.order;
     st.hub = built.hub;
     st.target = built.target;
@@ -162,21 +167,10 @@ const Phase2 = (() => {
   function isCriterionComplete(st) {
     if (!st || !st.order.length) return false;
     return st.order.every(([a, b]) => {
-      const ids = orderIds(st);
-      const i = ids.indexOf(a), j = ids.indexOf(b);
+      const i = st.ids.indexOf(a), j = st.ids.indexOf(b);
       if (i < 0 || j < 0) return false;
       return !!st.answers[pairKey(Math.min(i, j), Math.max(i, j))];
     });
-  }
-
-  function orderIds(st) {
-    // ids snapshot the order was built from (evaluated at build time)
-    const seen = [];
-    st.order.forEach(([a, b]) => {
-      if (!seen.includes(a)) seen.push(a);
-      if (!seen.includes(b)) seen.push(b);
-    });
-    return seen;
   }
 
   function isAllComplete() {
@@ -187,12 +181,13 @@ const Phase2 = (() => {
   }
 
   function recordKnown(st, ids, aId, bId, aOverB) {
-    const i = ids.indexOf(aId), j = ids.indexOf(bId);
-    if (i < 0 || j < 0) return;
-    const row = i, col = j;
-    const val = i <= j ? aOverB : 1 / aOverB;
-    const ui = Math.min(row, col), uj = Math.max(row, col);
-    const v = row <= col ? val : 1 / val;
+    // Canonical placement via Guided.locatePair (single normalization):
+    // value lands at matrix[row-of-a][col-of-b] with the mirror reciprocal.
+    // E.g. G6.4-over-G1.2 = 7 -> 7 at row G6.4 x col G1.2 (lower triangle),
+    // 1/7 at the upper mirror.
+    const placed = Guided.locatePair(ids, aId, bId, aOverB);
+    if (!placed) return;
+    const ui = placed.i, uj = placed.j, v = placed.value;
     st.matrix[ui][uj] = v;
     st.matrix[uj][ui] = 1 / v;
     st.user[ui][uj] = true;
@@ -229,7 +224,7 @@ const Phase2 = (() => {
     if (!c || !st) return;
     const pair = st.order[st.idx];
     if (!pair) return;
-    recordKnown(st, orderIds(st), pair[0], pair[1], aOverB);
+    recordKnown(st, st.ids, pair[0], pair[1], aOverB);
     st.choice = null;
     st.idx += 1;
     if (isCriterionComplete(st)) runCompletion(c.id);
@@ -308,7 +303,7 @@ const Phase2 = (() => {
     const ids = evalIds(c.id);
     if (title) title.innerHTML = `${current + 1}. ${escapeHtml(c.name)} ${Info.button(`crit:${c.id}`, c.name)} — how well does each evaluated KPI measure this criterion?`;
     const m = st.order.length;
-    if (progress) progress.textContent = `Criterion ${current + 1} of ${criteria.length} — evaluating ${ids.length} of ${indicators.length} KPIs — question ${Math.min(st.idx + 1, m)} of ${m}${st.hub ? ` — reference: ${nameOf(st.hub)}` : ''}`;
+    if (progress) progress.textContent = `Criterion ${current + 1} of ${criteria.length} — evaluating ${ids.length} of ${indicators.length} KPI`;
     if (barFill) barFill.style.width = `${m ? Math.round((Math.min(st.idx, m) / m) * 100) : 0}%`;
 
     renderGuidedCard();
@@ -344,7 +339,7 @@ const Phase2 = (() => {
       document.getElementById('phase2-suggest').textContent =
         `Suggested range from tiers (${st.tiers[pair[0]] || 'B'} vs ${st.tiers[pair[1]] || 'B'}): ${range}. Equal = 1.`;
       const hintEl = document.getElementById('phase2-hint');
-      const idx = orderIds(st);
+      const idx = st.ids;
       const implied = Guided.impliedValue(idx.indexOf(pair[0]), idx.indexOf(pair[1]), knownPairs(st), idx.length);
       hintEl.textContent = implied !== null
         ? `Based on your answers so far, ~${Guided.formatValue(implied)} would preserve consistency. Non-binding — your call.`
@@ -353,11 +348,6 @@ const Phase2 = (() => {
       document.getElementById('phase2-no').innerHTML = `<strong>${escapeHtml(b.name)}</strong> better`;
       renderScale();
     }
-  }
-
-  function nameOf(id) {
-    const k = indicatorById(id);
-    return k ? `${k.name} (${k.code})` : id;
   }
 
   function renderScale() {
@@ -862,7 +852,7 @@ const Phase2 = (() => {
         pairwise: {
           order: st.order.map(([a, b]) => [a, b]),
           answers: knownPairs(st).map(p => {
-            const oids = orderIds(st);
+            const oids = st.ids;
             return {
               a: oids[p.i],
               b: oids[p.j],
@@ -894,7 +884,7 @@ const Phase2 = (() => {
   function getDraft() {
     const dump = {};
     Object.entries(state).forEach(([id, st]) => {
-      const oids = orderIds(st);
+      const oids = st.ids;
       dump[id] = {
         excluded: [...st.excluded],
         tiers: { ...st.tiers },

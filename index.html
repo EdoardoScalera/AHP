@@ -235,7 +235,7 @@
     <div id="phase2-screen" class="screen hidden">
       <section class="card">
         <h2>Performance indicators</h2>
-        <p class="hint">Score performance indicators relatively to each criterion. You may remove KPIs unrelated to a criterion; if applicable, responses from Criteria priorities are used to compute the final KPI ranking, otherwise equal weight is assigned to all criteria.</p>
+        <p class="hint">Score performance indicators relatively to each criterion. You may remove KPIs unrelated to a criterion; if criteria priorities are available from the previous section of the survey, they are used to calculate the final KPI ranking; otherwise, all criteria receive equal weight.</p>
         <div class="form-group">
           <span class="label">Uncheck indicators not related to this criterion; select a minimum of 2 indicators <button type="button" class="info-btn" data-info-key="phase2-na" aria-label="More information about marking KPIs as not applicable" title="More information">i</button></span>
           <div id="phase2-tabs" class="phase2-tabs"></div>
@@ -293,7 +293,7 @@
 
       <section class="card">
         <h2>Pairwise Comparison Matrix</h2>
-        <p class="hint">For each criterion, complete the guided comparisons between the KPIs. Remaining pairs are estimated for consistency (<span class="tag estimated">yellow</span>); click any matrix value to override (<span class="tag user">green</span> = your score).</p>
+        <p class="hint">Complete the matrix of comparisons between the KPIs. Rate the relative importance of the row indicator relative to the column indicator. Use scale 2–9 if the row indicator is more important, or 1/9–1/2 if the column indicator is. Equal importance is set with 1. An estimate based on your responses in the guided comparison is defined for consistency (<span class="tag estimated">yellow = estimate</span>); click any matrix value to override (<span class="tag user">green = your score</span>).</p>
         <div class="matrix-container">
           <table id="phase2-matrix" class="matrix-table">
             <thead>

@@ -232,6 +232,35 @@ check('phase2: live ranking over a subset of criteria', () => {
   assert(rc.scored && rc.evaluatedIn === 1 && Math.abs(rc.weightBase - 0.6) < 1e-9, 'coverage metadata');
 });
 
+// 16. Guided answers land in canonical (matrix-display-order) positions.
+// Regression: answers were indexed by hub-first question order, permuting
+// the matrix whenever the Tier-A hub was not the first evaluated KPI
+// (e.g. G6.4-over-G1.2 = 7 appeared at row G1.2 x col G2.1).
+check('phase2: guided answers map to canonical matrix positions', () => {
+  const ids = ['g1.2', 'g2.1', 'g6.1', 'g6.2', 'g6.4', 'g6.5'];
+  const { order, hub } = Guided.generateOrder(ids, { 'g6.4': 'A' }, 4);
+  assert(hub === 'g6.4', `hub should be g6.4, got ${hub}`);
+  // The trap: first-seen (hub-first) order differs from canonical order.
+  const seen = [];
+  order.forEach(([a, b]) => { if (!seen.includes(a)) seen.push(a); if (!seen.includes(b)) seen.push(b); });
+  assert(seen.join('|') !== ids.join('|'), 'hub-first order must differ from matrix order here');
+  // Q1 is [g6.4, g1.2]; answering g6.4-over-g1.2 = 7 belongs in the lower
+  // triangle at row g6.4 (idx 4) x col g1.2 (idx 1), reciprocal upper.
+  assert(order[0][0] === 'g6.4' && order[0][1] === 'g1.2', `first pair should be hub vs g1.2, got ${order[0]}`);
+  const p = Guided.locatePair(ids, 'g6.4', 'g1.2', 7);
+  assert(p.i === 0 && p.j === 4 && Math.abs(p.value - 1 / 7) < 1e-12,
+    `upper should be 1/7 at [0][4], got [${p.i}][${p.j}] = ${p.value}`);
+  // Reverse direction: g1.2-over-g6.4 = 7 goes straight to upper [0][4].
+  const q = Guided.locatePair(ids, 'g1.2', 'g6.4', 7);
+  assert(q.i === 0 && q.j === 4 && q.value === 7, `upper should be 7, got ${q.value}`);
+  // Canonical-order pair passes through unchanged.
+  const r = Guided.locatePair(ids, 'g2.1', 'g6.1', 3);
+  assert(r.i === 1 && r.j === 2 && r.value === 3, `should be [1][2] = 3, got [${r.i}][${r.j}] = ${r.value}`);
+  // Unknown or identical ids are rejected.
+  assert(Guided.locatePair(ids, 'g1.2', 'nope', 3) === null, 'unknown id should give null');
+  assert(Guided.locatePair(ids, 'g1.2', 'g1.2', 1) === null, 'diagonal should give null');
+});
+
 if (failures) {  console.error(`\n${failures} check(s) FAILED`);
   process.exit(1);
 } else {

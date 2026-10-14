@@ -104,6 +104,20 @@ const Guided = (() => {
     return `1/${Math.max(1, Math.round(1 / v))}`;
   }
 
+  // Canonical placement of a judged pair (a over b = aOverB) into a matrix
+  // whose rows/columns follow `ids` order (Phase-2 evalIds order). Returns
+  // {i, j, value} with i<j for the upper triangle and the value oriented as
+  // ids[i]-over-ids[j], or null for unknown ids. Same role as Phase-1
+  // idToIndex, but for an explicit id list (Phase 2 keeps one evaluated-KPI
+  // subset per criterion, so the canonical list lives on the criterion
+  // state). NB: a single normalization only — never invert twice.
+  function locatePair(ids, aId, bId, aOverB) {
+    const i = ids.indexOf(aId), j = ids.indexOf(bId);
+    if (i < 0 || j < 0 || i === j) return null;
+    const ui = Math.min(i, j), uj = Math.max(i, j);
+    return { i: ui, j: uj, value: i <= j ? aOverB : 1 / aOverB };
+  }
+
   return {
     tierRank,
     pairDistance,
@@ -112,7 +126,8 @@ const Guided = (() => {
     generateOrder,
     hasPath,
     impliedValue,
-    formatValue
+    formatValue,
+    locatePair
   };
 })();
 
