@@ -914,6 +914,20 @@ header h1 {
   background: var(--success-light);
 }
 
+/* Keep (i) buttons circular inside criterion tab pills (tab-button rules
+   would otherwise override padding/border/radius). */
+#phase2-tabs .info-btn {
+  padding: 0;
+  border: 1px solid var(--primary);
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 0.8em;
+  width: 1.15em;
+  height: 1.15em;
+  margin-left: 6px;
+}
+
 /* Criterion-in-object highlight in the guided question */
 .crit-highlight {
   background: var(--primary-light);
@@ -923,9 +937,9 @@ header h1 {
   white-space: nowrap;
 }
 
-/* Vertical Phase-2 matrix column headers: code + (i) stay horizontal on
-   top, the full indicator name runs bottom-to-top below, keeping columns
-   narrow while showing full names. */
+/* Vertical Phase-2 matrix column headers: code + name run bottom-to-top as
+   one rotated unit (max ~2 columns), the (i) sits horizontally below it so
+   it is never clipped or rotated. Columns stay narrow. */
 #phase2-matrix thead th {
   min-width: 48px;
   max-width: 64px;
@@ -943,10 +957,9 @@ header h1 {
   font-weight: 600;
 }
 
-#phase2-matrix thead th .vhead-all .info-btn {
-  writing-mode: horizontal-tb;
-  display: inline-block;
-  margin-top: 4px;
+#phase2-matrix thead th > .info-btn {
+  display: flex;
+  margin: 6px auto 0;
 }
 
 @media (max-width: 600px) {

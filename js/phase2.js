@@ -313,7 +313,7 @@ const Phase2 = (() => {
       const st = state[c.id];
       const done = st && isCriterionComplete(st);
       const na = st && st.skipped ? ' (N/A)' : '';
-      return `<button type="button" data-tab="${i}" class="${i === current ? 'on' : ''} ${done ? 'done' : ''}">${escapeHtml(c.name)}${na}${done && !st.skipped ? ' ✓' : ''}</button>`;
+      return `<button type="button" data-tab="${i}" class="${i === current ? 'on' : ''} ${done ? 'done' : ''}">${escapeHtml(c.name)}${na}${done && !st.skipped ? ' ✓' : ''}${Info.button(`crit:${c.id}`, c.name)}</button>`;
     }).join('');
   }
 
@@ -480,7 +480,7 @@ const Phase2 = (() => {
     thead.innerHTML = '<th class="corner">KPI</th>' +
       ids.map(id => {
         const k = indicatorById(id);
-        return `<th title="${escapeHtml(k.code + ' — ' + k.name)}"><span class="vhead-all">${escapeHtml(k.code)} ${escapeHtml(k.name)}${Info.button(`kpi:${k.id}`, k.name)}</span></th>`;
+        return `<th title="${escapeHtml(k.code + ' — ' + k.name)}"><span class="vhead-all">${escapeHtml(k.code)} ${escapeHtml(k.name)}</span>${Info.button(`kpi:${k.id}`, k.name)}</th>`;
       }).join('');
     tbody.innerHTML = ids.map((id, i) => {
       const k = indicatorById(id);
@@ -797,6 +797,9 @@ const Phase2 = (() => {
     if (attached) return;
     attached = true;
     document.getElementById('phase2-tabs').addEventListener('click', e => {
+      // Info buttons live inside the tab pills: let the overlay open without
+      // switching tabs (the document-level Info handler serves the modal).
+      if (e.target.closest && e.target.closest('button[data-info-key]')) return;
       const btn = e.target.closest('button[data-tab]');
       if (!btn) return;
       current = parseInt(btn.dataset.tab, 10);

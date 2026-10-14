@@ -75,7 +75,7 @@
     {
       "id": "saifi",
       "code": "G4.2",
-      "name": "SAIFI [interruptions/year·customer]",
+      "name": "SAIFI [interruptions/y·customer]",
       "group": "G4",
       "groupName": "Reliability",
       "description": "Average number of supply interruptions experienced per customer per year.",
