@@ -2,6 +2,7 @@
 // Run: node tools/offline-check.mjs   (from the AHP repo root)
 import { AHP } from '../js/ahp-core.js';
 import { Guided } from '../js/guided.js';
+import { Phase2 } from '../js/phase2.js';
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -262,6 +263,151 @@ check('phase2: guided answers map to canonical matrix positions', () => {
   // Unknown or identical ids are rejected.
   assert(Guided.locatePair(ids, 'g1.2', 'nope', 3) === null, 'unknown id should give null');
   assert(Guided.locatePair(ids, 'g1.2', 'g1.2', 1) === null, 'diagonal should give null');
+});
+
+// 17. Adding a custom KPI extends the state without clearing answers.
+check('phase2: extendForAddedKpi preserves answers, appends new pairs', () => {
+  const T = Phase2.__test;
+  assert(T && typeof T.extendForAddedKpi === 'function', 'test hook missing');
+  const st = {
+    excluded: [], tiers: { a: 'B', b: 'B', c: 'B' }, skipped: false,
+    order: [], hub: null, target: 0, answers: {}, idx: 0, choice: null,
+    matrix: [], user: [], estimated: [], result: { weights: [1 / 3, 1 / 3, 1 / 3] }
+  };
+  T.resetAnswers(st, ['a', 'b', 'c']);
+  // Answer every guided pair (canonical keys, like recordKnown).
+  st.order.forEach(([x, y]) => {
+    const i = st.ids.indexOf(x), j = st.ids.indexOf(y);
+    const u = Math.min(i, j), v = Math.max(i, j);
+    st.answers[`${u}|${v}`] = { i: u, j: v, value: 2 };
+  });
+  const nAnswered = Object.keys(st.answers).length;
+  const oldOrder = st.order.map(([x, y]) => `${x}|${y}`);
+  const m00 = st.matrix[0][0], m01 = st.matrix[0][1], m22 = st.matrix[2][2];
+  st.tiers.d = 'B';
+  assert(T.extendForAddedKpi(st, 'd') === true, 'extend should apply');
+  assert(st.ids.join('|') === 'a|b|c|d', `ids append-only, got ${st.ids.join('|')}`);
+  assert(st.matrix.length === 4 && st.matrix.every(r => r.length === 4), 'matrix 4x4');
+  assert(st.matrix[0][0] === m00 && st.matrix[0][1] === m01 && st.matrix[2][2] === m22, 'old cells intact');
+  assert(st.matrix[3][3] === 1 && st.matrix[0][3] === 1 && st.user[0][3] === false, 'new row/col fresh');
+  assert(Object.keys(st.answers).length === nAnswered, 'no answers lost');
+  assert(st.order.length > oldOrder.length, 'pairs were appended');
+  assert(oldOrder.every((k, i) => {
+    const [x, y] = st.order[i];
+    return `${x < y ? x : y}|${x < y ? y : x}` === k.split('|').sort().join('|');
+  }), 'old order prefix intact');
+  assert(st.order.slice(oldOrder.length).every(([x, y]) => x === 'd' || y === 'd'), 'new pairs involve d');
+  assert(st.idx === oldOrder.length, `idx at first new pair, got ${st.idx}`);
+  assert(st.result === null, 'result cleared until new pairs answered');
+  // Guards: skipped tabs and duplicates fall back.
+  assert(T.extendForAddedKpi({ skipped: true, ids: ['a'] }, 'd') === false, 'skipped should refuse');
+  assert(T.extendForAddedKpi(st, 'd') === false, 'duplicate should refuse');
+});
+
+// 18. Tier changes rebuild the order but keep every answer.
+check('phase2: rebuildOrderKeepAnswers keeps answers on re-tier', () => {
+  const T = Phase2.__test;
+  const st = {
+    excluded: [], tiers: { a: 'B', b: 'B', c: 'B' }, skipped: false,
+    order: [], hub: null, target: 0, answers: {}, idx: 0, choice: null,
+    matrix: [], user: [], estimated: [], result: null
+  };
+  T.resetAnswers(st, ['a', 'b', 'c']);
+  const [x0, y0] = st.order[0];
+  const i0 = st.ids.indexOf(x0), j0 = st.ids.indexOf(y0);
+  st.answers[`${Math.min(i0, j0)}|${Math.max(i0, j0)}`] = { i: Math.min(i0, j0), j: Math.max(i0, j0), value: 3 };
+  const m = st.matrix.map(r => [...r]);
+  st.tiers.c = 'A';
+  T.rebuildOrderKeepAnswers(st);
+  assert(Object.keys(st.answers).length === 1, 'the one answer survives');
+  assert(st.matrix.every((r, i) => r.every((v, j) => v === m[i][j])), 'matrix untouched');
+  assert(st.hub === 'c', `hub should follow Tier-A, got ${st.hub}`);
+  assert(st.ids.join('|') === 'a|b|c', 'ids unchanged');
+});
+
+// 19. Excluding (N/A) a KPI shrinks the state, keeping other judgments.
+check('phase2: reduceForRemovedKpi keeps other answers on N/A toggle', () => {
+  const T = Phase2.__test;
+  assert(T && typeof T.reduceForRemovedKpi === 'function', 'test hook missing');
+  const fresh = (ids) => ({
+    excluded: [], tiers: Object.fromEntries(ids.map(id => [id, 'B'])), skipped: false,
+    order: [], hub: null, target: 0, answers: {}, idx: 0, choice: null,
+    matrix: [], user: [], estimated: [], result: null
+  });
+  const answerAll = (st) => {
+    st.order.forEach(([x, y]) => {
+      const i = st.ids.indexOf(x), j = st.ids.indexOf(y);
+      const u = Math.min(i, j), v = Math.max(i, j);
+      st.answers[`${u}|${v}`] = { i: u, j: v, value: 2 + ((u * 4 + v) % 7) };
+    });
+  };
+  const st = fresh(['a', 'b', 'c', 'd']);
+  T.resetAnswers(st, ['a', 'b', 'c', 'd']);
+  answerAll(st);
+  const before = JSON.parse(JSON.stringify(st.answers));
+  const dropped = Object.keys(before).filter(k => {
+    const [u, v] = k.split('|').map(Number);
+    return u === 2 || v === 2; // 'c' is index 2
+  });
+  assert(T.reduceForRemovedKpi(st, 'c') === true, 'reduce should apply');
+  assert(st.ids.join('|') === 'a|b|d', `ids shrunk, got ${st.ids.join('|')}`);
+  assert(st.matrix.length === 3 && st.matrix.every(r => r.length === 3), 'matrix 3x3');
+  assert(Object.keys(st.answers).length === Object.keys(before).length - dropped.length, 'only c-pairs dropped');
+  for (const [k, p] of Object.entries(st.answers)) {
+    const a = st.ids[p.i], b = st.ids[p.j];
+    assert(a !== 'c' && b !== 'c', 'no c-pair survives');
+    const oldKey = ['a', 'b', 'c', 'd'].indexOf(a) < ['a', 'b', 'c', 'd'].indexOf(b)
+      ? `${['a', 'b', 'c', 'd'].indexOf(a)}|${['a', 'b', 'c', 'd'].indexOf(b)}`
+      : `${['a', 'b', 'c', 'd'].indexOf(b)}|${['a', 'b', 'c', 'd'].indexOf(a)}`;
+    assert(before[oldKey] && before[oldKey].value === p.value, `value kept for ${k}`);
+  }
+  assert(st.order.every(([x, y]) => x !== 'c' && y !== 'c'), 'order covers remaining ids');
+  assert(st.result === null, 'result cleared until complete again');
+  // Hub re-derived when the hub itself is removed (5 ids so a non-hub
+  // pair exists: n=4 orders only hub links under divisor 4).
+  const st2 = fresh(['a', 'b', 'c', 'd', 'e']);
+  T.resetAnswers(st2, ['a', 'b', 'c', 'd', 'e']);
+  st2.tiers.e = 'A';
+  T.rebuildOrderKeepAnswers(st2);
+  assert(st2.hub === 'e', `hub should be e, got ${st2.hub}`);
+  answerAll(st2);
+  const nonHub = Object.entries(st2.answers).filter(([k, p]) => st2.ids[p.i] !== 'e' && st2.ids[p.j] !== 'e');
+  assert(nonHub.length > 0, 'setup needs a non-hub pair');
+  assert(T.reduceForRemovedKpi(st2, 'e') === true, 'hub removal should apply');
+  assert(st2.hub !== 'e' && st2.ids.includes(st2.hub), `hub re-derived, got ${st2.hub}`);
+  assert(Object.keys(st2.answers).length === nonHub.length, 'non-hub answers survive hub removal');
+  // Guards: unknown id is a no-op success, floor and skip refuse.
+  const snap = JSON.stringify(st2);
+  assert(T.reduceForRemovedKpi(st2, 'zz') === true, 'unknown id no-op');
+  assert(JSON.stringify(st2) === snap, 'no-op leaves state identical');
+  const st3 = fresh(['a', 'b']);
+  T.resetAnswers(st3, ['a', 'b']);
+  assert(T.reduceForRemovedKpi(st3, 'b') === false, 'floor keeps min 2');
+  assert(T.reduceForRemovedKpi({ skipped: true, ids: ['a', 'b', 'c'] }, 'c') === false, 'skipped refuses');
+});
+
+// 20. Toggle on then off round-trips without losing the original answers.
+check('phase2: extend then reduce round-trip keeps original answers', () => {
+  const T = Phase2.__test;
+  const st = {
+    excluded: [], tiers: { a: 'B', b: 'B', c: 'B' }, skipped: false,
+    order: [], hub: null, target: 0, answers: {}, idx: 0, choice: null,
+    matrix: [], user: [], estimated: [], result: null
+  };
+  T.resetAnswers(st, ['a', 'b', 'c']);
+  st.order.forEach(([x, y]) => {
+    const i = st.ids.indexOf(x), j = st.ids.indexOf(y);
+    const u = Math.min(i, j), v = Math.max(i, j);
+    st.answers[`${u}|${v}`] = { i: u, j: v, value: 3 };
+  });
+  const snapshot = JSON.stringify(st.answers);
+  const oldOrder = JSON.stringify(st.order);
+  st.tiers.d = 'B';
+  assert(T.extendForAddedKpi(st, 'd') === true, 'extend applies');
+  assert(T.reduceForRemovedKpi(st, 'd') === true, 'reduce applies');
+  assert(st.ids.join('|') === 'a|b|c', 'ids back to original');
+  assert(JSON.stringify(st.answers) === snapshot, 'original answers identical');
+  assert(JSON.stringify(st.order) === oldOrder, 'order regenerated identically');
 });
 
 if (failures) {  console.error(`\n${failures} check(s) FAILED`);

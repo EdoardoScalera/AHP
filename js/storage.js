@@ -114,6 +114,7 @@ const Storage = (() => {
       email: data.email || '',
       indicatorSet: data.indicatorSet || 'real-14-v2',
       indicatorIds: data.indicatorIds,
+      customIndicators: Array.isArray(data.customIndicators) ? data.customIndicators : [],
       criteriaIds: data.criteriaIds,
       criteriaWeights: data.criteriaWeights,
       options: data.options,

@@ -42,7 +42,8 @@ const Phase2 = (() => {
     Info.registerKpis(indicators);
     Info.register('phase2-na', 'What does N/A mean?', [
       'Marking a KPI as not applicable under a criterion means it cannot be meaningfully compared, not that it is the worst option.',
-      'The final indicator score is averaged only over the criteria where it was evaluated.'
+      'The final indicator score is averaged only over the criteria where it was evaluated.',
+      'Toggling N/A keeps your other answers — only new comparisons are asked. Only "Restart this criterion" clears them.'
     ]);
     onSubmit = opts.onSubmit || null;
     onSaveDraft = opts.onSaveDraft || null;
@@ -103,6 +104,107 @@ const Phase2 = (() => {
     return ids.indexOf(id);
   }
 
+  // Tiers only steer order/suggestions: rebuild the guided order, keep every
+  // answer (the id list is unchanged, so all positions stay valid), resume
+  // at the first unanswered pair.
+  function rebuildOrderKeepAnswers(st) {
+    const built = Guided.generateOrder(st.ids, st.tiers, DIVISOR);
+    st.order = built.order;
+    st.hub = built.hub;
+    st.target = built.target;
+    st.choice = null;
+    st.idx = firstUnansweredIndex(st);
+  }
+
+  // Index of the first guided pair without an answer (canonical pair keys).
+  function firstUnansweredIndex(st) {
+    const ans = st.answers || {};
+    for (let k = 0; k < st.order.length; k++) {
+      const [a, b] = st.order[k];
+      const i = st.ids.indexOf(a), j = st.ids.indexOf(b);
+      if (i < 0 || j < 0) return k;
+      if (!ans[pairKey(Math.min(i, j), Math.max(i, j))]) return k;
+    }
+    return st.order.length;
+  }
+
+  // Grow a criterion state for one added KPI without clearing answers.
+  // Append-only on st.ids: every existing canonical index (and therefore
+  // every answer key and matrix cell) stays valid. New pairs involving the
+  // added KPI are appended at the end of the guided order. Returns false
+  // when extension does not apply (skipped tab) — caller falls back to
+  // resetAnswers. Excluded (N/A) tabs are the caller's job: their id list
+  // is unchanged, so there is nothing to extend.
+  function extendForAddedKpi(st, newId) {
+    if (!st || st.skipped || st.ids.includes(newId)) return false;
+    st.ids.push(newId);
+    const m = st.ids.length;
+    st.matrix.forEach(row => row.push(1));
+    st.matrix.push(Array(m).fill(1));
+    st.user.forEach(row => row.push(false));
+    st.user.push(Array(m).fill(false));
+    st.estimated.forEach(row => row.push(false));
+    st.estimated.push(Array(m).fill(false));
+    const hub = (st.hub && st.ids.includes(st.hub)) ? st.hub : st.ids[0];
+    const key = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+    const seen = new Set(st.order.map(([a, b]) => key(a, b)));
+    const fresh = [];
+    if (!seen.has(key(hub, newId))) {
+      fresh.push([hub, newId]);
+      seen.add(key(hub, newId));
+    }
+    const tiers = st.tiers || {};
+    const cands = st.ids
+      .filter(id => id !== newId && id !== hub && !seen.has(key(id, newId)))
+      .map(id => ({ id, d: Guided.pairDistance(tiers[id], tiers[newId]) }));
+    cands.sort((x, y) => y.d - x.d);
+    const target = Guided.targetCount(m, DIVISOR);
+    for (const c of cands) {
+      if (st.order.length + fresh.length >= target) break;
+      fresh.push([c.id, newId]);
+    }
+    st.order = st.order.concat(fresh);
+    st.hub = hub;
+    st.target = target;
+    st.choice = null;
+    st.idx = firstUnansweredIndex(st);
+    st.result = null; // honestly incomplete again until the new pairs are answered
+    return true;
+  }
+
+  // Shrink a criterion state for one removed KPI without clearing the other
+  // answers. Keeps every respondent judgment not involving the removed id
+  // (re-keyed by position — never by blind index), drops only its pairs,
+  // and rebuilds the guided order over the remaining ids. Old LLS estimates
+  // are intentionally discarded: they were inferred with the removed KPI in
+  // the system, so runCompletion recomputes them from the kept judgments.
+  // Returns false when reduction does not apply — caller falls back to
+  // resetAnswers. Needs no change when the id was never evaluated (true).
+  function reduceForRemovedKpi(st, removedId) {
+    if (!st || st.skipped) return false;
+    const pos = st.ids.indexOf(removedId);
+    if (pos < 0) return true;
+    if (st.ids.length - 1 < MIN_EVAL) return false;
+    const kept = [];
+    for (const p of Object.values(st.answers || {})) {
+      const a = st.ids[p.i], b = st.ids[p.j];
+      if (a === removedId || b === removedId) continue;
+      kept.push({ a, b, value: p.value }); // value is a-over-b by construction
+    }
+    st.ids = st.ids.filter(id => id !== removedId);
+    const m = st.ids.length;
+    st.matrix = Array(m).fill(null).map(() => Array(m).fill(1));
+    st.user = Array(m).fill(null).map(() => Array(m).fill(false));
+    st.estimated = Array(m).fill(null).map(() => Array(m).fill(false));
+    st.answers = {};
+    for (const { a, b, value } of kept) {
+      recordKnown(st, st.ids, a, b, value);
+    }
+    rebuildOrderKeepAnswers(st);
+    st.result = null; // recomputed by the caller when complete again
+    return true;
+  }
+
   function pairKey(i, j) {
     return i < j ? `${i}|${j}` : `${j}|${i}`;
   }
@@ -125,12 +227,15 @@ const Phase2 = (() => {
     const st = state[cid];
     if (!st) return;
     const has = st.excluded.includes(id);
+    let included;
     if (exclude && !has) {
       if (evalIds(cid).length <= MIN_EVAL) return; // floor: keep at least 2
       st.excluded.push(id);
+      included = false;
     } else if (!exclude && has) {
       st.excluded = st.excluded.filter(x => x !== id);
       if (!st.tiers[id]) st.tiers[id] = 'B';
+      included = true;
     } else {
       return;
     }
@@ -139,7 +244,18 @@ const Phase2 = (() => {
     const next = {};
     ids.forEach(kid => { next[kid] = TIERS.includes(st.tiers[kid]) ? st.tiers[kid] : 'B'; });
     st.tiers = next;
-    resetAnswers(st, ids);
+    // Toggling never clears answers: including extends (only fresh pairs
+    // asked), excluding shrinks (other judgments kept). Only the explicit
+    // restart wipes a criterion.
+    if (st.skipped) {
+      resetAnswers(st, ids);
+    } else if (included) {
+      extendForAddedKpi(st, id);
+    } else if (reduceForRemovedKpi(st, id)) {
+      if (isCriterionComplete(st)) runCompletion(cid);
+    } else {
+      resetAnswers(st, ids);
+    }
     renderAll();
     persistDraft();
   }
@@ -151,8 +267,7 @@ const Phase2 = (() => {
     const board = document.getElementById('phase2-tier-board');
     const hadFocus = !!(board && board.contains(document.activeElement));
     st.tiers[id] = tier;
-    // Tier changes invalidate order/suggestions: restart guided Q&A for this tab.
-    resetAnswers(st, evalIds(cid));
+    rebuildOrderKeepAnswers(st);
     renderAll();
     persistDraft();
     if ((opts.focus !== false) && hadFocus && board) {
@@ -200,12 +315,17 @@ const Phase2 = (() => {
     indicators.push(k);
     Info.registerKpis([k]);
     // Evaluated under the current criterion, pre-excluded (N/A) elsewhere so
-    // matrix positions stay aligned across criteria. Like exclusion changes,
-    // guided answers restart.
+    // matrix positions stay aligned across criteria. Adding never clears
+    // answers: evaluated tabs are extended (only new pairs asked), excluded
+    // tabs just track the new id as N/A. Removal / N/A toggles still restart.
     Object.entries(state).forEach(([cid, st]) => {
       if (cid !== c.id && !st.excluded.includes(k.id)) st.excluded.push(k.id);
       if (cid === c.id) st.tiers[k.id] = 'B';
-      resetAnswers(st, evalIds(cid));
+      if (st.skipped || !evalIds(cid).includes(k.id)) {
+        if (st.skipped) resetAnswers(st, evalIds(cid));
+        return;
+      }
+      extendForAddedKpi(st, k.id);
     });
     input.value = '';
     renderCustomKpiList();
@@ -216,19 +336,24 @@ const Phase2 = (() => {
   function removeCustomIndicator(id) {
     customIndicators = customIndicators.filter(k => k.id !== id);
     indicators = indicators.filter(k => k.id !== id);
-    Object.values(state).forEach(st => {
+    // Like toggling: evaluated tabs shrink with other answers kept, tabs
+    // where it was N/A are left fully untouched. Only explicit restart wipes.
+    Object.entries(state).forEach(([cid, st]) => {
       st.excluded = st.excluded.filter(x => x !== id);
       if (st.tiers) delete st.tiers[id];
-      resetAnswers(st, evalIdsForState(st));
+      if (st.skipped) {
+        resetAnswers(st, evalIds(cid));
+      } else if (!st.ids.includes(id)) {
+        return; // N/A here: fully untouched
+      } else if (reduceForRemovedKpi(st, id)) {
+        if (isCriterionComplete(st)) runCompletion(cid);
+      } else {
+        resetAnswers(st, evalIds(cid));
+      }
     });
     renderCustomKpiList();
     renderAll();
     persistDraft();
-  }
-
-  function evalIdsForState(st) {
-    const excluded = new Set(st.excluded || []);
-    return indicators.filter(k => !excluded.has(k.id)).map(k => k.id);
   }
 
   // ---------- guided per criterion ----------
@@ -1142,7 +1267,8 @@ const Phase2 = (() => {
 
   return {
     init, isAllComplete, buildPayload, reset, clearDraft, downloadRanking,
-    DIVISOR, MIN_EVAL
+    DIVISOR, MIN_EVAL,
+    __test: { extendForAddedKpi, reduceForRemovedKpi, rebuildOrderKeepAnswers, firstUnansweredIndex, resetAnswers }
   };
 })();
 

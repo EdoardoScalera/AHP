@@ -101,13 +101,26 @@ const server = createServer((req, res) => {
         if (body.weightsSource !== 'phase1' && body.weightsSource !== 'equal-default') {
           return send(res, 400, { error: 'Criteria weight source is invalid.' });
         }
-        if (m < 2 || m > 16 || q < MIN_N || q > MAX_N) return send(res, 400, { error: 'Phase-2 indicator/criteria lists invalid.' });
+        if (m < 2 || m > 24 || q < MIN_N || q > MAX_N) return send(res, 400, { error: 'Phase-2 indicator/criteria lists invalid.' });
         if (!checkWeights(body.criteriaWeights, q)) return send(res, 400, { error: 'Criteria weights must sum to 1.' });
+        // Fail-closed mirror of the Worker: custom-looking ids need definitions.
+        const definedCX = new Set(Array.isArray(body.customIndicators) ? body.customIndicators.map((k) => k && k.id) : []);
+        for (const id of body.indicatorIds) {
+          if (typeof id === 'string' && id.startsWith('custom_kpi_') && !definedCX.has(id)) {
+            return send(res, 400, { error: `Custom indicator ${id} is missing its definition.` });
+          }
+        }
         for (const cid of body.criteriaIds) {
           const o = body.options && body.options[cid];
           const ev = o && o.evaluatedIds;
           const ex = o && o.excludedIds;
           const ids = body.indicatorIds;
+          if (o && o.skipped === true) {
+            if (!Array.isArray(ev) || ev.length !== 0) {
+              return send(res, 400, { error: `Skipped criterion ${cid} must be empty.` });
+            }
+            continue;
+          }
           if (!o || !Array.isArray(ev) || ev.length < 2 ||
               !ids.every((id) => ev.includes(id) !== ex.includes(id))) {
             return send(res, 400, { error: `Evaluated/excluded KPIs for ${cid} are invalid.` });
