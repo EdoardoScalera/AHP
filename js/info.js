@@ -72,7 +72,7 @@ const Info = (() => {
     ]);
     register('cr-info', 'About the Consistency Ratio (CR)', [
       'The Consistency Ratio checks whether your comparisons agree with each other: if A is more important than B, and B more important than C, then A should also come out stronger than C.',
-      'CR = CI / RI: CI measures the disagreement among your comparisons, and RI is a reference value for random comparisons of the same size (Saaty\u2019s Random Index).',
+      'CR = CI / RI: the consistency index (CI) measures the disagreement among your comparisons, and the Random Index (RI) is a reference value for random comparisons of the same size (Saaty\u2019s Random Index).',
       'CR \u2264 10% is considered acceptable.',
       'Above 10%, consider revising your judgments to improve quality \u2014 you can still submit (your responses are flagged for analysis).'
     ]);

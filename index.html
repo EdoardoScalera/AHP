@@ -112,7 +112,7 @@
 
         <section id="tier-section" class="card">
           <h2>Priority levels <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-tiers" aria-label="Leave a comment on Priority levels" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-          <p class="hint">Drag each criterion block into a tier (or use the A/B/C buttons; keyboard accessible).</p>
+          <p class="hint">Rank each criterion based on its priority level (or use the A/B/C buttons). Priority levels guide the comparison suggestions below</p>
           <div id="tier-board" class="tier-board">
             <div class="tier-col" data-tier="A">
               <h3>A — Top priority</h3>
@@ -187,6 +187,7 @@
 
         <section id="cr-section" class="card">
           <h2>Consistency Check <button type="button" class="info-btn" data-info-key="cr-info" aria-label="More information about the Consistency Ratio" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-cr" aria-label="Leave a comment on Consistency Check" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
+          <p class="guided-q">The Consistency Ratio checks whether your comparisons agree with each other. If CR is above 10%, it is advisable to revise your judgments to improve quality</p>
           <div class="cr-display">
             <div class="cr-value" id="cr-value">CR: —</div>
             <div class="cr-status" id="cr-status">Complete the matrix to see consistency ratio</div>
@@ -198,7 +199,7 @@
 
         <section id="plot-section" class="card">
           <h2>Your Priorities <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-plot" aria-label="Leave a comment on Your Priorities" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-          <p class="hint">Live view of criteria priority scores from your answers.</p>
+          <p class="hint">Criteria priority scores calculated from your answers.</p>
           <div id="plot-empty" class="hint">Complete the guided comparisons above — the plot appears here.</div>
           <div id="plot-wrap" class="hidden">
             <div class="plot-canvas-wrap"><canvas id="plot-canvas"></canvas></div>
@@ -236,9 +237,9 @@
     <div id="phase2-screen" class="screen hidden">
       <section class="card">
           <h2>Performance indicators <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-indicators" aria-label="Leave a comment on Performance indicators" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-        <p class="hint">Score performance indicators relatively to each criterion. You may remove KPIs unrelated to a criterion; if criteria priorities are available from the previous section of the survey, they are used to calculate the final KPI ranking; otherwise, all criteria receive equal weight. The indicator selection is pre-filled with default suggestions for each criterion, based on the ENTRANCE KPI shortlist. These are only defaults: check or uncheck indicators freely based on your own experience, perspective and interests.</p>
+        <p class="hint">Score performance indicators relatively to each criterion. The indicator selection is pre-filled with default suggestions for each criterion: check or uncheck indicators freely. You may remove KPIs unrelated to a criterion or add missing ones. <br> If criteria priorities are available from the previous section of the survey, they are used to calculate the final KPI ranking; otherwise, all criteria receive equal weight. </p>
         <div class="form-group">
-          <span class="label">Uncheck indicators not related to this criterion; select a minimum of 2 indicators <button type="button" class="info-btn" data-info-key="phase2-na" aria-label="More information about marking KPIs as not applicable" title="More information">i</button></span>
+          <span class="label">Select relevant indicators for this criterion; select a minimum of 2 indicators <button type="button" class="info-btn" data-info-key="phase2-na" aria-label="More information about marking KPIs as not applicable" title="More information">i</button></span>
           <div id="phase2-tabs" class="phase2-tabs"></div>
           <div id="phase2-kpi-checklist" class="criteria-checklist"></div>
           <div class="custom-add-row">
@@ -252,7 +253,7 @@
 
       <section class="card">
           <h2>Priority levels <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-tiers" aria-label="Leave a comment on Priority levels" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-          <p class="hint">Rank the evaluated KPIs into tiers (or use the A/B/C buttons). Tiers guide the comparison suggestions below.</p>
+          <p class="hint">Rank each indicator based on its priority level (or use the A/B/C buttons). Priority levels guide the comparison suggestions below.</p>
         <div id="phase2-tier-board" class="tier-board">
           <div class="tier-col" data-tier="A">
             <h3>A — Measures best</h3>
@@ -272,7 +273,7 @@
       <section class="card">
           <h2>Guided Comparisons <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-guided" aria-label="Leave a comment on Guided Comparisons" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
           <h3 id="phase2-crit-title" class="hidden"></h3>
-        <p class="hint">How well does each performance indicator measure this criterion? Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.</p>
+        <p class="hint">How well does each performance indicator measure this criterion? <br> Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.</p>
         <p class="hint" id="phase2-progress"></p>
         <div class="guided-bar"><div class="guided-bar-fill" id="phase2-bar-fill"></div></div>
         <p id="phase2-skipped-note" class="hint hidden">This criterion is marked as not applicable (“None of the above”). Uncheck it in the selection above to evaluate KPIs.</p>
