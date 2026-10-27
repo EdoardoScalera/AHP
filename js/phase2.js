@@ -539,18 +539,18 @@ const Phase2 = (() => {
 
   // Guided question card only — never touches the matrix table, so it is
   // safe to call while the user is typing in a matrix cell (keeps focus).
-  // Also toggles the matrix wrap: the table + its instructions appear only
-  // once every guided question of this criterion is answered (or when the
-  // criterion is marked N/A — then it renders empty). The CR display and
-  // the Prev/Next/Restart navigation below stay visible throughout.
+  // Also toggles the whole matrix card (question line, instructions and
+  // table): it appears only once every guided question of this criterion is
+  // answered, mirroring the Phase 1 layout. The Consistency Check lives in
+  // its own card below and stays visible throughout.
   function renderGuidedCard() {
     const c = cur(), st = curState();
     const card = document.getElementById('phase2-guided-card');
     const done = document.getElementById('phase2-done');
     const note = document.getElementById('phase2-skipped-note');
-    const wrap = document.getElementById('phase2-matrix-wrap');
+    const matrixCard = document.getElementById('phase2-matrix-section');
     if (!card || !done || !c || !st) return;
-    if (wrap) wrap.classList.toggle('hidden', st.skipped || !isCriterionComplete(st));
+    if (matrixCard) matrixCard.classList.toggle('hidden', st.skipped || !isCriterionComplete(st));
     if (st.skipped) {
       card.classList.add('hidden');
       done.classList.add('hidden');
@@ -796,7 +796,7 @@ const Phase2 = (() => {
     const showBlank = () => {
       vEl.textContent = 'CR: —';
       vEl.className = 'cr-value';
-      sEl.textContent = 'Answer the guided questions (or fill the matrix) to see consistency.';
+      sEl.textContent = 'Complete the matrix to see consistency ratio';
       bar.style.width = '0%';
       bar.className = 'cr-bar-fill';
     };
@@ -815,8 +815,8 @@ const Phase2 = (() => {
       vEl.textContent = `CR: ${(prov.CR * 100).toFixed(1)}%`;
       vEl.className = `cr-value ${prov.consistent ? 'acceptable' : 'unacceptable'}`;
       sEl.textContent = prov.consistent
-        ? '✓ Acceptable (CR ≤ 10%)'
-        : '✗ Exceeds 10% — you can still continue (flagged for analysis)';
+        ? '✓ Consistency is acceptable (CR ≤ 10%)'
+        : '✗ CR exceeds 10% — consider revising, but you can still continue (flagged for analysis)';
       bar.style.width = `${Math.min(100, (prov.CR / 0.2) * 100)}%`;
       bar.className = `cr-bar-fill ${prov.consistent ? '' : 'unacceptable'}`;
       return;
@@ -825,8 +825,8 @@ const Phase2 = (() => {
     vEl.textContent = `CR: ${(cr * 100).toFixed(1)}%`;
     vEl.className = `cr-value ${st.result.consistent ? 'acceptable' : 'unacceptable'}`;
     sEl.textContent = st.result.consistent
-      ? '✓ Acceptable (CR ≤ 10%)'
-      : '✗ Exceeds 10% — you can still continue (flagged for analysis)';
+      ? '✓ Consistency is acceptable (CR ≤ 10%)'
+      : '✗ CR exceeds 10% — consider revising, but you can still continue (flagged for analysis)';
     bar.style.width = `${Math.min(100, (cr / 0.2) * 100)}%`;
     bar.className = `cr-bar-fill ${st.result.consistent ? '' : 'unacceptable'}`;
   }

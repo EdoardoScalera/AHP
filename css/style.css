@@ -637,15 +637,6 @@ header h1 {
 }
 
 /* CR Display */
-.cr-subhead {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--primary);
-  margin: 4px 0 0;
-  display: flex;
-  align-items: center;
-}
-
 .cr-display {
   text-align: center;
   padding: 16px;

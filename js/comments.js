@@ -19,6 +19,7 @@ const Comments = (() => {
     'p2-tiers': 'Priority levels',
     'p2-guided': 'Guided Comparisons',
     'p2-matrix': 'Pairwise Comparison Matrix',
+    'p2-cr': 'Consistency Check',
     'p2-ranking': 'Final KPI Ranking',
     'p2-general': 'General comments'
   };

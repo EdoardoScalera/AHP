@@ -187,7 +187,7 @@
 
         <section id="cr-section" class="card">
           <h2>Consistency Check <button type="button" class="info-btn" data-info-key="cr-info" aria-label="More information about the Consistency Ratio" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-cr" aria-label="Leave a comment on Consistency Check" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-          <p class="guided-q">The Consistency Ratio checks whether your comparisons agree with each other. If CR is above 10%, it is advisable to revise your judgments to improve quality</p>
+          <p class="hint">The Consistency Ratio checks whether your comparisons agree with each other. If CR is above 10%, it is advisable to revise your judgments to improve quality</p>
           <div class="cr-display">
             <div class="cr-value" id="cr-value">CR: —</div>
             <div class="cr-status" id="cr-status">Complete the matrix to see consistency ratio</div>
@@ -237,7 +237,7 @@
     <div id="phase2-screen" class="screen hidden">
       <section class="card">
           <h2>Performance indicators <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-indicators" aria-label="Leave a comment on Performance indicators" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-        <p class="hint">Score performance indicators relatively to each criterion. The indicator selection is pre-filled with default suggestions for each criterion: check or uncheck indicators freely. You may remove KPIs unrelated to a criterion or add missing ones. <br> If criteria priorities are available from the previous section of the survey, they are used to calculate the final KPI ranking; otherwise, all criteria receive equal weight. </p>
+        <p class="hint">Score performance indicators relatively to each criterion. The indicator selection is pre-filled with default suggestions for each criterion: check or uncheck indicators freely. You may remove KPIs unrelated to a criterion or add missing ones.<br> If criteria priorities are available from the previous section of the survey, they are used to calculate the final KPI ranking; otherwise, all criteria receive equal weight. </p>
         <div class="form-group">
           <span class="label">Select relevant indicators for this criterion; select a minimum of 2 indicators <button type="button" class="info-btn" data-info-key="phase2-na" aria-label="More information about marking KPIs as not applicable" title="More information">i</button></span>
           <div id="phase2-tabs" class="phase2-tabs"></div>
@@ -303,34 +303,36 @@
         </div>
       </section>
 
-      <section class="card">
+      <section id="phase2-matrix-section" class="card hidden">
         <h2>Pairwise Comparison Matrix <button type="button" class="info-btn" data-info-key="matrix-info" aria-label="More information about the comparison matrix" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-matrix" aria-label="Leave a comment on Pairwise Comparison Matrix" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
         <p class="guided-q">How important is <strong>indicator A (row)</strong> relative to <strong>indicator B (column)</strong>?</p>
-        <div id="phase2-matrix-wrap" class="hidden">
-          <p class="hint">Complete the matrix of comparisons between the KPIs. Rate the relative importance of the row indicator relative to the column indicator. Use scale 2–9 if the row indicator is more important, or 1/9–1/2 if the column indicator is. Equal importance is set with 1. An estimate based on your responses in the guided comparison is defined for consistency (<span class="tag estimated">yellow = estimate</span>); click any matrix value to override (<span class="tag user">green = your score</span>).</p>
-          <div class="matrix-container">
-            <table id="phase2-matrix" class="matrix-table">
-              <thead>
-                <tr>
-                  <th class="corner">KPI</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
+        <p class="hint">Complete the matrix of comparisons between the KPIs. Rate the relative importance of the row indicator relative to the column indicator. Use scale 2–9 if the row indicator is more important, or 1/9–1/2 if the column indicator is. Equal importance is set with 1. An estimate based on your responses in the guided comparison is defined for consistency (<span class="tag estimated">yellow = estimate</span>); click any matrix value to override (<span class="tag user">green = your score</span>).</p>
+        <div class="matrix-container">
+          <table id="phase2-matrix" class="matrix-table">
+            <thead>
+              <tr>
+                <th class="corner">KPI</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
-        <h3 class="cr-subhead">Consistency Check <button type="button" class="info-btn" data-info-key="cr-info" aria-label="More information about the Consistency Ratio" title="More information">i</button></h3>
+        <div class="form-actions">
+          <button type="button" id="phase2-restart-matrix" class="btn btn-secondary push-left">Restart this criterion</button>
+          <button type="button" id="phase2-prev" class="btn btn-secondary">Previous criterion</button>
+          <button type="button" id="phase2-next" class="btn btn-secondary">Next criterion</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Consistency Check <button type="button" class="info-btn" data-info-key="cr-info" aria-label="More information about the Consistency Ratio" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-cr" aria-label="Leave a comment on Consistency Check" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
+        <p class="hint">The Consistency Ratio checks whether your comparisons agree with each other. If CR is above 10%, it is advisable to revise your judgments to improve quality</p>
         <div class="cr-display">
           <div class="cr-value" id="phase2-cr-value">CR: —</div>
           <div class="cr-status" id="phase2-cr-status"></div>
           <div class="cr-bar">
             <div class="cr-bar-fill" id="phase2-cr-bar-fill"></div>
           </div>
-        </div>
-        <div class="form-actions">
-          <button type="button" id="phase2-restart-matrix" class="btn btn-secondary push-left">Restart this criterion</button>
-          <button type="button" id="phase2-prev" class="btn btn-secondary">Previous criterion</button>
-          <button type="button" id="phase2-next" class="btn btn-secondary">Next criterion</button>
         </div>
       </section>
 
