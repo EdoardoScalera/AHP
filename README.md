@@ -18,10 +18,12 @@ The goal of this survey is to gather information on stakeholders to support the 
 2. **Respondent** — name, role, pilot, country (required), email (optional), renovation under consideration Yes/No + details, consent checkbox.
 3. **Decision criteria** — 7 defaults (uncheck irrelevant, add your own; 3–9 active, matrix adapts).
 4. **Priority levels** — drag criteria into tiers A (top) / B (mid) / C (low); keyboard accessible (arrows, A/B/C keys).
-5. **Guided comparisons** — ~n(n−1)/4 questions from a spanning tree (hub = first Tier-A), Yes/No/Equal + 2–9 scale with tier-based recommended highlights (non-binding) and transitive hints.
-6. **Review matrix** — green = your judgment, yellow = estimated via logarithmic least-squares inference (capped at the 1–9 scale, click to override).
+5. **Guided comparisons** — ~n(n−1)/4 questions from a spanning tree (hub = first Tier-A), Yes/No/Equal + 2–9 scale with tier-based recommended highlights (non-binding) and transitive hints. The pairwise matrix stays hidden until every guided question is answered.
+6. **Review matrix** — revealed once all questions are answered: green = your judgment, yellow = estimated via logarithmic least-squares inference (capped at the 1–9 scale, click to override). (i) popups explain the matrix and the Consistency Ratio.
 7. **Consistency + plot** — CR shown with warn-but-submit over 0.10; live priority bar chart (Chart.js CDN, table fallback offline).
 8. **Submit** — stored privately; drafts kept locally in the browser.
+
+Phase 2 (indicator grading) follows the same pattern per criterion, with a default KPI pre-selection per criterion (`data/criteria.json` `defaultKpis`, from `docs/kpi choices.txt`): Energy performance 8 KPIs, Economic 4, IEQ 3, Energy system integration 5, Practical implementation 5, and none for Water use / Climate impact (select ≥2 or mark the criterion not applicable). Defaults are suggestions only — respondents can check/uncheck freely.
 
 ## Decision Criteria (7 default)
 

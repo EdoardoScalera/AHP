@@ -79,16 +79,18 @@ check('ahp-core: completeIncomplete 6 pairs -> 7x7', () => {
 });
 
 // 6. indicators.json: 14 unique real KPIs (G1x2, G2x3, G3x2, G4x1, G5x2, G6x4)
-check('data: indicators.json has 14 unique KPIs (real-14-v2)', () => {
+check('data: indicators.json has 14 unique KPIs (real-14-v3)', () => {
   const data = JSON.parse(readFileSync(new URL('../data/indicators.json', import.meta.url), 'utf8'));
-  assert(data.version === 'real-14-v2', 'version');
+  assert(data.version === 'real-14-v3', 'version');
   assert(data.indicators.length === 14, 'should list 14');
   const groups = data.indicators.map(k => k.group).sort();
   assert(JSON.stringify(groups) === JSON.stringify(['G1', 'G1', 'G2', 'G2', 'G2', 'G3', 'G3', 'G4', 'G5', 'G5', 'G6', 'G6', 'G6', 'G6']), `groups: ${groups}`);
   assert(new Set(data.indicators.map(k => k.id)).size === 14, 'ids unique');
   assert(new Set(data.indicators.map(k => k.code)).size === 14, 'codes unique');
-  const iod = data.indicators.find(k => k.id === 'indoor_overheating_degree');
-  assert(iod && iod.name.includes('[°Ch]'), 'IOD unit should be [°Ch]');
+  const iod = data.indicators.find(k => k.id === 'indoor_discomfort_degree');
+  assert(iod && iod.name.includes('[°Ch]'), 'G5.2 unit should be [°Ch]');
+  assert(iod && iod.name.includes('Indoor Discomfort Degree'), 'G5.2 renamed to Indoor Discomfort Degree');
+  assert(!data.indicators.some(k => k.id === 'indoor_overheating_degree'), 'old overheating id should be gone');
   const sfi = data.indicators.find(k => k.id === 'saifi');
   assert(sfi && sfi.code === 'G4.2' && sfi.group === 'G4' && sfi.direction === 'lower', 'G4.2 SAIFI entry');
   assert(!data.indicators.some(k => k.id === 'saidi'), 'SAIDI should be replaced by SAIFI');
@@ -206,6 +208,33 @@ check('data: criteria + indicators carry info overlay text', () => {
   data.indicators.forEach(k => {
     assert(typeof k.info === 'string' && k.info.trim().length > 10, `KPI ${k.id} needs info text`);
     assert(k.direction === 'higher' || k.direction === 'lower', `KPI ${k.id} needs direction`);
+  });
+});
+
+// 13b. Per-criterion default KPI pre-selection (docs/kpi choices.txt): every
+// default references a real id; non-empty defaults respect the min-2 floor;
+// water_use and climate_impact deliberately default to nothing selected.
+check('data: per-criterion default KPI selections are valid', () => {
+  const crit = JSON.parse(readFileSync(new URL('../data/criteria.json', import.meta.url), 'utf8'));
+  const ind = JSON.parse(readFileSync(new URL('../data/indicators.json', import.meta.url), 'utf8'));
+  const ids = new Set(ind.indicators.map(k => k.id));
+  assert(crit.criteria.length === 7, 'should list 7 criteria');
+  const expected = {
+    energy_performance: ['primary_energy', 'energy_savings', 'demand_response', 'energy_shift_flexibility', 'no_grid_interaction', 'load_cover_factor', 'load_matching_index', 'specific_cost_flexibility'],
+    water_use: [],
+    climate_impact: [],
+    economic_performance: ['investment_cost', 'specific_cost_flexibility', 'npv', 'spp'],
+    ieq: ['saifi', 'ppd', 'indoor_discomfort_degree'],
+    energy_system_integration: ['demand_response', 'energy_shift_flexibility', 'no_grid_interaction', 'load_cover_factor', 'load_matching_index'],
+    practical_implementation: ['investment_cost', 'npv', 'spp', 'saifi', 'ppd']
+  };
+  crit.criteria.forEach(c => {
+    assert(Array.isArray(c.defaultKpis), `${c.id} needs a defaultKpis array`);
+    assert(JSON.stringify(c.defaultKpis) === JSON.stringify(expected[c.id]),
+      `${c.id} defaultKpis mismatch: got ${JSON.stringify(c.defaultKpis)}`);
+    c.defaultKpis.forEach(id => assert(ids.has(id), `${c.id} default references unknown id ${id}`));
+    assert(new Set(c.defaultKpis).size === c.defaultKpis.length, `${c.id} defaults must be unique`);
+    if (c.defaultKpis.length) assert(c.defaultKpis.length >= 2, `${c.id} needs >= 2 defaults (min-eval floor)`);
   });
 });
 

@@ -61,9 +61,27 @@ const Info = (() => {
     if (modal) modal.classList.add('hidden');
   }
 
+  // Shared static modals (matrix + consistency ratio), registered once on
+  // setup so they are available in every scenario (Phase 1 and Phase 2).
+  function registerShared() {
+    register('matrix-info', 'About the comparison matrix', [
+      'Each cell asks how many times more important the row item is compared to the column item.',
+      'Enter a value from 1 to 9 (1 = equal, 3 = moderate, 5 = strong, 7 = very strong, 9 = extreme importance), or a fraction such as 1/3 when the column item is more important.',
+      'An item compared with itself is always 1.',
+      'The matrix is reciprocal: if A over B is 3, then B over A is automatically 1/3. Only the upper half is filled in — the lower half mirrors it.'
+    ]);
+    register('cr-info', 'About the Consistency Ratio (CR)', [
+      'The Consistency Ratio checks whether your comparisons agree with each other: if A is more important than B, and B more important than C, then A should also come out stronger than C.',
+      'CR = CI / RI: CI measures the disagreement among your comparisons, and RI is a reference value for random comparisons of the same size (Saaty\u2019s Random Index).',
+      'CR \u2264 10% is considered acceptable.',
+      'Above 10%, consider revising your judgments to improve quality \u2014 you can still submit (your responses are flagged for analysis).'
+    ]);
+  }
+
   function setup() {
     if (wired) return;
     wired = true;
+    registerShared();
     document.addEventListener('click', e => {
       const btn = e.target.closest ? e.target.closest('button[data-info-key]') : null;
       if (btn) {

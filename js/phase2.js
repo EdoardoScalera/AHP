@@ -18,8 +18,10 @@ const Phase2 = (() => {
   const MIN_EVAL = 2;
   const DRAFT_KEY = 'ahp-phase2-v4';
   const TIERS = ['A', 'B', 'C'];
-  const INDICATOR_SET = 'real-14-v2';
+  const INDICATOR_SET = 'real-14-v3';
   const MAX_CUSTOM = 5;
+  const SKIPPED_NOTE = 'This criterion is marked as not applicable (“None of the above”). Uncheck it in the selection above to evaluate KPIs.';
+  const TOO_FEW_NOTE = 'Select at least 2 indicators above (or mark this criterion as not applicable) to start comparisons.';
 
   let indicators = [];
   let customIndicators = [];
@@ -51,7 +53,7 @@ const Phase2 = (() => {
     state = {};
     customIndicators = [];
     customCounter = 1;
-    criteria.forEach(c => { state[c.id] = freshCriterionState([]); });
+    criteria.forEach(c => { state[c.id] = freshCriterionState(defaultExclusions(c)); });
     attachOnce();
     buildTabs();
     loadDraft();
@@ -78,6 +80,22 @@ const Phase2 = (() => {
     };
     resetAnswers(st, ids);
     return st;
+  }
+
+  // Default exclusions per criterion from data/criteria.json `defaultKpis`
+  // (docs/kpi choices.txt). Suggested pre-selection only — respondents can
+  // freely re-check/unchecked indicators. An empty defaultKpis list excludes
+  // every indicator (respondent must pick at least 2 or mark the criterion
+  // not applicable); criteria without the field (custom ones) start with
+  // everything checked. Unknown ids are dropped and the >= 2 floor applies:
+  // fewer than 2 valid defaults fall back to no exclusion.
+  function defaultExclusions(c) {
+    const all = indicators.map(k => k.id);
+    if (!c || !Array.isArray(c.defaultKpis)) return [];
+    if (c.defaultKpis.length === 0) return all;
+    const valid = new Set(c.defaultKpis.filter(id => all.includes(id)));
+    if (valid.size < MIN_EVAL) return [];
+    return all.filter(id => !valid.has(id));
   }
 
   function resetAnswers(st, ids) {
@@ -149,7 +167,9 @@ const Phase2 = (() => {
     const key = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
     const seen = new Set(st.order.map(([a, b]) => key(a, b)));
     const fresh = [];
-    if (!seen.has(key(hub, newId))) {
+    // hub === newId only when the criterion had zero evaluated KPIs (defaults
+    // that pre-uncheck everything): a single KPI has no pair to ask yet.
+    if (hub !== newId && !seen.has(key(hub, newId))) {
       fresh.push([hub, newId]);
       seen.add(key(hub, newId));
     }
@@ -519,16 +539,36 @@ const Phase2 = (() => {
 
   // Guided question card only — never touches the matrix table, so it is
   // safe to call while the user is typing in a matrix cell (keeps focus).
+  // Also toggles the matrix wrap: the table + its instructions appear only
+  // once every guided question of this criterion is answered (or when the
+  // criterion is marked N/A — then it renders empty). The CR display and
+  // the Prev/Next/Restart navigation below stay visible throughout.
   function renderGuidedCard() {
     const c = cur(), st = curState();
     const card = document.getElementById('phase2-guided-card');
     const done = document.getElementById('phase2-done');
     const note = document.getElementById('phase2-skipped-note');
+    const wrap = document.getElementById('phase2-matrix-wrap');
     if (!card || !done || !c || !st) return;
+    if (wrap) wrap.classList.toggle('hidden', st.skipped || !isCriterionComplete(st));
     if (st.skipped) {
       card.classList.add('hidden');
       done.classList.add('hidden');
-      if (note) note.classList.remove('hidden');
+      if (note) {
+        note.textContent = SKIPPED_NOTE;
+        note.classList.remove('hidden');
+      }
+      return;
+    }
+    // Fewer than 2 evaluated KPIs (defaults may leave a criterion with none
+    // selected): nothing to compare yet.
+    if (evalIds(c.id).length < MIN_EVAL) {
+      card.classList.add('hidden');
+      done.classList.add('hidden');
+      if (note) {
+        note.textContent = TOO_FEW_NOTE;
+        note.classList.remove('hidden');
+      }
       return;
     }
     if (note) note.classList.add('hidden');
@@ -1213,7 +1253,9 @@ const Phase2 = (() => {
       Object.entries(d.state).forEach(([id, s]) => {
         if (!state[id] || !Array.isArray(s.excluded)) return;
         const validEx = s.excluded.filter(x => indicators.some(k => k.id === x));
-        if (indicators.length - validEx.length < MIN_EVAL) return;
+        // NB: 0 evaluated KPIs is a legitimate state (criteria whose defaults
+        // leave everything unchecked); the guided card shows the "select at
+        // least 2" note until the respondent picks indicators or marks N/A.
         state[id].excluded = validEx;
         if (s.skipped === true) state[id].skipped = true;
         if (s.tiers && typeof s.tiers === 'object') {
@@ -1253,7 +1295,7 @@ const Phase2 = (() => {
     customIndicators = [];
     customCounter = 1;
     indicators = indicators.filter(k => k && !String(k.id || '').startsWith('custom_kpi_'));
-    criteria.forEach(c => { state[c.id] = freshCriterionState([]); });
+    criteria.forEach(c => { state[c.id] = freshCriterionState(defaultExclusions(c)); });
     current = 0;
     if (chart) { chart.destroy(); chart = null; }
     lastExport = null;

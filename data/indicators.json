@@ -1,6 +1,6 @@
 {
-  "version": "real-14-v2",
-  "note": "Phase-2 real KPI set: 14 KPIs, codes per docs/kpi_review.tex. Same shortlist is compared under each active criterion. v2 replaces G4.1 SAIDI with G4.2 SAIFI.",
+  "version": "real-14-v3",
+  "note": "Phase-2 real KPI set: 14 KPIs, codes per docs/kpi_review.tex. Same shortlist is compared under each active criterion. v2 replaces G4.1 SAIDI with G4.2 SAIFI. v3 renames G5.2 Indoor Overheating Degree to Indoor Discomfort Degree (id indoor_discomfort_degree).",
   "indicators": [
     {
       "id": "primary_energy",
@@ -93,13 +93,13 @@
       "direction": "lower"
     },
     {
-      "id": "indoor_overheating_degree",
+      "id": "indoor_discomfort_degree",
       "code": "G5.2",
-      "name": "Indoor Overheating Degree [°Ch]",
+      "name": "Indoor Discomfort Degree [°Ch]",
       "group": "G5",
       "groupName": "Indoor environmental quality",
-      "description": "Degree-hours weighted measure of overheating across all occupied building zones.",
-      "info": "Accumulated overheating above comfort limits across all occupied zones.",
+      "description": "Degree-hours weighted measure of indoor discomfort (overheating) across all occupied building zones.",
+      "info": "Accumulated discomfort from overheating above comfort limits across all occupied zones.",
       "direction": "lower"
     },
     {

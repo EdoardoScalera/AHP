@@ -5,49 +5,56 @@
       "name": "Energy performance",
       "shortName": "Energy",
       "description": "Primary energy consumption, energy savings, CO2 emissions reduction, and energy labeling of the building.",
-      "info": "Overall energy efficiency of the building: energy consumption, energy savings, CO2 emissions and energy labeling."
+      "info": "Overall energy efficiency of the building: energy consumption, energy savings, CO2 emissions and energy labeling.",
+      "defaultKpis": ["primary_energy", "energy_savings", "demand_response", "energy_shift_flexibility", "no_grid_interaction", "load_cover_factor", "load_matching_index", "specific_cost_flexibility"]
     },
     {
       "id": "water_use",
       "name": "Water use",
       "shortName": "Water",
       "description": "Water consumption efficiency, wastewater reduction, and water reuse systems in building renovation.",
-      "info": "Efficient use of water in the renovated building: consumption efficiency, wastewater reduction and water reuse systems."
+      "info": "Efficient use of water in the renovated building: consumption efficiency, wastewater reduction and water reuse systems.",
+      "defaultKpis": []
     },
     {
       "id": "climate_impact",
       "name": "Climate impact",
       "shortName": "Climate",
       "description": "Greenhouse gas emissions, carbon footprint, and climate resilience of the renovated building.",
-      "info": "Effect of the building on the climate: greenhouse gas emissions, carbon footprint and resilience to climate change."
+      "info": "Effect of the building on the climate: greenhouse gas emissions, carbon footprint and resilience to climate change.",
+      "defaultKpis": []
     },
     {
       "id": "economic_performance",
       "name": "Economic performance",
       "shortName": "Economic",
       "description": "Investment costs, operational savings, payback period, NPV, IRR, and life-cycle cost analysis.",
-      "info": "Financial viability of the renovation: investment costs, operational savings, payback period, net present value and life-cycle costs."
+      "info": "Financial viability of the renovation: investment costs, operational savings, payback period, net present value and life-cycle costs.",
+      "defaultKpis": ["investment_cost", "specific_cost_flexibility", "npv", "spp"]
     },
     {
       "id": "ieq",
       "name": "Indoor Environmental Quality (IEQ)",
       "shortName": "IEQ",
       "description": "Thermal comfort, indoor air quality, visual comfort, and acoustic comfort for building occupants.",
-      "info": "Quality of the indoor environment for occupants: thermal comfort, indoor air quality, visual comfort and acoustic comfort."
+      "info": "Quality of the indoor environment for occupants: thermal comfort, indoor air quality, visual comfort and acoustic comfort.",
+      "defaultKpis": ["saifi", "ppd", "indoor_discomfort_degree"]
     },
     {
       "id": "energy_system_integration",
       "name": "Energy system integration",
       "shortName": "Energy System",
       "description": "Demand response, peak load reduction, load shifting, grid interaction, flexibility, and smart readiness indicators.",
-      "info": "How well the building interacts with the energy system: demand response, peak load reduction, load shifting, grid interaction, flexibility and smart readiness."
+      "info": "How well the building interacts with the energy system: demand response, peak load reduction, load shifting, grid interaction, flexibility and smart readiness.",
+      "defaultKpis": ["demand_response", "energy_shift_flexibility", "no_grid_interaction", "load_cover_factor", "load_matching_index"]
     },
     {
       "id": "practical_implementation",
       "name": "Practical implementation",
       "shortName": "Practical",
       "description": "Practical implementation combining technical feasibility (constructability, technical complexity, maintenance requirements, technology readiness) with social impact (occupant satisfaction, social acceptance, equity, accessibility, and community benefits).",
-      "info": "Feasibility in practice: technical aspects (constructability, complexity, maintenance, technology readiness) together with social impact (occupant satisfaction, acceptance, equity, accessibility, community benefits)."
+      "info": "Feasibility in practice: technical aspects (constructability, complexity, maintenance, technology readiness) together with social impact (occupant satisfaction, acceptance, equity, accessibility, community benefits).",
+      "defaultKpis": ["investment_cost", "npv", "spp", "saifi", "ppd"]
     }
   ]
 }

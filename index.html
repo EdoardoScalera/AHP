@@ -168,9 +168,9 @@
         </section>
 
         <section id="matrix-section" class="card">
-          <h2>Pairwise Comparison Matrix <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-matrix" aria-label="Leave a comment on Pairwise Comparison Matrix" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-          <p class="hint">How important is criterion <strong>A (row)</strong> relative to criterion <strong>B (column)</strong>?<br>
-          Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.<br>
+          <h2>Pairwise Comparison Matrix <button type="button" class="info-btn" data-info-key="matrix-info" aria-label="More information about the comparison matrix" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-matrix" aria-label="Leave a comment on Pairwise Comparison Matrix" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
+          <p class="guided-q">How important is <strong>criterion A (row)</strong> relative to <strong>criterion B (column)</strong>?</p>
+          <p class="hint">Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.<br>
           Use fractions (e.g., 1/3) for inverse comparisons. Only fill upper triangle; lower triangle fills automatically.<br>
           <span class="tag user">green</span> = your judgment · <span class="tag estimated">yellow</span> = estimated (click to override).</p>
           <div class="matrix-container">
@@ -186,7 +186,7 @@
         </section>
 
         <section id="cr-section" class="card">
-          <h2>Consistency Check <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-cr" aria-label="Leave a comment on Consistency Check" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
+          <h2>Consistency Check <button type="button" class="info-btn" data-info-key="cr-info" aria-label="More information about the Consistency Ratio" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-cr" aria-label="Leave a comment on Consistency Check" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
           <div class="cr-display">
             <div class="cr-value" id="cr-value">CR: —</div>
             <div class="cr-status" id="cr-status">Complete the matrix to see consistency ratio</div>
@@ -236,7 +236,7 @@
     <div id="phase2-screen" class="screen hidden">
       <section class="card">
           <h2>Performance indicators <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-indicators" aria-label="Leave a comment on Performance indicators" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-        <p class="hint">Score performance indicators relatively to each criterion. You may remove KPIs unrelated to a criterion; if criteria priorities are available from the previous section of the survey, they are used to calculate the final KPI ranking; otherwise, all criteria receive equal weight.</p>
+        <p class="hint">Score performance indicators relatively to each criterion. You may remove KPIs unrelated to a criterion; if criteria priorities are available from the previous section of the survey, they are used to calculate the final KPI ranking; otherwise, all criteria receive equal weight. The indicator selection is pre-filled with default suggestions for each criterion, based on the ENTRANCE KPI shortlist. These are only defaults: check or uncheck indicators freely based on your own experience, perspective and interests.</p>
         <div class="form-group">
           <span class="label">Uncheck indicators not related to this criterion; select a minimum of 2 indicators <button type="button" class="info-btn" data-info-key="phase2-na" aria-label="More information about marking KPIs as not applicable" title="More information">i</button></span>
           <div id="phase2-tabs" class="phase2-tabs"></div>
@@ -303,18 +303,22 @@
       </section>
 
       <section class="card">
-        <h2>Pairwise Comparison Matrix <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-matrix" aria-label="Leave a comment on Pairwise Comparison Matrix" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-        <p class="hint">Complete the matrix of comparisons between the KPIs. Rate the relative importance of the row indicator relative to the column indicator. Use scale 2–9 if the row indicator is more important, or 1/9–1/2 if the column indicator is. Equal importance is set with 1. An estimate based on your responses in the guided comparison is defined for consistency (<span class="tag estimated">yellow = estimate</span>); click any matrix value to override (<span class="tag user">green = your score</span>).</p>
-        <div class="matrix-container">
-          <table id="phase2-matrix" class="matrix-table">
-            <thead>
-              <tr>
-                <th class="corner">KPI</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <h2>Pairwise Comparison Matrix <button type="button" class="info-btn" data-info-key="matrix-info" aria-label="More information about the comparison matrix" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-matrix" aria-label="Leave a comment on Pairwise Comparison Matrix" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
+        <p class="guided-q">How important is <strong>indicator A (row)</strong> relative to <strong>indicator B (column)</strong>?</p>
+        <div id="phase2-matrix-wrap" class="hidden">
+          <p class="hint">Complete the matrix of comparisons between the KPIs. Rate the relative importance of the row indicator relative to the column indicator. Use scale 2–9 if the row indicator is more important, or 1/9–1/2 if the column indicator is. Equal importance is set with 1. An estimate based on your responses in the guided comparison is defined for consistency (<span class="tag estimated">yellow = estimate</span>); click any matrix value to override (<span class="tag user">green = your score</span>).</p>
+          <div class="matrix-container">
+            <table id="phase2-matrix" class="matrix-table">
+              <thead>
+                <tr>
+                  <th class="corner">KPI</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
+        <h3 class="cr-subhead">Consistency Check <button type="button" class="info-btn" data-info-key="cr-info" aria-label="More information about the Consistency Ratio" title="More information">i</button></h3>
         <div class="cr-display">
           <div class="cr-value" id="phase2-cr-value">CR: —</div>
           <div class="cr-status" id="phase2-cr-status"></div>

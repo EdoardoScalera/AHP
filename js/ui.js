@@ -535,6 +535,16 @@ const UI = (() => {
     return { a: criteria[i], b: criteria[j], i, j };
   }
 
+  // The pairwise matrix card stays hidden while guided questions are
+  // pending: it is revealed only once every guided comparison is answered
+  // (manual editing / estimate override then becomes available). Pure
+  // visibility — no state, recording or completion logic changes.
+  function syncMatrixVisibility() {
+    const section = document.getElementById('matrix-section');
+    if (!section) return;
+    section.classList.toggle('hidden', !(criteria.length >= MIN_N && guidedIsComplete()));
+  }
+
   function renderGuided() {
     const section = document.getElementById('guided-section');
     const progress = document.getElementById('guided-progress');
@@ -542,6 +552,7 @@ const UI = (() => {
     const card = document.getElementById('guided-card');
     const done = document.getElementById('guided-done');
     const pane = document.getElementById('guided-review-pane');
+    syncMatrixVisibility();
     if (!section || !progress || !card || !done) return;
     if (pane) pane.classList.add('hidden');
     guidedReviewIdx = -1;
@@ -974,6 +985,9 @@ const UI = (() => {
           customCounter = 2;
         }
         renderCustomList();
+        // Re-register restored custom criteria so their (i) buttons work
+        // after a draft reload (same as Phase 2 custom KPIs).
+        Info.registerCriteria(customCriteria);
         rebuildFromCriteria(false);
       }
       if (draft.tiers && typeof draft.tiers === 'object') {

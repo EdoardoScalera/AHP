@@ -112,7 +112,7 @@ const Storage = (() => {
       pilot: data.pilot,
       country: data.country,
       email: data.email || '',
-      indicatorSet: data.indicatorSet || 'real-14-v2',
+      indicatorSet: data.indicatorSet || 'real-14-v3',
       indicatorIds: data.indicatorIds,
       customIndicators: Array.isArray(data.customIndicators) ? data.customIndicators : [],
       criteriaIds: data.criteriaIds,
