@@ -1117,7 +1117,7 @@ const Phase2 = (() => {
 
     // Criterion banner navigation: scrolls to the priority-level section
     const scrollToPriority = () => {
-      const el = document.getElementById('phase2-tier-board');
+      const el = document.getElementById('phase2-priority-section');
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
     const bannerPrev = document.getElementById('phase2-banner-prev');
