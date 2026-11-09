@@ -434,6 +434,28 @@ header h1 {
   border-color: #e0c400;
 }
 
+/* Dropdown section for indicator selection */
+.dropdown-section {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-top: 8px;
+  background: #fff;
+}
+.dropdown-section summary {
+  outline: none;
+  padding: 0.5rem 0.75rem;
+}
+.dropdown-section summary::-webkit-details-marker {
+  display: none;
+}
+.dropdown-arrow {
+  font-size: 0.8rem;
+  transition: transform 0.2s ease;
+}
+.dropdown-section[open] .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
 /* Review provenance: green = user, yellow = estimated */
 .tag {
   display: inline-block;
