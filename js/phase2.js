@@ -584,8 +584,6 @@ const Phase2 = (() => {
       const b = indicatorById(pair[1]);
       document.getElementById('phase2-qtext').innerHTML =
         `Compare the two indicators with each other, which one better measures this criterion: <strong>${escapeHtml(a.name)}</strong> or <strong>${escapeHtml(b.name)}</strong>?`;
-      document.getElementById('phase2-suggest').textContent =
-        'Recommended scores are highlighted for ensuring consistency (non-binding).';
       const hintEl = document.getElementById('phase2-hint');
       const idx = st.ids;
       const implied = Guided.impliedValue(idx.indexOf(pair[0]), idx.indexOf(pair[1]), knownPairs(st), idx.length);
