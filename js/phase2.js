@@ -583,12 +583,7 @@ const Phase2 = (() => {
       const a = indicatorById(pair[0]);
       const b = indicatorById(pair[1]);
       document.getElementById('phase2-qtext').innerHTML =
-        `Compare the two indicators with each other, which one better measures this criterion: <strong>${escapeHtml(a.name)}</strong> or <strong>${escapeHtml(b.name)}</strong>?`;
-      const suggestEl = document.getElementById('phase2-suggest');
-      if (suggestEl) {
-        const range = Guided.suggestedRange(st.tiers[pair[0]] || 'B', st.tiers[pair[1]] || 'B');
-        suggestEl.textContent = `Suggested range from tiers (${st.tiers[pair[0]] || 'B'} vs ${st.tiers[pair[1]] || 'B'}): ${range}. Equal importance = 1.`;
-      }
+        `Compare the two indicators with each other, which one better measures <strong>${escapeHtml(cur().name)}</strong>: <strong>${escapeHtml(a.name)}</strong> or <strong>${escapeHtml(b.name)}</strong>?`;
       const hintEl = document.getElementById('phase2-hint');
       const idx = st.ids;
       const implied = Guided.impliedValue(idx.indexOf(pair[0]), idx.indexOf(pair[1]), knownPairs(st), idx.length);
