@@ -136,7 +136,7 @@
           <div class="guided-bar"><div class="guided-bar-fill" id="guided-bar-fill"></div></div>
           <div id="guided-card">
             <p id="guided-qtext" class="guided-q"></p>
-            <p class="hint">Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.</p>
+            <p class="hint">Scale: 1 = Equally important, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extremely more important.</p>
             <p class="hint" id="guided-suggest"></p>
             <p class="hint" id="guided-hint"></p>
             <div class="guided-choices">
@@ -154,7 +154,7 @@
           </div>
           <div id="guided-done" class="hidden">
             <p>All guided comparisons answered. Review the matrix below — <span class="tag user">green</span> = your judgment, <span class="tag estimated">yellow</span> = estimated for consistency (click any yellow value to set your own).</p>
-            <p class="hint">Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.</p>
+            <p class="hint">Scale: 1 = Equal importance, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.</p>
             <button type="button" id="guided-review" class="btn btn-secondary">Review guided answers</button>
             <button type="button" id="guided-restart" class="btn btn-secondary">Restart guided comparison</button>
           </div>
@@ -238,9 +238,11 @@
     <div id="phase2-screen" class="screen hidden">
       <section class="card">
           <h2>Performance indicators <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-indicators" aria-label="Leave a comment on Performance indicators" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-        <p class="hint">Score performance indicators relatively to each criterion. The indicator selection is pre-filled with default suggestions for each criterion: check or uncheck indicators freely. You may remove KPIs unrelated to a criterion or add missing ones.<br> If criteria priorities are available from the previous section of the survey, they are used to calculate the final KPI ranking; otherwise, all criteria receive equal weight. </p>
+        <p class="hint">Select only those performance indicators relevant to each criterion. Default suggestions are selected. You may remove KPIs unrelated to a criterion or add missing ones.<br> If criteria priorities are available from the previous section of the survey, they are used to calculate the final KPI ranking; otherwise, all criteria receive equal weight. </p>
         <div class="form-group">
-          <span class="label">Select relevant indicators for this criterion; select a minimum of 2 indicators <button type="button" class="info-btn" data-info-key="phase2-na" aria-label="More information about marking KPIs as not applicable" title="More information">i</button></span>
+          <span class="label" style="font-size:1.1rem;">Select relevant indicators for this criterion</span>
+          <p class="hint" style="margin-bottom:8px;">Select a minimum of 2 indicators.</p>
+          <button type="button" class="info-btn" data-info-key="phase2-na" aria-label="More information about marking KPIs as not applicable" title="More information">i</button>
           <div id="phase2-tabs" class="phase2-tabs"></div>
           <div id="phase2-kpi-checklist" class="criteria-checklist"></div>
           <div class="custom-add-row">
@@ -274,11 +276,14 @@
       <section class="card">
           <h2>Guided Comparisons <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-guided" aria-label="Leave a comment on Guided Comparisons" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
           <h3 id="phase2-crit-title" class="hidden"></h3>
-        <p class="hint">How well does each performance indicator measure this criterion? <br> Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.</p>
+        <p class="hint">How well does each performance indicator measure this criterion? <br> Scale: 1 = Equal importance, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.</p>
         <p class="hint" id="phase2-progress"></p>
         <div class="guided-bar"><div class="guided-bar-fill" id="phase2-bar-fill"></div></div>
         <p id="phase2-skipped-note" class="hint hidden">This criterion is marked as not applicable (“None of the above”). Uncheck it in the selection above to evaluate KPIs.</p>
         <div id="phase2-guided-card">
+          <div class="form-actions" style="margin-bottom:0.75rem;">
+            <button type="button" id="phase2-next" class="btn btn-secondary">Next criterion</button>
+          </div>
           <p id="phase2-qtext" class="guided-q"></p>
           <p class="hint" id="phase2-suggest"></p>
           <p class="hint" id="phase2-hint"></p>
@@ -321,7 +326,6 @@
         <div class="form-actions">
           <button type="button" id="phase2-restart-matrix" class="btn btn-secondary push-left">Restart this criterion</button>
           <button type="button" id="phase2-prev" class="btn btn-secondary">Previous criterion</button>
-          <button type="button" id="phase2-next" class="btn btn-secondary">Next criterion</button>
         </div>
       </section>
 

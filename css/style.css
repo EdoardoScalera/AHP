@@ -392,6 +392,12 @@ header h1 {
   margin-bottom: 8px;
 }
 
+/* Scale labels match the guided question size. */
+#guided-scale-label,
+#phase2-scale-label {
+  font-size: 1.05rem;
+}
+
 .guided-choices {
   display: flex;
   flex-wrap: wrap;

@@ -4,17 +4,9 @@
       "id": "energy_performance",
       "name": "Energy performance",
       "shortName": "Energy",
-      "description": "Primary energy consumption, energy savings, CO2 emissions reduction, and energy labeling of the building.",
-      "info": "Overall energy efficiency of the building: energy consumption, energy savings, CO2 emissions and energy labeling.",
+      "description": "Primary energy consumption, energy savings, CO2 emissions reduction, energy labeling, and water consumption efficiency (wastewater reduction and water reuse systems) of the building.",
+      "info": "Overall energy and water efficiency of the building: energy consumption, energy savings, CO2 emissions, energy labeling, water consumption efficiency, wastewater reduction and water reuse systems.",
       "defaultKpis": ["primary_energy", "energy_savings", "demand_response", "energy_shift_flexibility", "no_grid_interaction", "load_cover_factor", "load_matching_index", "specific_cost_flexibility"]
-    },
-    {
-      "id": "water_use",
-      "name": "Water use",
-      "shortName": "Water",
-      "description": "Water consumption efficiency, wastewater reduction, and water reuse systems in building renovation.",
-      "info": "Efficient use of water in the renovated building: consumption efficiency, wastewater reduction and water reuse systems.",
-      "defaultKpis": []
     },
     {
       "id": "climate_impact",

@@ -583,7 +583,7 @@ const Phase2 = (() => {
       const a = indicatorById(pair[0]);
       const b = indicatorById(pair[1]);
       document.getElementById('phase2-qtext').innerHTML =
-        `Which KPI better measures <span class="crit-highlight"><strong>${escapeHtml(c.name)}</strong>${Info.button(`crit:${c.id}`, c.name)}</span>: <strong>${escapeHtml(a.name)}</strong> or <strong>${escapeHtml(b.name)}</strong>?`;
+        `Compare the two indicators with each other, which one better measures this criterion: <strong>${escapeHtml(a.name)}</strong> or <strong>${escapeHtml(b.name)}</strong>?`;
       document.getElementById('phase2-suggest').textContent =
         'Recommended scores are highlighted for ensuring consistency (non-binding).';
       const hintEl = document.getElementById('phase2-hint');
@@ -612,11 +612,11 @@ const Phase2 = (() => {
     const pair = st.order[st.idx];
     if (!pair) { wrap.classList.add('hidden'); return; }
     const winner = st.choice === 'A' ? indicatorById(pair[0]) : indicatorById(pair[1]);
-    if (label) label.textContent = `How much better does ${winner.name} measure this criterion? Highlighted = recommended from your tiers (non-binding).`;
+    if (label) label.textContent = `How much more important is ${winner.name} on a scale 2-9?`;
     const dist = Guided.pairDistance(st.tiers[pair[0]], st.tiers[pair[1]]);
     const lo = dist === 0 ? 1 : dist === 1 ? 3 : 7;
     const hi = dist === 0 ? 3 : dist === 1 ? 5 : 9;
-    for (let v = 2; v <= 9; v++) {
+    for (let v = 9; v >= 2; v--) {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.textContent = String(v);

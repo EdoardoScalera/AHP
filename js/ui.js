@@ -583,7 +583,7 @@ const UI = (() => {
     if (!p) return;
     const range = Guided.suggestedRange(tiers[p.a.id] || 'B', tiers[p.b.id] || 'B');
     document.getElementById('guided-qtext').innerHTML =
-      `Do you find <strong>${escapeHtml(p.a.name)}</strong> more important than <strong>${escapeHtml(p.b.name)}</strong>?`;
+      `Compare the two criteria with each other, which criterion is more important to you: <strong>${escapeHtml(p.a.name)}</strong> or <strong>${escapeHtml(p.b.name)}</strong>?`;
     document.getElementById('guided-suggest').textContent =
       `Suggested range from tiers (${tiers[p.a.id] || 'B'} vs ${tiers[p.b.id] || 'B'}): ${range}. Equal importance = 1.`;
 
@@ -622,12 +622,12 @@ const UI = (() => {
     const p = guidedPairAt(guidedIdx);
     if (!p) { wrap.classList.add('hidden'); return; }
     const winner = guidedChoice === 'A' ? p.a : p.b;
-    label.textContent = `How much more important is ${displayName(winner)}? Highlighted = recommended from your tiers (non-binding). (stored as ${guidedChoice === 'A' ? 'A over B' : 'reciprocal, B over A'})`;
+    label.textContent = `How much more important is ${displayName(winner)} on a scale 2-9?`;
     // Yellow-highlight the tier-recommended magnitudes (non-binding).
     const dist = Guided.pairDistance(tiers[p.a.id], tiers[p.b.id]);
     const lo = dist === 0 ? 1 : dist === 1 ? 3 : 7;
     const hi = dist === 0 ? 3 : dist === 1 ? 5 : 9;
-    for (let v = 2; v <= 9; v++) {
+    for (let v = 9; v >= 2; v--) {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.textContent = String(v);
