@@ -276,14 +276,11 @@
       <section class="card">
           <h2>Guided Comparisons <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-guided" aria-label="Leave a comment on Guided Comparisons" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
           <h3 id="phase2-crit-title" class="hidden"></h3>
-        <p class="hint">How well does each performance indicator measure this criterion? <br> Scale: 1 = Equal importance, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.</p>
+        <p class="hint">How well does each performance indicator measure this criterion? <br> Scale: 1 = Equal importance, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance. Highlighted scores ensure judgement consistency.</p>
         <p class="hint" id="phase2-progress"></p>
         <div class="guided-bar"><div class="guided-bar-fill" id="phase2-bar-fill"></div></div>
         <p id="phase2-skipped-note" class="hint hidden">This criterion is marked as not applicable (“None of the above”). Uncheck it in the selection above to evaluate KPIs.</p>
         <div id="phase2-guided-card">
-          <div class="form-actions" style="margin-bottom:0.75rem;">
-            <button type="button" id="phase2-next" class="btn btn-secondary">Next criterion</button>
-          </div>
           <p id="phase2-qtext" class="guided-q"></p>
           <p class="hint" id="phase2-suggest"></p>
           <p class="hint" id="phase2-hint"></p>
@@ -296,9 +293,12 @@
             <p class="hint" id="phase2-scale-label"></p>
             <div id="phase2-scale" class="guided-scale"></div>
           </div>
-          <div class="form-actions">
-            <button type="button" id="phase2-back" class="btn btn-secondary">Back</button>
-            <button type="button" id="phase2-restart" class="btn btn-secondary">Restart this criterion</button>
+          <div class="form-actions" style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;gap:0.5rem;">
+              <button type="button" id="phase2-back" class="btn btn-secondary">Back</button>
+              <button type="button" id="phase2-restart" class="btn btn-secondary">Restart this criterion</button>
+            </div>
+            <button type="button" id="phase2-next" class="btn btn-secondary">Next criterion</button>
           </div>
         </div>
         <div id="phase2-done" class="hidden">

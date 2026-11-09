@@ -585,6 +585,12 @@ const UI = (() => {
     document.getElementById('guided-qtext').innerHTML =
       `Compare the two criteria with each other, which criterion is more important to you: <strong>${escapeHtml(p.a.name)}</strong> or <strong>${escapeHtml(p.b.name)}</strong>?`;
 
+    const suggestEl = document.getElementById('guided-suggest');
+    if (suggestEl) {
+      const range = Guided.suggestedRange(tiers[p.a.id] || 'B', tiers[p.b.id] || 'B');
+      suggestEl.textContent = `Suggested range from tiers (${tiers[p.a.id] || 'B'} vs ${tiers[p.b.id] || 'B'}): ${range}. Equal importance = 1.`;
+    }
+
     const hintEl = document.getElementById('guided-hint');
     const implied = Guided.impliedValue(p.i, p.j, guidedKnownPairs(), criteria.length);
     if (implied !== null) {
