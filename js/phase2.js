@@ -473,6 +473,7 @@ const Phase2 = (() => {
     renderCustomKpiList();
     renderTierBoard();
     renderCriterionPanel();
+    renderBanner();
     renderRanking();
     updateSubmitState();
   }
@@ -537,6 +538,30 @@ const Phase2 = (() => {
     if (next) next.disabled = current >= criteria.length - 1;
   }
 
+  function renderBanner() {
+    const banner = document.getElementById('phase2-criterion-banner');
+    if (!banner || !criteria.length) return;
+    banner.classList.remove('hidden');
+
+    const prevBtn = document.getElementById('phase2-banner-prev');
+    const currBtn = document.getElementById('phase2-banner-current');
+    const nextBtn = document.getElementById('phase2-banner-next');
+    if (!prevBtn || !currBtn || !nextBtn) return;
+
+    const c = criteria[current];
+    const prevC = current > 0 ? criteria[current - 1] : null;
+    const nextC = current < criteria.length - 1 ? criteria[current + 1] : null;
+
+    currBtn.textContent = c ? escapeHtml(c.name) : '';
+    prevBtn.disabled = current <= 0;
+    nextBtn.disabled = current >= criteria.length - 1;
+
+    const prevLabel = prevC ? `Previous ${escapeHtml(prevC.name)}` : 'Previous';
+    const nextLabel = nextC ? `Next ${escapeHtml(nextC.name)}` : 'Next';
+    prevBtn.innerHTML = prevLabel + ' <span class="banner-crit"></span>';
+    nextBtn.innerHTML = nextLabel + ' <span class="banner-crit"></span>';
+  }
+
   // Guided question card only — never touches the matrix table, so it is
   // safe to call while the user is typing in a matrix cell (keeps focus).
   // Also toggles the whole matrix card (question line, instructions and
@@ -583,7 +608,7 @@ const Phase2 = (() => {
       const a = indicatorById(pair[0]);
       const b = indicatorById(pair[1]);
       document.getElementById('phase2-qtext').innerHTML =
-        `Compare the two indicators with each other, which one better measures <strong>${escapeHtml(cur().name)}</strong>: <strong>${escapeHtml(a.name)}</strong> or <strong>${escapeHtml(b.name)}</strong>?`;
+        `Which indicator better measures <span class="crit-highlight">${escapeHtml(cur().name)}${Info.button(`crit:${cur().id}`, cur().name)}</span>: <strong>${escapeHtml(a.name)}</strong> or <strong>${escapeHtml(b.name)}</strong>?`;
       const hintEl = document.getElementById('phase2-hint');
       const idx = st.ids;
       const implied = Guided.impliedValue(idx.indexOf(pair[0]), idx.indexOf(pair[1]), knownPairs(st), idx.length);
@@ -1089,6 +1114,23 @@ const Phase2 = (() => {
     document.getElementById('phase2-next').addEventListener('click', () => {
       if (current < criteria.length - 1) { current += 1; renderAll(); }
     });
+
+    // Criterion banner navigation: scrolls to the priority-level section
+    const scrollToPriority = () => {
+      const el = document.getElementById('phase2-tier-board');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    const bannerPrev = document.getElementById('phase2-banner-prev');
+    const bannerCurr = document.getElementById('phase2-banner-current');
+    const bannerNext = document.getElementById('phase2-banner-next');
+    if (bannerPrev) bannerPrev.addEventListener('click', () => {
+      if (current > 0) { current -= 1; renderAll(); scrollToPriority(); }
+    });
+    if (bannerCurr) bannerCurr.addEventListener('click', scrollToPriority);
+    if (bannerNext) bannerNext.addEventListener('click', () => {
+      if (current < criteria.length - 1) { current += 1; renderAll(); scrollToPriority(); }
+    });
+
     document.getElementById('btn-phase2-submit').addEventListener('click', handleSubmit);
     document.getElementById('btn-phase2-save').addEventListener('click', () => {
       persistDraft(true);

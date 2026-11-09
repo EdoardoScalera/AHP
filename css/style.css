@@ -456,6 +456,72 @@ header h1 {
   transform: rotate(180deg);
 }
 
+/* Phase 2 criterion banner: overlayed header showing the criterion being assessed */
+.criterion-banner {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--primary);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+.criterion-banner.hidden {
+  display: none;
+}
+.criterion-banner .banner-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.criterion-banner .banner-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+.criterion-banner .banner-btn {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s;
+}
+.criterion-banner .banner-btn:hover {
+  background: rgba(255,255,255,0.3);
+  border-color: rgba(255,255,255,0.6);
+}
+.criterion-banner .banner-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.criterion-banner .banner-current {
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.55);
+  font-weight: 700;
+  padding: 0.45rem 1rem;
+  border-radius: 20px;
+  flex: 1;
+  justify-content: center;
+}
+.criterion-banner .banner-crit {
+  font-weight: 500;
+}
+
 /* Review provenance: green = user, yellow = estimated */
 .tag {
   display: inline-block;
