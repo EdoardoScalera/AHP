@@ -222,7 +222,7 @@ check('data: per-criterion default KPI selections are valid', () => {
   const expected = {
     energy_performance: ['primary_energy', 'energy_savings', 'demand_response', 'energy_shift_flexibility', 'no_grid_interaction', 'load_cover_factor', 'load_matching_index', 'specific_cost_flexibility'],
     water_use: [],
-    climate_impact: [],
+    climate_impact: ["ghg_emissions", "operational_carbon_intensity"],
     economic_performance: ['investment_cost', 'specific_cost_flexibility', 'npv', 'spp'],
     ieq: ['saifi', 'ppd', 'indoor_discomfort_degree'],
     energy_system_integration: ['demand_response', 'energy_shift_flexibility', 'no_grid_interaction', 'load_cover_factor', 'load_matching_index'],

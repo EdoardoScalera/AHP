@@ -141,6 +141,26 @@
       "description": "The time it takes for an investment's cash inflows to equal its initial cost, calculated by dividing the initial investment by the average annual cash flow for uniform flows.",
       "info": "Number of years until the renovation pays for itself through savings and earnings.",
       "direction": "lower"
+    },
+    {
+      "id": "ghg_emissions",
+      "code": "G7.1",
+      "name": "GHG Emissions [kg CO2e/m2·yr]",
+      "group": "G7",
+      "groupName": "Climate impact",
+      "description": "GHG emissions captures both the carbon cost of renovation measures—such as insulation, windows, heat pumps, PV, and batteries—and their operational benefits. This prevents a renovation from appearing beneficial while shifting impact into embodied emissions. Röck et al. found that embodied GHG emissions are a major and often under-addressed component of building climate mitigation.",
+      "info": "GHG emissions captures both the carbon cost of renovation measures—such as insulation, windows, heat pumps, PV, and batteries—and their operational benefits. This prevents a renovation from appearing beneficial while shifting impact into embodied emissions. Röck et al. found that embodied GHG emissions are a major and often under-addressed component of building climate mitigation.",
+      "direction": "lower"
+    },
+    {
+      "id": "operational_carbon_intensity",
+      "code": "G7.2",
+      "name": "Operational Carbon Intensity [kg CO2e/kWh]",
+      "group": "G7",
+      "groupName": "Climate impact",
+      "description": "Operational carbon intensity is directly compatible with ENTRANCE's energy-monitoring data: annual delivered electricity, district heat, gas, and on-site renewable generation can be converted to emissions using location- and time-specific emission factors. It is especially useful for comparing the pre- and post-renovation performance of the same pilot building.",
+      "info": "Operational carbon intensity is directly compatible with ENTRANCE's energy-monitoring data: annual delivered electricity, district heat, gas, and on-site renewable generation can be converted to emissions using location- and time-specific emission factors. It is especially useful for comparing the pre- and post-renovation performance of the same pilot building.",
+      "direction": "lower"
     }
   ]
 }

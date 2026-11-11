@@ -14,7 +14,7 @@
       "shortName": "Climate",
       "description": "Greenhouse gas emissions, carbon footprint, and climate resilience of the renovated building.",
       "info": "Effect of the building on the climate: greenhouse gas emissions, carbon footprint and resilience to climate change.",
-      "defaultKpis": []
+      "defaultKpis": ["ghg_emissions", "operational_carbon_intensity"]
     },
     {
       "id": "economic_performance",
