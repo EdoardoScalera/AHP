@@ -635,7 +635,7 @@ const Phase2 = (() => {
     const pair = st.order[st.idx];
     if (!pair) { wrap.classList.add('hidden'); return; }
     const winner = st.choice === 'A' ? indicatorById(pair[0]) : indicatorById(pair[1]);
-    if (label) label.textContent = `How much more important is ${winner.name} on a scale 2-9?`;
+    if (label) label.textContent = `How much more important is <strong>${winner.name}</strong> on a scale 2-9?`;
     const dist = Guided.pairDistance(st.tiers[pair[0]], st.tiers[pair[1]]);
     const lo = dist === 0 ? 1 : dist === 1 ? 3 : 7;
     const hi = dist === 0 ? 3 : dist === 1 ? 5 : 9;

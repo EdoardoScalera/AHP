@@ -113,7 +113,7 @@
 
         <section id="tier-section" class="card">
           <h2>Priority levels <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-tiers" aria-label="Leave a comment on Priority levels" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-          <p class="hint">Rank each criterion based on its priority level (or use the A/B/C buttons). Priority levels guide the comparison suggestions below</p>
+          <p class="hint">Please assign each indicator a priority level (A, B, or C) based on its importance. You can do this by either clicking the A/B/C buttons or moving the indicators into your preferred order.<br> Your selections will guide the comparison suggestions shown below.</p>
           <div id="tier-board" class="tier-board">
             <div class="tier-col" data-tier="A">
               <h3>A — Top priority</h3>
@@ -145,7 +145,7 @@
             </div>
             <div id="guided-scale-wrap" class="hidden">
               <p class="hint guided-q" id="guided-scale-label"></p>
-              <p class="hint">Scale: 1 = Equally important, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extremely more important.</p>
+              <p class="hint">Scale: 2 = Slightly more important, 3 = Moderately, 5 = Strongly, 7 = Very strongly, 9 = Extremely more important.</p>
               <p class="hint">Highlighted scores represent most consistent choices.</p>
               <div id="guided-scale" class="guided-scale"></div>
             </div>
@@ -154,8 +154,7 @@
             </div>
           </div>
           <div id="guided-done" class="hidden">
-            <p>All guided comparisons answered. Review the matrix below — <span class="tag user">green</span> = your judgment, <span class="tag estimated">yellow</span> = estimated for consistency (click any yellow value to set your own).</p>
-            <p class="hint">Scale: 1 = Equally important, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extremely more important.</p>
+            <p>All guided comparisons answered. Review the matrix below. </p>
             <button type="button" id="guided-review" class="btn btn-secondary">Review guided answers</button>
             <button type="button" id="guided-restart" class="btn btn-secondary">Restart guided comparison</button>
           </div>
@@ -172,9 +171,7 @@
         <section id="matrix-section" class="card">
           <h2>Pairwise Comparison Matrix <button type="button" class="info-btn" data-info-key="matrix-info" aria-label="More information about the comparison matrix" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-matrix" aria-label="Leave a comment on Pairwise Comparison Matrix" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
           <p class="guided-q">How important is <strong>criterion A (row)</strong> relative to <strong>criterion B (column)</strong>?</p>
-          <p class="hint">Scale: 1 = Equal, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extreme importance.<br>
-          Use fractions (e.g., 1/3) for inverse comparisons. Only fill upper triangle; lower triangle fills automatically.<br>
-          <span class="tag user">green</span> = your judgment · <span class="tag estimated">yellow</span> = estimated (click to override).</p>
+          <p class="hint">Review the matrix of comparisons. (<span class="tag estimated">yellow = Yellow cells</span>) are estimates based on your earlier answers. (<span class="tag user">green = Green cells</span>) represents your own choices.<br> Rank pairs in the range 1–9 if the row indicator is more important, or a reciprocal value (e.g., 1/3, 1/5, 1/7, or 1/9) if the column indicator is more important. Choose 1 = “Equal importance” if neither is more important.</p>
           <div class="matrix-container">
             <table id="matrix-table" class="matrix-table">
               <thead>
@@ -239,9 +236,9 @@
     <div id="phase2-screen" class="screen hidden">
       <section class="card">
           <h2>Performance indicators <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-indicators" aria-label="Leave a comment on Performance indicators" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-        <p class="hint">Select only those performance indicators relevant to each criterion. Default suggestions are selected. You may remove KPIs unrelated to a criterion or add missing ones.<br> If criteria priorities are available from the previous section of the survey, they are used to calculate the final KPI ranking; otherwise, all criteria receive equal weight. </p>
+        <p class="hint">For each criterion, we have identified performance indicators (KPIs) that can inform the planning of an energy renovation project. You can review the suggested KPIs, remove any that are not relevant, or add others that you consider important. <br> If criteria priorities are available from the previous section of the survey, they are used to calculate the final KPI ranking; otherwise, all criteria receive equal weight. </p>
         <details class="dropdown-section" id="phase2-indicator-section">
-          <summary style="font-size:1.1rem; cursor: pointer; list-style: none; padding: 0.5rem 0; display:flex; align-items:center; gap:0.5rem;">Select relevant indicators for this criterion <span class="dropdown-arrow">▼</span></summary>
+          <summary style="font-size:1.1rem; cursor: pointer; list-style: none; padding: 0.5rem 0; display:flex; align-items:center; gap:0.5rem;">Review selected indicators for each criterion (optional) <span class="dropdown-arrow">▼</span></summary>
           <p class="hint" style="margin-bottom:8px;">Select a minimum of 2 indicators.</p>
           <button type="button" class="info-btn" data-info-key="phase2-na" aria-label="More information about marking KPIs as not applicable" title="More information">i</button>
           <div id="phase2-tabs" class="phase2-tabs"></div>
@@ -257,15 +254,15 @@
 
       <div id="phase2-criterion-banner" class="criterion-banner hidden">
         <div class="banner-inner">
-          <button type="button" id="phase2-banner-prev" class="banner-btn banner-prev">Previous <span class="banner-crit"></span></button>
+          <button type="button" id="phase2-banner-prev" class="banner-btn banner-prev">Previous: <span class="banner-crit"></span></button>
           <button type="button" id="phase2-banner-current" class="banner-btn banner-current"></button>
-          <button type="button" id="phase2-banner-next" class="banner-btn banner-next">Next <span class="banner-crit"></span></button>
+          <button type="button" id="phase2-banner-next" class="banner-btn banner-next">Next: <span class="banner-crit"></span></button>
         </div>
       </div>
 
       <section class="card" id="phase2-priority-section">
           <h2>Priority levels <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-tiers" aria-label="Leave a comment on Priority levels" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-          <p class="hint">Rank each indicator based on its priority level (or use the A/B/C buttons). Priority levels guide the comparison suggestions below.</p>
+          <p class="hint">Please assign each indicator a priority level (A, B, or C) based on its importance. You can do this by either clicking the A/B/C buttons or moving the indicators into your preferred order.<br> Your selections will guide the comparison suggestions shown below.</p>
         <div id="phase2-tier-board" class="tier-board">
           <div class="tier-col" data-tier="A">
             <h3>A — Measures best</h3>
@@ -298,8 +295,8 @@
             <button type="button" id="phase2-equal" class="btn btn-secondary">Equal</button>
           </div>
           <div id="phase2-scale-wrap" class="hidden">
-            <p class="hint" id="phase2-scale-label"></p>
-            <p class="hint">Scale: 1 = Equally important, 3 = Moderate, 5 = Strong, 7 = Very strong, 9 = Extremely more important.</p>
+            <p class="guided-q" id="phase2-scale-label"></p>
+            <p class="hint">Scale: 2 = Slightly more important, 3 = Moderately, 5 = Strongly, 7 = Very strongly, 9 = Extremely more important.</p>
             <p class="hint">Highlighted scores represent most consistent choices.</p>
             <div id="phase2-scale" class="guided-scale"></div>
           </div>
@@ -309,7 +306,7 @@
           </div>
         </div>
         <div id="phase2-done" class="hidden">
-          <p>All guided comparisons for this criterion answered. Review the matrix below — <span class="tag user">green</span> = your judgment, <span class="tag estimated">yellow</span> = estimated.</p>
+          <p>All guided comparisons for this criterion answered. Review the matrix below.</p>
           <div class="form-actions">
             <button type="button" id="phase2-restart-done" class="btn btn-secondary">Restart this criterion</button>
           </div>
@@ -319,7 +316,7 @@
       <section id="phase2-matrix-section" class="card hidden">
         <h2>Pairwise Comparison Matrix <button type="button" class="info-btn" data-info-key="matrix-info" aria-label="More information about the comparison matrix" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-matrix" aria-label="Leave a comment on Pairwise Comparison Matrix" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
         <p class="guided-q">How important is <strong>indicator A (row)</strong> relative to <strong>indicator B (column)</strong>?</p>
-        <p class="hint">Complete the matrix of comparisons between the KPIs. Rate the relative importance of the row indicator relative to the column indicator. Use scale 2–9 if the row indicator is more important, or 1/9–1/2 if the column indicator is. Equal importance is set with 1. An estimate based on your responses in the guided comparison is defined for consistency (<span class="tag estimated">yellow = estimate</span>); click any matrix value to override (<span class="tag user">green = your score</span>).</p>
+        <p class="hint">Review the matrix of comparisons. (<span class="tag estimated">yellow = Yellow cells</span>) are estimates based on your earlier answers. (<span class="tag user">green = Green cells</span>) represents your own choices.<br> Rank pairs in the range 1–9 if the row indicator is more important, or a reciprocal value (e.g., 1/3, 1/5, 1/7, or 1/9) if the column indicator is more important. Choose 1 = “Equal importance” if neither is more important.</p>
         <div class="matrix-container">
           <table id="phase2-matrix" class="matrix-table">
             <thead>
