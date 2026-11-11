@@ -1151,7 +1151,7 @@ const UI = (() => {
       if (d.selection) {
         const p1 = document.getElementById('input-phase1-select');
         const p2 = document.getElementById('input-phase2-select');
-        if (p1) p1.checked = d.selection.phase1 !== false;
+        if (p1) p1.checked = true;
         if (p2) p2.checked = d.selection.phase2 !== false;
       }
     } catch (e) { /* noop */ }
