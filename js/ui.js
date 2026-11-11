@@ -590,7 +590,7 @@ const UI = (() => {
     if (implied !== null) {
       const band = Guided.suggestedRange(tiers[p.a.id] || 'B', tiers[p.b.id] || 'B');
       hintEl.textContent =
-        `Based on your answers so far, ~${Guided.formatValue(implied)} (band ${band}) would preserve consistency. Non-binding — your call.`;
+        `Based on your answers so far, ~${Guided.formatValue(implied)} (band ${band}) would preserve consistency.`;
     } else {
       hintEl.textContent = '';
     }

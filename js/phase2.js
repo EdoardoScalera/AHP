@@ -613,7 +613,7 @@ const Phase2 = (() => {
       const idx = st.ids;
       const implied = Guided.impliedValue(idx.indexOf(pair[0]), idx.indexOf(pair[1]), knownPairs(st), idx.length);
       hintEl.textContent = implied !== null
-        ? `Based on your answers so far, ~${Guided.formatValue(implied)} would preserve consistency. Non-binding — your call.`
+        ? `Based on your answers so far, ~${Guided.formatValue(implied)} would preserve consistency.`
         : '';
       document.getElementById('phase2-yes').innerHTML = `<strong>${escapeHtml(a.name)}</strong> better`;
       document.getElementById('phase2-no').innerHTML = `<strong>${escapeHtml(b.name)}</strong> better`;
