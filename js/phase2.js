@@ -1109,10 +1109,10 @@ const Phase2 = (() => {
     const restartMatrix = document.getElementById('phase2-restart-matrix');
     if (restartMatrix) restartMatrix.addEventListener('click', restartCriterion);
     document.getElementById('phase2-prev').addEventListener('click', () => {
-      if (current > 0) { current -= 1; renderAll(); }
+      if (current > 0) { current -= 1; renderAll(); scrollToPriority(); }
     });
     document.getElementById('phase2-next').addEventListener('click', () => {
-      if (current < criteria.length - 1) { current += 1; renderAll(); }
+      if (current < criteria.length - 1) { current += 1; renderAll(); scrollToPriority(); }
     });
 
     // Criterion banner navigation: scrolls to the priority-level section

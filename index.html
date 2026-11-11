@@ -303,12 +303,9 @@
             <p class="hint">Highlighted scores represent most consistent choices.</p>
             <div id="phase2-scale" class="guided-scale"></div>
           </div>
-          <div class="form-actions" style="display:flex;justify-content:space-between;align-items:center;">
-            <div style="display:flex;gap:0.5rem;">
-              <button type="button" id="phase2-back" class="btn btn-secondary">Back</button>
-              <button type="button" id="phase2-restart" class="btn btn-secondary">Restart this criterion</button>
-            </div>
-            <button type="button" id="phase2-next" class="btn btn-secondary">Next criterion</button>
+          <div class="form-actions" style="display:flex;gap:0.5rem;">
+            <button type="button" id="phase2-back" class="btn btn-secondary">Back</button>
+            <button type="button" id="phase2-restart" class="btn btn-secondary">Restart this criterion</button>
           </div>
         </div>
         <div id="phase2-done" class="hidden">
@@ -333,9 +330,12 @@
             <tbody></tbody>
           </table>
         </div>
-        <div class="form-actions">
-          <button type="button" id="phase2-restart-matrix" class="btn btn-secondary push-left">Restart this criterion</button>
-          <button type="button" id="phase2-prev" class="btn btn-secondary">Previous criterion</button>
+        <div class="form-actions" style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;gap:0.5rem;">
+            <button type="button" id="phase2-restart-matrix" class="btn btn-secondary push-left">Restart this criterion</button>
+            <button type="button" id="phase2-prev" class="btn btn-secondary">Previous criterion</button>
+          </div>
+          <button type="button" id="phase2-next" class="btn btn-secondary">Next criterion</button>
         </div>
       </section>
 
