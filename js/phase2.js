@@ -28,6 +28,7 @@ const Phase2 = (() => {
   let customCounter = 1;
   let criteria = []; // active criteria from Phase 1 [{id,name,...}]
   let criteriaWeights = []; // parallel array, sums to 1
+  let mandatoryCriteria = new Set(); // criterion ids that are mandatory (top 3 by phase-1 weight)
   let current = 0; // index into criteria
   let state = {}; // criterionId -> {excluded,tiers,order,hub,target,answers,idx,choice,matrix,user,estimated,result}
   let onSubmit = null;
@@ -35,10 +36,36 @@ const Phase2 = (() => {
   let chart = null;
   let lastExport = null; // { labels, values, colors, crText } for 3x PNG export
 
+  // Rank criteria by phase-1 weight (descending). Top 3 are mandatory;
+  // include a 4th (and beyond) when two criteria share the same priority score.
+  function computeMandatoryCriteria(criteriaList, weights) {
+    const paired = criteriaList.map((c, i) => ({ id: c.id, weight: weights[i] || 0 }));
+    paired.sort((a, b) => b.weight - a.weight || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    const mandatory = new Set();
+    const n = paired.length;
+    if (n === 0) return mandatory;
+    const take = Math.min(3, n);
+    for (let i = 0; i < take; i++) mandatory.add(paired[i].id);
+    if (n > 3) {
+      const thirdScore = paired[2].weight;
+      for (let i = 3; i < n; i++) {
+        if (paired[i].weight === thirdScore) mandatory.add(paired[i].id);
+        else break;
+      }
+    }
+    return mandatory;
+  }
+
   function init(opts) {
     indicators = opts.indicators || [];
     criteria = opts.criteria || [];
     criteriaWeights = opts.criteriaWeights || [];
+    // Reorder criteria by phase-1 priority weight (rank 1 first, ...).
+    const paired = criteria.map((c, i) => ({ c, w: criteriaWeights[i] || 0 }));
+    paired.sort((a, b) => b.w - a.w || (a.c.id < b.c.id ? -1 : a.c.id > b.c.id ? 1 : 0));
+    criteria = paired.map(p => p.c);
+    criteriaWeights = paired.map(p => p.w);
+    mandatoryCriteria = computeMandatoryCriteria(criteria, criteriaWeights);
     Info.setup();
     Info.registerCriteria(criteria);
     Info.registerKpis(indicators);
@@ -492,7 +519,13 @@ const Phase2 = (() => {
         `<span>${escapeHtml(k.name)}${locked ? ' (min 2)' : ''}</span>${Info.button(`kpi:${k.id}`, k.name)}</label>`;
     }).join('');
     const skip = document.getElementById('phase2-skip');
-    if (skip) skip.checked = !!st.skipped;
+    if (skip) {
+      skip.checked = !!st.skipped;
+      // Mandatory criteria (top 3 by phase-1 priority) cannot be skipped.
+      const isMandatory = mandatoryCriteria.has(c.id);
+      skip.disabled = isMandatory;
+      if (isMandatory && skip.checked) skip.checked = false;
+    }
   }
 
   function renderTierBoard() {
@@ -532,10 +565,6 @@ const Phase2 = (() => {
 
     renderMatrix();
     renderCriterionCR();
-    const prev = document.getElementById('phase2-prev');
-    const next = document.getElementById('phase2-next');
-    if (prev) prev.disabled = current <= 0;
-    if (next) next.disabled = current >= criteria.length - 1;
   }
 
   function renderBanner() {
@@ -573,9 +602,12 @@ const Phase2 = (() => {
     const card = document.getElementById('phase2-guided-card');
     const done = document.getElementById('phase2-done');
     const note = document.getElementById('phase2-skipped-note');
-    const matrixCard = document.getElementById('phase2-matrix-section');
+    const matrixCard = document.getElementById('phase2-matrix-cr-section');
+    const matrixContent = document.getElementById('phase2-matrix-content');
     if (!card || !done || !c || !st) return;
-    if (matrixCard) matrixCard.classList.toggle('hidden', st.skipped || !isCriterionComplete(st));
+    // CR check stays always visible (in the unified card); matrix content revealed once guided is complete.
+    if (matrixCard) matrixCard.classList.remove('hidden');
+    if (matrixContent) matrixContent.classList.toggle('hidden', st.skipped || !isCriterionComplete(st));
     if (st.skipped) {
       card.classList.add('hidden');
       done.classList.add('hidden');
@@ -1004,7 +1036,7 @@ const Phase2 = (() => {
     if (skipBox) skipBox.addEventListener('change', () => {
       const c = cur();
       if (!c) return;
-      // "None of the above": flag only, answers underneath are preserved.
+      if (mandatoryCriteria.has(c.id)) return; // mandatory criteria cannot be skipped
       state[c.id].skipped = skipBox.checked;
       renderAll();
       persistDraft();
@@ -1101,18 +1133,35 @@ const Phase2 = (() => {
     });
     document.getElementById('phase2-back').addEventListener('click', () => {
       const st = curState();
-      if (st && st.idx > 0) { st.idx -= 1; st.choice = null; renderAll(); }
+      if (st && st.idx > 0) { st.idx -= 1; renderAll(); }
     });
     document.getElementById('phase2-restart').addEventListener('click', restartCriterion);
     const restartDone = document.getElementById('phase2-restart-done');
     if (restartDone) restartDone.addEventListener('click', restartCriterion);
-    const restartMatrix = document.getElementById('phase2-restart-matrix');
-    if (restartMatrix) restartMatrix.addEventListener('click', restartCriterion);
-    document.getElementById('phase2-prev').addEventListener('click', () => {
-      if (current > 0) { current -= 1; renderAll(); scrollToPriority(); }
-    });
-    document.getElementById('phase2-next').addEventListener('click', () => {
-      if (current < criteria.length - 1) { current += 1; renderAll(); scrollToPriority(); }
+    // Note: phase2-prev / phase2-next / phase2-restart-matrix buttons were removed from the DOM;
+    // criterion navigation is handled by the criterion banner (phase2-banner-prev/next).
+
+    // ---- Confirm & continue buttons (Phase 2) ----
+    function scrollToSection(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const headerOffset = 90;
+      const elTop = el.getBoundingClientRect().top + window.pageYOffset;
+      window.scrollTo({ top: elTop - headerOffset, behavior: 'smooth' });
+    }
+    const confirmP2 = [
+      { btn: 'btn-confirm-p2-indicators', next: 'phase2-priority-section' },
+      { btn: 'btn-confirm-p2-tiers', next: 'phase2-guided-card' },
+      { btn: 'btn-confirm-p2-guided', next: 'phase2-matrix-cr-section' },
+      { btn: 'btn-confirm-p2-matrix-cr', next: null } // last section: ranking is below
+    ];
+    confirmP2.forEach(({ btn, next }) => {
+      const b = document.getElementById(btn);
+      if (b) {
+        b.addEventListener('click', () => {
+          if (next) scrollToSection(next);
+        });
+      }
     });
 
     // Criterion banner navigation: scrolls to the priority-level section
@@ -1131,10 +1180,8 @@ const Phase2 = (() => {
       if (current < criteria.length - 1) { current += 1; renderAll(); scrollToPriority(); }
     });
 
-    document.getElementById('btn-phase2-submit').addEventListener('click', handleSubmit);
     document.getElementById('btn-phase2-save').addEventListener('click', () => {
       persistDraft(true);
-      if (onSaveDraft) onSaveDraft(getDraft());
     });
     const dlBtn = document.getElementById('btn-download-phase2-plot');
     if (dlBtn) dlBtn.addEventListener('click', () => downloadRanking());
@@ -1241,15 +1288,21 @@ const Phase2 = (() => {
         tiers: { ...st.tiers },
         skipped: !!st.skipped,
         answers: knownPairs(st).map(p => ({ a: oids[p.i], b: oids[p.j], value: p.value })),
-        idx: st.idx
+        idx: st.idx,
+        matrix: st.matrix ? st.matrix.map(r => [...r]) : null,
+        user: st.user ? st.user.map(r => [...r]) : null,
+        estimated: st.estimated ? st.estimated.map(r => [...r]) : null
       };
     });
     return {
       indicatorSet: indicatorSetId(),
       customIndicators: customIndicators.map(k => ({ ...k })),
       criteriaIds: criteria.map(c => c.id),
+      criteriaWeights: [...criteriaWeights],
       current,
-      state: dump
+      mandatoryCriteria: [...mandatoryCriteria],
+      state: dump,
+      comments: Comments.getAll('p2')
     };
   }
 
@@ -1290,6 +1343,19 @@ const Phase2 = (() => {
         }, 1);
         if (customIndicators.length) Info.registerKpis(customIndicators);
       }
+      // Restore mandatory criteria set.
+      if (Array.isArray(d.mandatoryCriteria)) {
+        mandatoryCriteria = new Set(d.mandatoryCriteria);
+      }
+      // Restore Phase 2 comments.
+      if (typeof d.comments === 'object' && d.comments !== null) {
+        Object.entries(d.comments).forEach(([phase, text]) => {
+          if (phase === 'p2' && typeof text === 'string') {
+            const el = document.getElementById('comment-text');
+            if (el) el.value = text;
+          }
+        });
+      }
       Object.entries(d.state).forEach(([id, s]) => {
         if (!state[id] || !Array.isArray(s.excluded)) return;
         const validEx = s.excluded.filter(x => indicators.some(k => k.id === x));
@@ -1316,6 +1382,16 @@ const Phase2 = (() => {
             if (!isFinite(a.value) || a.value < 1 / 9 - 1e-9 || a.value > 9 + 1e-9) return;
             recordKnown(state[id], ids, a.a, a.b, i <= j ? a.value : 1 / a.value);
           });
+        }
+        // Restore matrix, user, estimated flags for full draft fidelity.
+        if (Array.isArray(s.matrix)) {
+          state[id].matrix = s.matrix.map((row, i) => row.map((v, j) => j < row.length ? v : 1));
+        }
+        if (Array.isArray(s.user)) {
+          state[id].user = s.user.map((row, i) => row.map((v, j) => j < row.length ? !!v : false));
+        }
+        if (Array.isArray(s.estimated)) {
+          state[id].estimated = s.estimated.map((row, i) => row.map((v, j) => j < row.length ? !!v : false));
         }
         if (Number.isInteger(s.idx)) state[id].idx = Math.max(0, Math.min(s.idx, state[id].order.length));
         if (isCriterionComplete(state[id])) runCompletion(id);
@@ -1350,6 +1426,18 @@ const Phase2 = (() => {
   return {
     init, isAllComplete, buildPayload, reset, clearDraft, downloadRanking,
     DIVISOR, MIN_EVAL,
+    firstIncompleteIndex: () => {
+      for (let i = 0; i < criteria.length; i++) {
+        const st = state[criteria[i].id];
+        if (!st || !(st.skipped || (isCriterionComplete(st) && st.result))) return i;
+      }
+      return null;
+    },
+    goToCriterion: (index) => {
+      if (index < 0 || index >= criteria.length) return;
+      current = index;
+      renderAll();
+    },
     __test: { extendForAddedKpi, reduceForRemovedKpi, rebuildOrderKeepAnswers, firstUnansweredIndex, resetAnswers }
   };
 })();

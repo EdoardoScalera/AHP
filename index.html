@@ -47,7 +47,21 @@
             </div>
             <div class="form-group">
               <label for="input-role">Role *</label>
-              <input type="text" id="input-role" required placeholder="e.g., Building Owner, Architect, Engineer" autocomplete="off">
+              <select id="input-role" required>
+                <option value="">Select a role</option>
+                <option value="End User">End User</option>
+                <option value="Building owner and developer">Building owner and developer</option>
+                <option value="Utilities and grid operator">Utilities and grid operator</option>
+                <option value="Policymaker and regulatory body">Policymaker and regulatory body</option>
+                <option value="Technology provider and manufacturer">Technology provider and manufacturer</option>
+                <option value="Energy service company (ESCO)">Energy service company (ESCO)</option>
+                <option value="Financial institution">Financial institution</option>
+                <option value="Other">Other</option>
+              </select>
+              <div class="form-group hidden" id="role-other-group">
+                <label for="input-role-other">Please specify your role *</label>
+                <input type="text" id="input-role-other" maxlength="120" placeholder="e.g., Consultant" autocomplete="off">
+              </div>
             </div>
             <div class="form-group">
               <label for="input-pilot">Pilot Name *</label>
@@ -109,6 +123,9 @@
           </div>
           <div id="custom-criteria-list" class="custom-criteria-list"></div>
           <p class="hint" id="criteria-count"></p>
+          <div class="form-actions">
+            <button type="button" id="btn-confirm-criteria" class="btn btn-primary">Confirm and continue</button>
+          </div>
         </section>
 
         <section id="tier-section" class="card">
@@ -127,6 +144,9 @@
               <h3>C — Low priority</h3>
               <div class="tier-blocks" id="tier-col-C"></div>
             </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" id="btn-confirm-tiers" class="btn btn-primary">Confirm and continue</button>
           </div>
         </section>
 
@@ -160,31 +180,27 @@
           </div>
           <div id="guided-review-pane" class="hidden">
             <p id="guided-review-text" class="guided-q"></p>
+            <div id="guided-review-choices" class="guided-choices" style="display:none;">
+              <button type="button" id="guided-review-yes" class="btn btn-secondary"></button>
+              <button type="button" id="guided-review-no" class="btn btn-secondary"></button>
+              <button type="button" id="guided-review-equal" class="btn btn-secondary">Equal importance</button>
+            </div>
+            <div id="guided-review-scale-wrap" class="hidden">
+              <p class="guided-q" id="guided-review-scale-label"></p>
+              <div id="guided-review-scale" class="guided-scale"></div>
+            </div>
             <div class="form-actions">
               <button type="button" id="guided-review-prev" class="btn btn-secondary">Previous</button>
               <button type="button" id="guided-review-next" class="btn btn-secondary">Next</button>
               <button type="button" id="guided-review-exit" class="btn btn-secondary">Exit review</button>
             </div>
           </div>
-        </section>
-
-        <section id="matrix-section" class="card">
-          <h2>Pairwise Comparison Matrix <button type="button" class="info-btn" data-info-key="matrix-info" aria-label="More information about the comparison matrix" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-matrix" aria-label="Leave a comment on Pairwise Comparison Matrix" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-          <p class="guided-q">How important is <strong>criterion A (row)</strong> relative to <strong>criterion B (column)</strong>?</p>
-          <p class="hint">Review the matrix of comparisons. <span class="tag estimated">Yellow cells</span> are estimates based on your earlier answers. <span class="tag user">Green cells</span> represents your own choices.<br> Rank pairs in the range 1–9 if the row indicator is more important, or a reciprocal value (e.g., 1/3, 1/5, 1/7, or 1/9) if the column indicator is more important. Choose 1 = “Equal importance” if neither is more important.</p>
-          <div class="matrix-container">
-            <table id="matrix-table" class="matrix-table">
-              <thead>
-                <tr>
-                  <th class="corner">Criteria</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+          <div class="form-actions">
+            <button type="button" id="btn-confirm-guided" class="btn btn-primary">Confirm and continue</button>
           </div>
         </section>
 
-        <section id="cr-section" class="card">
+        <section id="matrix-cr-section" class="card">
           <h2>Consistency Check <button type="button" class="info-btn" data-info-key="cr-info" aria-label="More information about the Consistency Ratio" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-cr" aria-label="Leave a comment on Consistency Check" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
           <p class="hint">The Consistency Ratio checks whether your comparisons agree with each other. If CR is above 10%, it is advisable to revise your judgments to improve quality</p>
           <div class="cr-display">
@@ -193,6 +209,26 @@
             <div class="cr-bar">
               <div class="cr-bar-fill" id="cr-bar-fill"></div>
             </div>
+          </div>
+
+          <div id="matrix-content" class="hidden">
+            <h2>Pairwise Comparison Matrix <button type="button" class="info-btn" data-info-key="matrix-info" aria-label="More information about the comparison matrix" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p1" data-comment-key="p1-matrix" aria-label="Leave a comment on Pairwise Comparison Matrix" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
+            <p class="guided-q">How important is <strong>criterion A (row)</strong> relative to <strong>criterion B (column)</strong>?</p>
+            <p class="hint">Review the matrix of comparisons. <span class="tag estimated">Yellow cells</span> are estimates based on your earlier answers. <span class="tag user">Green cells</span> represents your own choices.<br> Rank pairs in the range 1–9 if the row indicator is more important, or a reciprocal value (e.g., 1/3, 1/5, 1/7, or 1/9) if the column indicator is more important. Choose 1 = “Equal importance” if neither is more important.</p>
+            <div class="matrix-container">
+              <table id="matrix-table" class="matrix-table">
+                <thead>
+                  <tr>
+                    <th class="corner">Criteria</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" id="btn-confirm-matrix-cr" class="btn btn-primary">Confirm and continue</button>
           </div>
         </section>
 
@@ -216,6 +252,9 @@
         <div class="form-actions">
           <button type="button" id="btn-comments-p1" class="btn btn-secondary push-left" data-comment-phase="p1" data-comment-key="p1-general">General comments</button>
           <button type="button" id="btn-save-draft" class="btn btn-secondary">Save Draft</button>
+          <label class="save-draft-phase2">
+            <input type="checkbox" id="input-save-draft-phase2"> Save draft and proceed to Phase 2
+          </label>
           <button type="submit" id="btn-submit" class="btn btn-primary" disabled>Submit</button>
         </div>
       </form>
@@ -236,7 +275,7 @@
     <div id="phase2-screen" class="screen hidden">
       <section class="card">
           <h2>Performance indicators <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-indicators" aria-label="Leave a comment on Performance indicators" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-        <p class="hint">For each criterion, we have identified performance indicators (KPIs) that can inform the planning of an energy renovation project. You can review the suggested KPIs, remove any that are not relevant, or add others that you consider important. <br> If criteria priorities are available from the previous section of the survey, they are used to calculate the final KPI ranking; otherwise, all criteria receive equal weight. </p>
+        <p class="hint">For each criterion, we have identified performance indicators (KPIs) that can inform the planning of an energy renovation project.<br> You can review the suggested KPIs, remove any that are not relevant, or add others that you consider important. Indicator scoring is mandatory for your 3 highest priority criteria. <br> Criteria priorities from the previous section are used to calculate the final KPI ranking.</p>
         <details class="dropdown-section" id="phase2-indicator-section">
           <summary style="font-size:1.1rem; cursor: pointer; list-style: none; padding: 0.5rem 0; display:flex; align-items:center; gap:0.5rem;">Review selected indicators for each criterion (optional) <span class="dropdown-arrow">▼</span></summary>
           <p class="hint" style="margin-bottom:8px;">Select a minimum of 2 indicators.</p>
@@ -250,6 +289,9 @@
           <div id="custom-kpi-list" class="custom-criteria-list"></div>
           <label class="skip-check"><input type="checkbox" id="phase2-skip"> <span>None of the above — this criterion does not apply</span></label>
         </details>
+        <div class="form-actions">
+          <button type="button" id="btn-confirm-p2-indicators" class="btn btn-primary">Confirm and continue</button>
+        </div>
       </section>
 
       <div id="phase2-criterion-banner" class="criterion-banner hidden">
@@ -276,6 +318,9 @@
             <h3>C — Measures least</h3>
             <div class="tier-blocks" id="phase2-tier-col-C"></div>
           </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" id="btn-confirm-p2-tiers" class="btn btn-primary">Confirm and continue</button>
         </div>
       </section>
 
@@ -311,32 +356,12 @@
             <button type="button" id="phase2-restart-done" class="btn btn-secondary">Restart this criterion</button>
           </div>
         </div>
-      </section>
-
-      <section id="phase2-matrix-section" class="card hidden">
-        <h2>Pairwise Comparison Matrix <button type="button" class="info-btn" data-info-key="matrix-info" aria-label="More information about the comparison matrix" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-matrix" aria-label="Leave a comment on Pairwise Comparison Matrix" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
-        <p class="guided-q">How important is <strong>indicator A (row)</strong> relative to <strong>indicator B (column)</strong>?</p>
-        <p class="hint">Review the matrix of comparisons. <span class="tag estimated">Yellow cells</span> are estimates based on your earlier answers. <span class="tag user">Green cells</span> represents your own choices.<br> Rank pairs in the range 1–9 if the row indicator is more important, or a reciprocal value (e.g., 1/3, 1/5, 1/7, or 1/9) if the column indicator is more important. Choose 1 = “Equal importance” if neither is more important.</p>
-        <div class="matrix-container">
-          <table id="phase2-matrix" class="matrix-table">
-            <thead>
-              <tr>
-                <th class="corner">KPI</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="form-actions" style="display:flex;justify-content:space-between;align-items:center;">
-          <div style="display:flex;gap:0.5rem;">
-            <button type="button" id="phase2-restart-matrix" class="btn btn-secondary push-left">Restart this criterion</button>
-            <button type="button" id="phase2-prev" class="btn btn-secondary">Previous criterion</button>
-          </div>
-          <button type="button" id="phase2-next" class="btn btn-secondary">Next criterion</button>
+        <div class="form-actions">
+          <button type="button" id="btn-confirm-p2-guided" class="btn btn-primary">Confirm and continue</button>
         </div>
       </section>
 
-      <section class="card">
+      <section id="phase2-matrix-cr-section" class="card">
         <h2>Consistency Check <button type="button" class="info-btn" data-info-key="cr-info" aria-label="More information about the Consistency Ratio" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-cr" aria-label="Leave a comment on Consistency Check" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
         <p class="hint">The Consistency Ratio checks whether your comparisons agree with each other. If CR is above 10%, it is advisable to revise your judgments to improve quality</p>
         <div class="cr-display">
@@ -345,6 +370,26 @@
           <div class="cr-bar">
             <div class="cr-bar-fill" id="phase2-cr-bar-fill"></div>
           </div>
+        </div>
+
+        <div id="phase2-matrix-content" class="hidden">
+          <h2>Pairwise Comparison Matrix <button type="button" class="info-btn" data-info-key="matrix-info" aria-label="More information about the comparison matrix" title="More information">i</button> <button type="button" class="comment-btn" data-comment-phase="p2" data-comment-key="p2-matrix" aria-label="Leave a comment on Pairwise Comparison Matrix" title="Leave a comment"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2.5h12v7.5H8.5L5.5 13v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button></h2>
+          <p class="guided-q">How important is <strong>indicator A (row)</strong> relative to <strong>indicator B (column)</strong>?</p>
+          <p class="hint">Review the matrix of comparisons. <span class="tag estimated">Yellow cells</span> are estimates based on your earlier answers. <span class="tag user">Green cells</span> represents your own choices.<br> Rank pairs in the range 1–9 if the row indicator is more important, or a reciprocal value (e.g., 1/3, 1/5, 1/7, or 1/9) if the column indicator is more important. Choose 1 = “Equal importance” if neither is more important.</p>
+          <div class="matrix-container">
+            <table id="phase2-matrix" class="matrix-table">
+              <thead>
+                <tr>
+                  <th class="corner">KPI</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" id="btn-confirm-p2-matrix-cr" class="btn btn-primary">Confirm and continue</button>
         </div>
       </section>
 
@@ -367,7 +412,7 @@
 
       <div class="form-actions">
         <button type="button" id="btn-comments-p2" class="btn btn-secondary push-left" data-comment-phase="p2" data-comment-key="p2-general">General comments</button>
-        <button type="button" id="btn-phase2-save" class="btn btn-secondary">Save indicators grading draft</button>
+        <button type="button" id="btn-phase2-save" class="btn btn-secondary">Save draft</button>
         <button type="button" id="btn-phase2-submit" class="btn btn-primary" disabled>Submit indicators grading</button>
       </div>
     </div>

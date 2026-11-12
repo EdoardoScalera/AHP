@@ -11,16 +11,29 @@ let allDefaultCriteria = []; // full defaults from criteria.json (scenario B)
 let currentMatrix = [];
 let currentResult = null;
 // Respondent info + phase selection from the start screen.
-let startIdentity = null; // {name,role,pilot,country,email,...}
+let startIdentity = null; // {name,role,roleOther,pilot,country,email,...}
 let selection = { phase1: true, phase2: true };
 // Phase-2 link: filled after Phase-1 submit (scenario C).
 let phase1Link = null; // { submissionId, activeCriteria, weights }
-// Standalone Phase-2 response id (scenario B, no Phase-1 submission).
+// Phase-1 data saved locally via the "Save draft and proceed to Phase 2"
+// draft path (submitted to the Worker together with Phase 2).
+let phase1DraftData = null;
+// Standalone Phase-2 response id (scenario B, no Phase-1 submission) — deprecated.
 let standaloneResponseId = null;
 
 async function init() {
   Storage.init(CONFIG);
   Auth.setStorage(Storage);
+
+  // Restore Phase 1 draft from localStorage (survives page reload).
+  try {
+    const saved = localStorage.getItem('ahp-phase1-draft-v1');
+    if (saved) {
+      phase1DraftData = JSON.parse(saved);
+    }
+  } catch (e) {
+    console.warn('Failed to restore phase 1 draft:', e);
+  }
 
   try {
     const response = await fetch('data/criteria.json');
@@ -37,6 +50,7 @@ async function init() {
     onMatrixChange: handleMatrixChange,
     onSubmit: handleSubmit,
     onSaveDraft: handleSaveDraft,
+    onSaveDraftProceed: handleSaveDraftProceed,
     onCriteriaChange: handleCriteriaChange
   });
 
@@ -96,11 +110,12 @@ function wireStart() {
     standaloneResponseId = null;
 
     if (sel.phase1) {
-      // Scenarios A + C: Phase 1 first.
+      // Phase 1 is mandatory (scenario B / Phase-2-only deprecated).
       UI.showScreen('survey-screen');
     } else {
-      // Scenario B: Phase 2 only, over all default criteria.
-      await startPhase2Standalone();
+      // Should not happen: phase 1 checkbox is always checked/disabled.
+      const err = document.getElementById('start-error');
+      if (err) err.classList.remove('hidden');
     }
   });
   document.getElementById('start-form').addEventListener('submit', e => e.preventDefault());
@@ -114,26 +129,7 @@ async function loadIndicators() {
   return list;
 }
 
-async function startPhase2Standalone() {
-  try {
-    const indicatorsList = await loadIndicators();
-    const weights = allDefaultCriteria.map(() => 1 / allDefaultCriteria.length);
-    standaloneResponseId = crypto.randomUUID();
-    Phase2.init({
-      indicators: indicatorsList,
-      criteria: allDefaultCriteria.map(c => ({ ...c })),
-      criteriaWeights: weights,
-      onSubmit: handlePhase2Submit,
-      onSaveDraft: () => {}
-    });
-    UI.showScreen('phase2-screen');
-  } catch (e) {
-    console.error('Phase2 init failed:', e);
-    alert('Could not load indicators: ' + e.message);
-  }
-}
-
-// ---------- Phase 1 submit ----------
+// ---------- Phase 1 submit (app-level: server storage + phase-2 link) ----------
 function phasesSelectedList() {
   const out = [];
   if (selection.phase1) out.push(1);
@@ -162,6 +158,8 @@ async function handleSubmit(data) {
       activeCriteria: UI.getActiveCriteria ? UI.getActiveCriteria().map(c => ({ ...c })) : [...criteria],
       weights: [...data.weights]
     };
+    // Phase 1 submitted to server — clear local draft.
+    localStorage.removeItem('ahp-phase1-draft-v1');
     submitBtn.disabled = false;
     submitBtn.textContent = 'Submit';
     if (selection.phase2) {
@@ -239,24 +237,64 @@ async function handlePhase2Submit(phase2payload) {
     return;
   }
 
+  // Unfinished survey check: warn if any part (Phase 1 or Phase 2) is incomplete.
+  if (!Phase2.isAllComplete()) {
+    const firstMissing = Phase2.firstIncompleteIndex();
+    const missingText = firstMissing != null
+      ? ` — incomplete criterion: ${criteria[firstMissing].name}`
+      : '';
+    const goMissing = confirm(
+      'Are you sure you want to submit an unfinished survey? Default or estimated values will be used to complete your survey.' +
+      missingText +
+      '\n\nPress OK to submit now, or Cancel to go to the missing section.'
+    );
+    if (!goMissing && firstMissing != null) {
+      // Go to the first incomplete criterion tab.
+      Phase2.goToCriterion(firstMissing);
+      UI.showScreen('phase2-screen');
+      return;
+    }
+  }
+
   const base = {
     ...phase2payload,
     accessCode,
     comments: Comments.getAll('p2'),
     name: startIdentity.name,
     role: startIdentity.role,
+    roleOther: startIdentity.roleOther || '',
     pilot: startIdentity.pilot,
     country: startIdentity.country,
     email: startIdentity.email || '',
     consent: true,
     phasesSelected: phasesSelectedList()
   };
+
+  // Draft path: submit Phase 1 first (Worker needs phase1SubmissionId to validate Phase 2).
+  if (phase1DraftData && !phase1Link) {
+    try {
+      const phase1Result = await Storage.saveSubmission(phase1DraftData);
+      phase1Link = {
+        submissionId: phase1Result.submissionId || null,
+        activeCriteria: criteria.map(c => ({ ...c })),
+        weights: [...phase1DraftData.weights]
+      };
+      phase1DraftData = null;
+    } catch (error) {
+      console.error('Phase-1 pre-submission error:', error);
+      alert('Failed to submit Phase 1: ' + error.message);
+      btn.disabled = false;
+      btn.textContent = prev;
+      return;
+    }
+  }
+
   if (phase1Link && phase1Link.submissionId) {
     // Scenario C: link to the Phase-1 submission (shared response ID).
     base.phase1SubmissionId = phase1Link.submissionId;
     base.weightsSource = 'phase1';
   } else {
-    // Scenario B: standalone response with a client-generated ID.
+    // Scenario B (deprecated): standalone response.
     base.phase1Skipped = true;
     base.responseId = standaloneResponseId;
     base.weightsSource = 'equal-default';
@@ -265,6 +303,7 @@ async function handlePhase2Submit(phase2payload) {
   try {
     await Storage.savePhase2Submission(base);
     Phase2.clearDraft();
+    localStorage.removeItem('ahp-phase1-draft-v1');
     Auth.clearPassword();
     phase1Link = null;
     standaloneResponseId = null;
@@ -281,7 +320,51 @@ async function handlePhase2Submit(phase2payload) {
 
 function handleSaveDraft(data) {
   UI.saveDraft(data);
+  // Persist full Phase 1 payload for reload safety (unified draft pattern).
+  const accessCode = Auth.getAccessCode ? Auth.getAccessCode() : Auth.getPassword();
+  const draft = {
+    ...data,
+    accessCode,
+    phasesSelected: phasesSelectedList()
+  };
+  try {
+    localStorage.setItem('ahp-phase1-draft-v1', JSON.stringify(draft));
+  } catch (e) {
+    console.warn('Failed to save phase 1 draft:', e);
+  }
   alert('Draft saved locally in this browser');
+}
+
+// ---------- "Save draft and proceed to Phase 2" (draft path) ----------
+// Saves Phase 1 data locally (no Worker submission yet) and moves to Phase 2.
+// Phase 1 is submitted to the Worker first during the final Phase 2 submit.
+async function handleSaveDraftProceed(data) {
+  const accessCode = Auth.getAccessCode ? Auth.getAccessCode() : Auth.getPassword();
+  phase1DraftData = {
+    ...data,
+    accessCode,
+    phasesSelected: phasesSelectedList()
+  };
+  // Persist for reload safety.
+  try {
+    localStorage.setItem('ahp-phase1-draft-v1', JSON.stringify(phase1DraftData));
+  } catch (e) {
+    console.warn('Failed to save phase 1 draft:', e);
+  }
+  try {
+    const indicatorsList = await loadIndicators();
+    Phase2.init({
+      indicators: indicatorsList,
+      criteria: criteria.map(c => ({ ...c })),
+      criteriaWeights: [...data.weights],
+      onSubmit: handlePhase2Submit,
+      onSaveDraft: () => {}
+    });
+    UI.showScreen('phase2-screen');
+  } catch (e) {
+    console.error('Phase2 init failed:', e);
+    alert('Could not load indicators: ' + e.message);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);

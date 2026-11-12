@@ -22,12 +22,14 @@ const UI = (() => {
   let guidedIdx = 0;
   let guidedChoice = null;
   let guidedReviewIdx = -1;
+  let guidedReviewChoice = null;
   let userCells = [];
   let estimatedFlags = [];
   let matrix = [];
   let onMatrixChange = null;
   let onSubmit = null;
   let onSaveDraft = null;
+  let onSaveDraftProceed = null;
   let onCriteriaChange = null;
 
   function init(criteriaData, callbacks) {
@@ -37,6 +39,7 @@ const UI = (() => {
     onMatrixChange = callbacks.onMatrixChange;
     onSubmit = callbacks.onSubmit;
     onSaveDraft = callbacks.onSaveDraft;
+    onSaveDraftProceed = callbacks.onSaveDraftProceed || null;
     onCriteriaChange = callbacks.onCriteriaChange || null;
 
     buildCriteriaChecklist();
@@ -282,6 +285,16 @@ const UI = (() => {
     });
     toggleRenovationDetails();
 
+    const roleSelect = document.getElementById('input-role');
+    const roleOtherGroup = document.getElementById('role-other-group');
+    if (roleSelect && roleOtherGroup) {
+      function toggleRoleOther() {
+        roleOtherGroup.classList.toggle('hidden', roleSelect.value !== 'Other');
+      }
+      roleSelect.addEventListener('change', toggleRoleOther);
+      toggleRoleOther();
+    }
+
     const board = document.getElementById('tier-board');
     if (board) {
       board.addEventListener('click', e => {
@@ -367,12 +380,40 @@ const UI = (() => {
       renderGuidedReview();
     });
     document.getElementById('guided-review-exit').addEventListener('click', exitGuidedReview);
+    document.getElementById('guided-review-yes').addEventListener('click', () => answerGuidedReview('A'));
+    document.getElementById('guided-review-no').addEventListener('click', () => answerGuidedReview('B'));
+    document.getElementById('guided-review-equal').addEventListener('click', () => answerGuidedReview('Eq'));
+    document.getElementById('guided-review-scale').addEventListener('click', e => {
+      const btn = e.target.closest('button[data-scale]');
+      if (btn) applyReviewAnswer(parseInt(btn.dataset.scale, 10));
+    });
     document.getElementById('btn-save-draft').addEventListener('click', handleSaveDraft);
     const dlPlotBtn = document.getElementById('btn-download-plot');
     if (dlPlotBtn) dlPlotBtn.addEventListener('click', () => Plot.download());
     document.getElementById('survey-form').addEventListener('submit', e => e.preventDefault());
     document.getElementById('btn-new-response').addEventListener('click', resetForm);
     document.getElementById('btn-retry').addEventListener('click', () => showScreen('survey-screen'));
+
+    // ---- Confirm & continue buttons (Phase 1) ----
+    function scrollToSection(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const headerOffset = 90; // keep section title visible below fixed header
+      const elTop = el.getBoundingClientRect().top + window.pageYOffset;
+      window.scrollTo({ top: elTop - headerOffset, behavior: 'smooth' });
+    }
+    const confirmP1 = [
+      { btn: 'btn-confirm-criteria', next: 'tier-section' },
+      { btn: 'btn-confirm-tiers', next: 'guided-section' },
+      { btn: 'btn-confirm-guided', next: 'matrix-cr-section' },
+      { btn: 'btn-confirm-matrix-cr', next: 'plot-section' }
+    ];
+    confirmP1.forEach(({ btn, next }) => {
+      const b = document.getElementById(btn);
+      if (b) {
+        b.addEventListener('click', () => scrollToSection(next));
+      }
+    });
   }
 
   function toggleRenovationDetails() {
@@ -540,9 +581,10 @@ const UI = (() => {
   // (manual editing / estimate override then becomes available). Pure
   // visibility — no state, recording or completion logic changes.
   function syncMatrixVisibility() {
-    const section = document.getElementById('matrix-section');
-    if (!section) return;
-    section.classList.toggle('hidden', !(criteria.length >= MIN_N && guidedIsComplete()));
+    const matrixContent = document.getElementById('matrix-content');
+    if (!matrixContent) return;
+    // CR check stays always visible above the matrix; matrix revealed once guided is complete.
+    matrixContent.classList.toggle('hidden', !(criteria.length >= MIN_N && guidedIsComplete()));
   }
 
   function renderGuided() {
@@ -680,7 +722,7 @@ const UI = (() => {
   function guidedBack() {
     if (guidedIdx <= 0) return;
     guidedIdx -= 1;
-    guidedChoice = null;
+    // Keep the previous choice so the user can review and eventually change it.
     renderGuided();
   }
 
@@ -700,6 +742,7 @@ const UI = (() => {
   function enterGuidedReview() {
     if (!guidedIsComplete()) return;
     guidedReviewIdx = 0;
+    guidedReviewChoice = null;
     document.getElementById('guided-card').classList.add('hidden');
     document.getElementById('guided-done').classList.add('hidden');
     document.getElementById('guided-review-pane').classList.remove('hidden');
@@ -708,7 +751,11 @@ const UI = (() => {
 
   function renderGuidedReview() {
     const text = document.getElementById('guided-review-text');
-    if (!text) return;
+    const choices = document.getElementById('guided-review-choices');
+    const scaleWrap = document.getElementById('guided-review-scale-wrap');
+    const scaleLabel = document.getElementById('guided-review-scale-label');
+    const scale = document.getElementById('guided-review-scale');
+    if (!text || !choices || !scaleWrap || !scaleLabel || !scale) return;
     const m = guidedOrder.length;
     const k = Math.max(0, Math.min(guidedReviewIdx, m - 1));
     guidedReviewIdx = k;
@@ -727,8 +774,73 @@ const UI = (() => {
     }
     text.innerHTML =
       `<strong>Question ${k + 1} of ${m}:</strong> ${escapeHtml(a.name)} vs ${escapeHtml(b.name)}<br>Your answer: <strong>${escapeHtml(verdict)}</strong>`;
+
+    // Show changeable choice buttons; highlight the current selection.
+    const yesBtn = document.getElementById('guided-review-yes');
+    const noBtn = document.getElementById('guided-review-no');
+    const eqBtn = document.getElementById('guided-review-equal');
+    if (yesBtn && noBtn && eqBtn) {
+      yesBtn.innerHTML = `<strong>${escapeHtml(displayName(a))}</strong> more important`;
+      noBtn.innerHTML = `<strong>${escapeHtml(displayName(b))}</strong> more important`;
+      [yesBtn, noBtn, eqBtn].forEach(btn => btn.classList.remove('on'));
+      if (guidedReviewChoice === 'A') yesBtn.classList.add('on');
+      else if (guidedReviewChoice === 'B') noBtn.classList.add('on');
+      else if (guidedReviewChoice === 'Eq') eqBtn.classList.add('on');
+      else if (ans) {
+        // Restore choice from stored answer.
+        if (i <= j ? ans.value > 1 : ans.value < 1) yesBtn.classList.add('on');
+        else if (i <= j ? ans.value < 1 : ans.value > 1) noBtn.classList.add('on');
+        else eqBtn.classList.add('on');
+      }
+      choices.style.display = 'flex';
+    }
+
+    // Scale: show when A or B is chosen.
+    scaleWrap.classList.add('hidden');
+    if (guidedReviewChoice === 'A' || guidedReviewChoice === 'B') {
+      scale.innerHTML = '';
+      const winner = guidedReviewChoice === 'A' ? a : b;
+      scaleLabel.textContent = `How much more important is ${displayName(winner)} on a scale 2-9?`;
+      const dist = Guided.pairDistance(tiers[a.id] || 'B', tiers[b.id] || 'B');
+      const lo = dist === 0 ? 1 : dist === 1 ? 3 : 7;
+      const hi = dist === 0 ? 3 : dist === 1 ? 5 : 9;
+      const currentScale = ans ? (guidedReviewChoice === 'A' ? v : 1 / v) : null;
+      for (let val = 9; val >= 2; val--) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = String(val);
+        btn.dataset.scale = String(val);
+        if (val >= lo && val <= hi) btn.classList.add('suggested');
+        if (currentScale && Math.abs(currentScale - val) < 1e-9) btn.classList.add('on');
+        scale.appendChild(btn);
+      }
+      scaleWrap.classList.remove('hidden');
+    } else if (guidedReviewChoice === 'Eq') {
+      scaleLabel.textContent = 'Equal importance selected.';
+    }
+
     document.getElementById('guided-review-prev').disabled = k <= 0;
     document.getElementById('guided-review-next').disabled = k >= m - 1;
+  }
+
+  function answerGuidedReview(dir) {
+    if (dir === 'Eq') {
+      applyReviewAnswer(1);
+      return;
+    }
+    guidedReviewChoice = dir;
+    renderGuidedReview();
+  }
+
+  function applyReviewAnswer(aOverB) {
+    const m = guidedOrder.length;
+    const k = Math.max(0, Math.min(guidedReviewIdx, m - 1));
+    const [aId, bId] = guidedOrder[k];
+    const i = idToIndex(aId), j = idToIndex(bId);
+    if (i < 0 || j < 0) return;
+    recordKnown(i, j, aOverB);
+    guidedReviewChoice = null;
+    renderGuidedReview();
   }
 
   function exitGuidedReview() {
@@ -830,19 +942,29 @@ const UI = (() => {
     const result = AHP.calculateAll(matrix);
     const meta = getCriteriaMeta();
 
+    const data = {
+      ...identity,
+      criteria: meta,
+      tiers: getTiers(),
+      pairwise: getPairwisePayload(),
+      matrix,
+      weights: result.weights,
+      cr: result.CR,
+      consistent: result.consistent,
+      missingCriteria,
+      comments: Comments.getAll('p1')
+    };
+
+    // Draft path: save Phase 1 locally and proceed to Phase 2 without server submission.
+    const saveDraftPhase2 = document.getElementById('input-save-draft-phase2');
+    if (saveDraftPhase2 && saveDraftPhase2.checked && getSelection().phase2) {
+      if (onSaveDraft) onSaveDraft(data);
+      if (onSaveDraftProceed) onSaveDraftProceed(data);
+      return;
+    }
+
     if (onSubmit) {
-      onSubmit({
-        ...identity,
-        criteria: meta,
-        tiers: getTiers(),
-        pairwise: getPairwisePayload(),
-        matrix,
-        weights: result.weights,
-        cr: result.CR,
-        consistent: result.consistent,
-        missingCriteria,
-        comments: Comments.getAll('p1')
-      });
+      onSubmit(data);
     }
   }
 
@@ -862,6 +984,13 @@ const UI = (() => {
     const identity = getIdentity();
     const missingEl = document.getElementById('input-missing');
     const missingCriteria = missingEl ? missingEl.value.trim() : '';
+    let weights = null, cr = null, consistent = null;
+    try {
+      const result = AHP.calculateAll(matrix);
+      weights = result.weights;
+      cr = result.CR;
+      consistent = result.consistent;
+    } catch (e) { /* matrix may be incomplete */ }
 
     if (onSaveDraft) {
       onSaveDraft({
@@ -873,7 +1002,11 @@ const UI = (() => {
           idx: guidedIdx
         },
         matrix,
-        missingCriteria
+        weights,
+        cr,
+        consistent,
+        missingCriteria,
+        comments: Comments.getAll('p1')
       });
     }
   }
@@ -883,12 +1016,20 @@ const UI = (() => {
     const yesEl = document.getElementById('input-renovation-yes');
     const noEl = document.getElementById('input-renovation-no');
     const detailsEl = document.getElementById('input-renovation-details');
+    const roleEl = document.getElementById('input-role');
+    const roleOtherEl = document.getElementById('input-role-other');
     let renovationUnderConsideration = null;
     if (yesEl && yesEl.checked) renovationUnderConsideration = true;
     else if (noEl && noEl.checked) renovationUnderConsideration = false;
+    const role = roleEl ? roleEl.value.trim() : '';
+    let roleOther = '';
+    if (role === 'Other' && roleOtherEl) {
+      roleOther = roleOtherEl.value.trim();
+    }
     return {
       name: document.getElementById('input-name').value.trim(),
-      role: document.getElementById('input-role').value.trim(),
+      role: role,
+      roleOther: roleOther,
       pilot: document.getElementById('input-pilot').value.trim(),
       country: document.getElementById('input-country').value.trim(),
       email: document.getElementById('input-email') ? document.getElementById('input-email').value.trim() : '',
@@ -910,6 +1051,11 @@ const UI = (() => {
     if (identity.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identity.email)) {
       alert('Please provide a valid email address or leave it empty.');
       document.getElementById('input-email').focus();
+      return false;
+    }
+    if (identity.role === 'Other' && !identity.roleOther) {
+      alert('Please specify your role.');
+      document.getElementById('input-role-other').focus();
       return false;
     }
     if (identity.renovationUnderConsideration === null) {
@@ -938,8 +1084,18 @@ const UI = (() => {
         const simple = ['name', 'role', 'pilot', 'country', 'email'];
         simple.forEach(k => {
           const el = document.getElementById(`input-${k}`);
-          if (el && draft.identity[k]) el.value = draft.identity[k];
+          if (el && draft.identity[k] != null) el.value = draft.identity[k];
         });
+        // Restore role-specific "Other" text box.
+        if (draft.identity.roleOther) {
+          const roleOtherEl = document.getElementById('input-role-other');
+          if (roleOtherEl) roleOtherEl.value = draft.identity.roleOther;
+        }
+        const roleSelect = document.getElementById('input-role');
+        const roleOtherGroup = document.getElementById('role-other-group');
+        if (roleSelect && roleOtherGroup) {
+          roleOtherGroup.classList.toggle('hidden', roleSelect.value !== 'Other');
+        }
         if (draft.identity.consent) {
           const el = document.getElementById('input-consent');
           if (el) el.checked = true;
@@ -1069,6 +1225,7 @@ const UI = (() => {
     document.getElementById('success-detail').textContent = detail;
     showScreen('success-screen');
     localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem('ahp-phase1-draft-v1');
     Comments.clear('p1');
     Comments.clear('p2');
   }
@@ -1084,6 +1241,7 @@ const UI = (() => {
     if (startForm) startForm.reset();
     Comments.clear('p1');
     Comments.clear('p2');
+    localStorage.removeItem('ahp-phase1-draft-v1');
     document.querySelectorAll('#criteria-checklist input[type="checkbox"]').forEach(cb => { cb.checked = true; });
     customCriteria = [];
     customCounter = 1;
@@ -1132,8 +1290,18 @@ const UI = (() => {
       if (d.identity) {
         ['name', 'role', 'pilot', 'country', 'email'].forEach(k => {
           const el = document.getElementById(`input-${k}`);
-          if (el && d.identity[k]) el.value = d.identity[k];
+          if (el && d.identity[k] != null) el.value = d.identity[k];
         });
+        // Restore role-specific "Other" text box.
+        if (d.identity.roleOther) {
+          const roleOtherEl = document.getElementById('input-role-other');
+          if (roleOtherEl) roleOtherEl.value = d.identity.roleOther;
+        }
+        const roleSelect = document.getElementById('input-role');
+        const roleOtherGroup = document.getElementById('role-other-group');
+        if (roleSelect && roleOtherGroup) {
+          roleOtherGroup.classList.toggle('hidden', roleSelect.value !== 'Other');
+        }
         if (d.identity.consent) {
           const el = document.getElementById('input-consent');
           if (el) el.checked = true;
