@@ -744,7 +744,7 @@ const UI = (() => {
     guidedReviewIdx = 0;
     guidedReviewChoice = null;
     document.getElementById('guided-card').classList.add('hidden');
-    document.getElementById('guided-done').classList.add('hidden');
+    document.getElementById('guided-done').classList.remove('hidden');
     document.getElementById('guided-review-pane').classList.remove('hidden');
     renderGuidedReview();
   }
@@ -955,14 +955,6 @@ const UI = (() => {
       comments: Comments.getAll('p1')
     };
 
-    // Draft path: save Phase 1 locally and proceed to Phase 2 without server submission.
-    const saveDraftPhase2 = document.getElementById('input-save-draft-phase2');
-    if (saveDraftPhase2 && saveDraftPhase2.checked && getSelection().phase2) {
-      if (onSaveDraft) onSaveDraft(data);
-      if (onSaveDraftProceed) onSaveDraftProceed(data);
-      return;
-    }
-
     if (onSubmit) {
       onSubmit(data);
     }
@@ -1009,6 +1001,30 @@ const UI = (() => {
         comments: Comments.getAll('p1')
       });
     }
+
+    // If "Save draft and proceed to Phase 2" is checked, save locally and move to Phase 2.
+    const saveDraftPhase2 = document.getElementById('input-save-draft-phase2');
+    if (saveDraftPhase2 && saveDraftPhase2.checked && getSelection().phase2) {
+      if (onSaveDraftProceed) {
+        onSaveDraftProceed({
+          identity,
+          criteria: getCriteriaMeta(),
+          tiers: getTiers(),
+          guided: {
+            answers: guidedKnownPairs(),
+            idx: guidedIdx
+          },
+          matrix,
+          weights,
+          cr,
+          consistent,
+          missingCriteria,
+          comments: Comments.getAll('p1')
+        });
+      }
+      return;
+    }
+    alert('Draft saved locally in this browser');
   }
 
   function getIdentity() {

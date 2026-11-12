@@ -35,6 +35,8 @@ const Phase2 = (() => {
   let onSaveDraft = null;
   let chart = null;
   let lastExport = null; // { labels, values, colors, crText } for 3x PNG export
+  let phase2ReviewIdx = -1;
+  let phase2ReviewChoice = null;
 
   // Rank criteria by phase-1 weight (descending). Top 3 are mandatory;
   // include a 4th (and beyond) when two criteria share the same priority score.
@@ -475,6 +477,123 @@ const Phase2 = (() => {
     if (isCriterionComplete(st)) runCompletion(c.id);
     renderAll();
     persistDraft();
+  }
+
+  // ---------- Phase 2 guided review ----------
+  function enterPhase2GuidedReview() {
+    const st = curState();
+    if (!st || !isCriterionComplete(st)) return;
+    phase2ReviewIdx = 0;
+    phase2ReviewChoice = null;
+    document.getElementById('phase2-guided-card').classList.add('hidden');
+    document.getElementById('phase2-done').classList.remove('hidden');
+    document.getElementById('phase2-review-pane').classList.remove('hidden');
+    renderPhase2GuidedReview();
+  }
+
+  function renderPhase2GuidedReview() {
+    const text = document.getElementById('phase2-review-text');
+    const choices = document.getElementById('phase2-review-choices');
+    const scaleWrap = document.getElementById('phase2-review-scale-wrap');
+    const scaleLabel = document.getElementById('phase2-review-scale-label');
+    const scale = document.getElementById('phase2-review-scale');
+    if (!text || !choices || !scaleWrap || !scaleLabel || !scale) return;
+    const st = curState();
+    if (!st) return;
+    const m = st.order.length;
+    const k = Math.max(0, Math.min(phase2ReviewIdx, m - 1));
+    phase2ReviewIdx = k;
+    const [aId, bId] = st.order[k];
+    const idx = st.ids;
+    const i = idx.indexOf(aId), j = idx.indexOf(bId);
+    const a = indicatorById(aId), b = indicatorById(bId);
+    const ans = st.answers[pairKey(i, j)];
+    const v = ans ? (i <= j ? ans.value : 1 / ans.value) : 1;
+    let verdict;
+    if (Math.abs(v - 1) < 1e-9) {
+      verdict = 'Equal importance (1)';
+    } else if (v > 1) {
+      verdict = `${a.name} more important`;
+    } else {
+      verdict = `${b.name} more important`;
+    }
+    text.innerHTML =
+      `<strong>Question ${k + 1} of ${m}:</strong> ${escapeHtml(a.name)} vs ${escapeHtml(b.name)}<br>Your answer: <strong>${verdict}</strong>`;
+
+    // Show changeable choice buttons; highlight the current selection.
+    const yesBtn = document.getElementById('phase2-review-yes');
+    const noBtn = document.getElementById('phase2-review-no');
+    const eqBtn = document.getElementById('phase2-review-equal');
+    if (yesBtn && noBtn && eqBtn) {
+      yesBtn.innerHTML = `<strong>${escapeHtml(a.name)}</strong> better`;
+      noBtn.innerHTML = `<strong>${escapeHtml(b.name)}</strong> better`;
+      [yesBtn, noBtn, eqBtn].forEach(btn => btn.classList.remove('on'));
+      if (phase2ReviewChoice === 'A') yesBtn.classList.add('on');
+      else if (phase2ReviewChoice === 'B') noBtn.classList.add('on');
+      else if (phase2ReviewChoice === 'Eq') eqBtn.classList.add('on');
+      else if (ans) {
+        if (i <= j ? ans.value > 1 : ans.value < 1) yesBtn.classList.add('on');
+        else if (i <= j ? ans.value < 1 : ans.value > 1) noBtn.classList.add('on');
+        else eqBtn.classList.add('on');
+      }
+      choices.style.display = 'flex';
+    }
+
+    // Scale: show when A or B is chosen.
+    scaleWrap.classList.add('hidden');
+    if (phase2ReviewChoice === 'A' || phase2ReviewChoice === 'B') {
+      scale.innerHTML = '';
+      const winner = phase2ReviewChoice === 'A' ? a : b;
+      scaleLabel.textContent = `How much more important is ${escapeHtml(winner.name)} on a scale 2-9?`;
+      const dist = Guided.pairDistance(st.tiers[aId], st.tiers[bId]);
+      const lo = dist === 0 ? 1 : dist === 1 ? 3 : 7;
+      const hi = dist === 0 ? 3 : dist === 1 ? 5 : 9;
+      const currentScale = ans ? (phase2ReviewChoice === 'A' ? v : 1 / v) : null;
+      for (let val = 9; val >= 2; val--) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = String(val);
+        btn.dataset.scale = String(val);
+        if (val >= lo && val <= hi) btn.classList.add('suggested');
+        if (currentScale && Math.abs(currentScale - val) < 1e-9) btn.classList.add('on');
+        scale.appendChild(btn);
+      }
+      scaleWrap.classList.remove('hidden');
+    }
+
+    document.getElementById('phase2-review-prev').disabled = k <= 0;
+    document.getElementById('phase2-review-next').disabled = k >= m - 1;
+  }
+
+  function answerPhase2GuidedReview(dir) {
+    if (dir === 'Eq') {
+      applyPhase2ReviewAnswer(1);
+      return;
+    }
+    phase2ReviewChoice = dir;
+    renderPhase2GuidedReview();
+  }
+
+  function applyPhase2ReviewAnswer(aOverB) {
+    const st = curState();
+    if (!st) return;
+    const m = st.order.length;
+    const k = Math.max(0, Math.min(phase2ReviewIdx, m - 1));
+    const [aId, bId] = st.order[k];
+    const idx = st.ids;
+    const i = idx.indexOf(aId), j = idx.indexOf(bId);
+    if (i < 0 || j < 0) return;
+    recordKnown(st, idx, aId, bId, aOverB);
+    phase2ReviewChoice = null;
+    renderPhase2GuidedReview();
+  }
+
+  function exitPhase2GuidedReview() {
+    phase2ReviewIdx = -1;
+    phase2ReviewChoice = null;
+    document.getElementById('phase2-review-pane').classList.add('hidden');
+    document.getElementById('phase2-guided-card').classList.remove('hidden');
+    renderAll();
   }
 
   // ---------- rendering ----------
@@ -1138,8 +1257,29 @@ const Phase2 = (() => {
     document.getElementById('phase2-restart').addEventListener('click', restartCriterion);
     const restartDone = document.getElementById('phase2-restart-done');
     if (restartDone) restartDone.addEventListener('click', restartCriterion);
+
+    // ---- Phase 2 guided review event listeners ----
+    document.getElementById('phase2-review').addEventListener('click', enterPhase2GuidedReview);
+    document.getElementById('phase2-review-yes').addEventListener('click', () => answerPhase2GuidedReview('A'));
+    document.getElementById('phase2-review-no').addEventListener('click', () => answerPhase2GuidedReview('B'));
+    document.getElementById('phase2-review-equal').addEventListener('click', () => answerPhase2GuidedReview('Eq'));
+    document.getElementById('phase2-review-scale').addEventListener('click', e => {
+      const btn = e.target.closest('button[data-scale]');
+      if (btn) applyPhase2ReviewAnswer(parseInt(btn.dataset.scale, 10));
+    });
+    document.getElementById('phase2-review-prev').addEventListener('click', () => {
+      phase2ReviewIdx = Math.max(0, phase2ReviewIdx - 1);
+      renderPhase2GuidedReview();
+    });
+    document.getElementById('phase2-review-next').addEventListener('click', () => {
+      const st = curState();
+      const m = st ? st.order.length : 0;
+      phase2ReviewIdx = Math.min(m - 1, phase2ReviewIdx + 1);
+      renderPhase2GuidedReview();
+    });
+    document.getElementById('phase2-review-exit').addEventListener('click', exitPhase2GuidedReview);
+
     // Note: phase2-prev / phase2-next / phase2-restart-matrix buttons were removed from the DOM;
-    // criterion navigation is handled by the criterion banner (phase2-banner-prev/next).
 
     // ---- Confirm & continue buttons (Phase 2) ----
     function scrollToSection(id) {

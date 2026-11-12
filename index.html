@@ -48,7 +48,7 @@
             <div class="form-group">
               <label for="input-role">Role *</label>
               <select id="input-role" required>
-                <option value="">Select a role</option>
+                <option value="" disabled selected>Select a role</option>
                 <option value="End User">End User</option>
                 <option value="Building owner and developer">Building owner and developer</option>
                 <option value="Utilities and grid operator">Utilities and grid operator</option>
@@ -169,33 +169,31 @@
               <p class="hint">Highlighted scores represent most consistent choices.</p>
               <div id="guided-scale" class="guided-scale"></div>
             </div>
-            <div class="form-actions">
-              <button type="button" id="guided-back" class="btn btn-secondary">Back</button>
-            </div>
           </div>
           <div id="guided-done" class="hidden">
             <p>All guided comparisons answered. Review the matrix below. </p>
+            <div id="guided-review-pane" class="hidden">
+              <p id="guided-review-text" class="guided-q"></p>
+              <div id="guided-review-choices" class="guided-choices" style="display:none;">
+                <button type="button" id="guided-review-yes" class="btn btn-secondary"></button>
+                <button type="button" id="guided-review-no" class="btn btn-secondary"></button>
+                <button type="button" id="guided-review-equal" class="btn btn-secondary">Equal importance</button>
+              </div>
+              <div id="guided-review-scale-wrap" class="hidden">
+                <p class="guided-q" id="guided-review-scale-label"></p>
+                <div id="guided-review-scale" class="guided-scale"></div>
+              </div>
+              <div class="form-actions">
+                <button type="button" id="guided-review-prev" class="btn btn-secondary">Previous</button>
+                <button type="button" id="guided-review-next" class="btn btn-secondary">Next</button>
+                <button type="button" id="guided-review-exit" class="btn btn-secondary">Exit review</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions" style="display:flex;gap:0.5rem;align-items:center;">
+            <button type="button" id="guided-back" class="btn btn-secondary">Back</button>
             <button type="button" id="guided-review" class="btn btn-secondary">Review guided answers</button>
             <button type="button" id="guided-restart" class="btn btn-secondary">Restart guided comparison</button>
-          </div>
-          <div id="guided-review-pane" class="hidden">
-            <p id="guided-review-text" class="guided-q"></p>
-            <div id="guided-review-choices" class="guided-choices" style="display:none;">
-              <button type="button" id="guided-review-yes" class="btn btn-secondary"></button>
-              <button type="button" id="guided-review-no" class="btn btn-secondary"></button>
-              <button type="button" id="guided-review-equal" class="btn btn-secondary">Equal importance</button>
-            </div>
-            <div id="guided-review-scale-wrap" class="hidden">
-              <p class="guided-q" id="guided-review-scale-label"></p>
-              <div id="guided-review-scale" class="guided-scale"></div>
-            </div>
-            <div class="form-actions">
-              <button type="button" id="guided-review-prev" class="btn btn-secondary">Previous</button>
-              <button type="button" id="guided-review-next" class="btn btn-secondary">Next</button>
-              <button type="button" id="guided-review-exit" class="btn btn-secondary">Exit review</button>
-            </div>
-          </div>
-          <div class="form-actions">
             <button type="button" id="btn-confirm-guided" class="btn btn-primary">Confirm and continue</button>
           </div>
         </section>
@@ -251,10 +249,10 @@
 
         <div class="form-actions">
           <button type="button" id="btn-comments-p1" class="btn btn-secondary push-left" data-comment-phase="p1" data-comment-key="p1-general">General comments</button>
-          <button type="button" id="btn-save-draft" class="btn btn-secondary">Save Draft</button>
           <label class="save-draft-phase2">
             <input type="checkbox" id="input-save-draft-phase2"> Save draft and proceed to Phase 2
           </label>
+          <button type="button" id="btn-save-draft" class="btn btn-secondary">Save Draft</button>
           <button type="submit" id="btn-submit" class="btn btn-primary" disabled>Submit</button>
         </div>
       </form>
@@ -345,18 +343,31 @@
             <p class="hint">Highlighted scores represent most consistent choices.</p>
             <div id="phase2-scale" class="guided-scale"></div>
           </div>
-          <div class="form-actions" style="display:flex;gap:0.5rem;">
-            <button type="button" id="phase2-back" class="btn btn-secondary">Back</button>
-            <button type="button" id="phase2-restart" class="btn btn-secondary">Restart this criterion</button>
-          </div>
         </div>
         <div id="phase2-done" class="hidden">
           <p>All guided comparisons for this criterion answered. Review the matrix below.</p>
-          <div class="form-actions">
-            <button type="button" id="phase2-restart-done" class="btn btn-secondary">Restart this criterion</button>
+          <div id="phase2-review-pane" class="hidden">
+            <p id="phase2-review-text" class="guided-q"></p>
+            <div id="phase2-review-choices" class="guided-choices" style="display:none;">
+              <button type="button" id="phase2-review-yes" class="btn btn-secondary"></button>
+              <button type="button" id="phase2-review-no" class="btn btn-secondary"></button>
+              <button type="button" id="phase2-review-equal" class="btn btn-secondary">Equal</button>
+            </div>
+            <div id="phase2-review-scale-wrap" class="hidden">
+              <p class="guided-q" id="phase2-review-scale-label"></p>
+              <div id="phase2-review-scale" class="guided-scale"></div>
+            </div>
+            <div class="form-actions">
+              <button type="button" id="phase2-review-prev" class="btn btn-secondary">Previous</button>
+              <button type="button" id="phase2-review-next" class="btn btn-secondary">Next</button>
+              <button type="button" id="phase2-review-exit" class="btn btn-secondary">Exit review</button>
+            </div>
           </div>
         </div>
-        <div class="form-actions">
+        <div class="form-actions" style="display:flex;gap:0.5rem;align-items:center;">
+          <button type="button" id="phase2-back" class="btn btn-secondary">Back</button>
+          <button type="button" id="phase2-review" class="btn btn-secondary">Review guided answers</button>
+          <button type="button" id="phase2-restart" class="btn btn-secondary">Restart this criterion</button>
           <button type="button" id="btn-confirm-p2-guided" class="btn btn-primary">Confirm and continue</button>
         </div>
       </section>
