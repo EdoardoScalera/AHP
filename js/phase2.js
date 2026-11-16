@@ -1297,18 +1297,18 @@ const Phase2 = (() => {
       const elTop = el.getBoundingClientRect().top + window.pageYOffset;
       window.scrollTo({ top: elTop - headerOffset, behavior: 'smooth' });
     }
-    const confirmP2 = [
-      { btn: 'btn-confirm-p2-indicators', next: 'phase2-priority-section' },
-      { btn: 'btn-confirm-p2-tiers', next: 'phase2-guided-card' },
-      { btn: 'btn-confirm-p2-guided', next: 'phase2-matrix-cr-section' }
-    ];
-    confirmP2.forEach(({ btn, next }) => {
-      const b = document.getElementById(btn);
-      if (b) {
-        b.addEventListener('click', () => {
-          if (next) scrollToSection(next);
-        });
-      }
+    // indicators → priority section (no reset)
+    document.getElementById('btn-confirm-p2-indicators').addEventListener('click', () => {
+      scrollToSection('phase2-priority-section');
+    });
+    // tiers → guided section: reset to first criterion (#1 highest priority)
+    document.getElementById('btn-confirm-p2-tiers').addEventListener('click', () => {
+      current = 0;
+      scrollToSection('phase2-guided-card');
+    });
+    // guided → matrix section (no reset)
+    document.getElementById('btn-confirm-p2-guided').addEventListener('click', () => {
+      scrollToSection('phase2-matrix-cr-section');
     });
 
     // ---- "Confirm and continue" on the Consistency Check / matrix section ----

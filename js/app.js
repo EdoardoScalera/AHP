@@ -438,6 +438,7 @@ async function handleSaveDraftProceed(data) {
       onSaveDraft: () => {}
     });
     UI.showScreen('phase2-screen');
+    window.scrollTo({ top:0, behavior: 'smooth' })
     setPhase2ReturnVisibility();
   } catch (e) {
     console.error('Phase2 init failed:', e);
