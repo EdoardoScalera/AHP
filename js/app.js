@@ -502,6 +502,6 @@ function initTurnstile() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  await initTurnstile();
+  initTurnstile();
   init();
 });
