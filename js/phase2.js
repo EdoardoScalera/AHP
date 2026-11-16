@@ -12,6 +12,7 @@ import { Guided } from './guided.js';
 import { Info } from './info.js';
 import { colorsFor } from './palette.js';
 import { exportBarPng, triggerDownload } from './plot-export.js';
+import { Comments } from './comments.js';
 
 const Phase2 = (() => {
   const DIVISOR = 4;
@@ -1255,6 +1256,7 @@ const Phase2 = (() => {
       const btn = e.target.closest('button[data-scale]');
       if (!btn) return;
       const st = curState();
+      if (!st || !st.choice || st.choice === 'Eq') return;
       const v = parseInt(btn.dataset.scale, 10);
       answerGuided(st.choice === 'A' ? v : 1 / v);
     });
@@ -1299,11 +1301,12 @@ const Phase2 = (() => {
     }
     // indicators → priority section (no reset)
     document.getElementById('btn-confirm-p2-indicators').addEventListener('click', () => {
+      current = 0;
+      renderAll();
       scrollToSection('phase2-priority-section');
     });
-    // tiers → guided section: reset to first criterion (#1 highest priority)
+    // tiers → guided section (current criterion)
     document.getElementById('btn-confirm-p2-tiers').addEventListener('click', () => {
-      current = 0;
       scrollToSection('phase2-guided-card');
     });
     // guided → matrix section (no reset)
