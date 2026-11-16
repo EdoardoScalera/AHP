@@ -4,9 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AHP Stakeholder Survey - ENTRANCE Horizon EU</title>
-  <link rel="icon" href="data:,">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'/%3E">
+
   <link rel="stylesheet" href="css/style.css">
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4" crossorigin="anonymous"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
   <div class="container">
@@ -16,21 +18,15 @@
       <h2 id="phase-title" class="phase-title hidden"></h2>
     </header>
 
-    <div id="password-screen" class="screen active">
+    <div id="splash-screen" class="screen hidden">
       <div class="card">
-        <h2>Access Required</h2>
-        <p>Enter the password to access the survey.</p>
-        <div class="form-group">
-          <label for="password-input">Access code</label>
-          <input type="password" id="password-input" placeholder="Enter access code" autocomplete="off">
+        <h2>About this survey</h2>
+        <div class="splash-text">
+          <h3></h3>
+          <p>Work Package 2 of the Horizon EU ENTRANCE project aims to define a methodology to assess building performance that could support the identification of effective renovation strategies towards more electrified, energy efficient and flexible buildings.<br><br> A building renovation involves a multiplicity of, often opposing, objectives, perspectives, constraints, and variables, that must be properly quantified to evaluate alternatives. WP2 employs the Analytic Hierarchy Process (AHP), a multi-criteria decision-making method, to translate subjective opinions into commensurable quantities and priority scores.<br><br> The goal of this survey is to gather information on stakeholders to support the selection of performance indicators that can provide meaningful and relevant information for a building renovation.</p>
         </div>
-        <button id="password-submit" class="btn btn-primary">Unlock Survey</button>
-        <p id="password-error" class="error hidden">Incorrect password. Please try again.</p>
-        <div class="about">
-          <h3>About this survey</h3>
-          <p>The Work Package 2 of the Horizon EU ENTRANCE project aims to define a methodology to assess building performance that could support the identification of effective renovation strategies towards more electrified, energy efficient and flexible buildings.</p>
-          <p>A building renovation involves a multiplicity of, often opposing, objectives, perspectives, constraints, and variables, that must be properly quantified to evaluate alternatives. WP2 employs the Analytic Hierarchy Process (AHP), a multi-criteria decision-making method, to translate subjective opinions into commensurable quantities and priority scores.</p>
-          <p>The goal of this survey is to gather information on stakeholders to support the selection of performance indicators that can provide meaningful and relevant information for a building renovation.</p>
+        <div class="form-actions" style="justify-content:center">
+          <button type="button" id="btn-splash-start" class="btn btn-primary">Start</button>
         </div>
       </div>
     </div>
@@ -85,7 +81,7 @@
               <textarea id="input-renovation-details" rows="2" maxlength="2000" placeholder="Optional details..."></textarea>
             </div>
             <div class="form-group">
-              <label><input type="checkbox" id="input-consent" required> I agree my data will be safely stored and accessed only in the context of the ENTRANCE project. *</label>
+              <label><input type="checkbox" id="input-consent" required> I acknowledge and consent to the processing and secure storage of my personal data solely for the purposes of the ENTRANCE project. *</label>
             </div>
           </div>
         </section>
@@ -190,10 +186,12 @@
               </div>
             </div>
           </div>
-          <div class="form-actions" style="display:flex;gap:0.5rem;align-items:center;">
-            <button type="button" id="guided-back" class="btn btn-secondary">Back</button>
-            <button type="button" id="guided-review" class="btn btn-secondary">Review guided answers</button>
-            <button type="button" id="guided-restart" class="btn btn-secondary">Restart guided comparison</button>
+          <div class="form-actions" style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;gap:0.5rem;">
+              <button type="button" id="guided-back" class="btn btn-secondary">Back</button>
+              <button type="button" id="guided-review" class="btn btn-secondary">Review guided answers</button>
+              <button type="button" id="guided-restart" class="btn btn-secondary">Restart guided comparison</button>
+            </div>
             <button type="button" id="btn-confirm-guided" class="btn btn-primary">Confirm and continue</button>
           </div>
         </section>
@@ -248,11 +246,11 @@
         </section>
 
         <div class="form-actions">
-          <button type="button" id="btn-comments-p1" class="btn btn-secondary push-left" data-comment-phase="p1" data-comment-key="p1-general">General comments</button>
-          <label class="save-draft-phase2">
-            <input type="checkbox" id="input-save-draft-phase2"> Save draft and proceed to Phase 2
-          </label>
-          <button type="button" id="btn-save-draft" class="btn btn-secondary">Save Draft</button>
+          <button type="button" id="btn-return-p1" class="btn btn-return push-left">Return to respondent info</button>
+          <div class="save-draft-wrapper">
+            <button type="button" id="btn-save-draft" class="btn btn-secondary">Save Draft</button>
+            <button type="button" id="btn-save-draft-proceed" class="btn btn-secondary save-draft-proceed">Save and proceed</button>
+          </div>
           <button type="submit" id="btn-submit" class="btn btn-primary" disabled>Submit</button>
         </div>
       </form>
@@ -364,10 +362,12 @@
             </div>
           </div>
         </div>
-        <div class="form-actions" style="display:flex;gap:0.5rem;align-items:center;">
-          <button type="button" id="phase2-back" class="btn btn-secondary">Back</button>
-          <button type="button" id="phase2-review" class="btn btn-secondary">Review guided answers</button>
-          <button type="button" id="phase2-restart" class="btn btn-secondary">Restart this criterion</button>
+        <div class="form-actions" style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;gap:0.5rem;">
+            <button type="button" id="phase2-back" class="btn btn-secondary">Back</button>
+            <button type="button" id="phase2-review" class="btn btn-secondary">Review guided answers</button>
+            <button type="button" id="phase2-restart" class="btn btn-secondary">Restart this criterion</button>
+          </div>
           <button type="button" id="btn-confirm-p2-guided" class="btn btn-primary">Confirm and continue</button>
         </div>
       </section>
@@ -422,7 +422,7 @@
       </section>
 
       <div class="form-actions">
-        <button type="button" id="btn-comments-p2" class="btn btn-secondary push-left" data-comment-phase="p2" data-comment-key="p2-general">General comments</button>
+        <button type="button" id="btn-phase2-return" class="btn btn-return push-left phase2-return hidden">Return to previous section</button>
         <button type="button" id="btn-phase2-save" class="btn btn-secondary">Save draft</button>
         <button type="button" id="btn-phase2-submit" class="btn btn-primary" disabled>Submit indicators grading</button>
       </div>

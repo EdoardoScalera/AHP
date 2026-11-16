@@ -30,6 +30,7 @@ const UI = (() => {
   let onSubmit = null;
   let onSaveDraft = null;
   let onSaveDraftProceed = null;
+  let onReturnToStart = null;
   let onCriteriaChange = null;
 
   function init(criteriaData, callbacks) {
@@ -40,6 +41,7 @@ const UI = (() => {
     onSubmit = callbacks.onSubmit;
     onSaveDraft = callbacks.onSaveDraft;
     onSaveDraftProceed = callbacks.onSaveDraftProceed || null;
+    onReturnToStart = callbacks.onReturnToStart || null;
     onCriteriaChange = callbacks.onCriteriaChange || null;
 
     buildCriteriaChecklist();
@@ -387,7 +389,14 @@ const UI = (() => {
       const btn = e.target.closest('button[data-scale]');
       if (btn) applyReviewAnswer(parseInt(btn.dataset.scale, 10));
     });
-    document.getElementById('btn-save-draft').addEventListener('click', handleSaveDraft);
+    const btnSaveDraft = document.getElementById('btn-save-draft');
+    btnSaveDraft.addEventListener('click', () => {
+      handleSaveDraft();
+    });
+    document.getElementById('btn-save-draft-proceed').addEventListener('click', handleSaveDraftProceed);
+    document.getElementById('btn-return-p1').addEventListener('click', () => {
+      if (onReturnToStart) onReturnToStart();
+    });
     const dlPlotBtn = document.getElementById('btn-download-plot');
     if (dlPlotBtn) dlPlotBtn.addEventListener('click', () => Plot.download());
     document.getElementById('survey-form').addEventListener('submit', e => e.preventDefault());
@@ -840,6 +849,21 @@ const UI = (() => {
     if (i < 0 || j < 0) return;
     recordKnown(i, j, aOverB);
     guidedReviewChoice = null;
+    // Propagate the change to matrix, CR display, and plot so the review
+    // reflects the updated values immediately.
+    if (guidedIsComplete()) {
+      runCompletion();
+    } else {
+      updateMatrixDisplay();
+    }
+    updateCRDisplay(null);
+    const prov = provisionalResult();
+    if (prov) {
+      updateCRDisplay(prov);
+      renderPlot(prov.matrix);
+    } else {
+      Plot.clear();
+    }
     renderGuidedReview();
   }
 
@@ -972,7 +996,7 @@ const UI = (() => {
     };
   }
 
-  function handleSaveDraft() {
+  function buildDraftData() {
     const identity = getIdentity();
     const missingEl = document.getElementById('input-missing');
     const missingCriteria = missingEl ? missingEl.value.trim() : '';
@@ -983,48 +1007,32 @@ const UI = (() => {
       cr = result.CR;
       consistent = result.consistent;
     } catch (e) { /* matrix may be incomplete */ }
+    return {
+      identity,
+      criteria: getCriteriaMeta(),
+      tiers: getTiers(),
+      guided: {
+        answers: guidedKnownPairs(),
+        idx: guidedIdx
+      },
+      matrix,
+      weights,
+      cr,
+      consistent,
+      missingCriteria,
+      comments: Comments.getAll('p1')
+    };
+  }
 
-    if (onSaveDraft) {
-      onSaveDraft({
-        identity,
-        criteria: getCriteriaMeta(),
-        tiers: getTiers(),
-        guided: {
-          answers: guidedKnownPairs(),
-          idx: guidedIdx
-        },
-        matrix,
-        weights,
-        cr,
-        consistent,
-        missingCriteria,
-        comments: Comments.getAll('p1')
-      });
-    }
-
-    // If "Save draft and proceed to Phase 2" is checked, save locally and move to Phase 2.
-    const saveDraftPhase2 = document.getElementById('input-save-draft-phase2');
-    if (saveDraftPhase2 && saveDraftPhase2.checked && getSelection().phase2) {
-      if (onSaveDraftProceed) {
-        onSaveDraftProceed({
-          identity,
-          criteria: getCriteriaMeta(),
-          tiers: getTiers(),
-          guided: {
-            answers: guidedKnownPairs(),
-            idx: guidedIdx
-          },
-          matrix,
-          weights,
-          cr,
-          consistent,
-          missingCriteria,
-          comments: Comments.getAll('p1')
-        });
-      }
-      return;
-    }
+  function handleSaveDraft() {
+    const data = buildDraftData();
+    if (onSaveDraft) onSaveDraft(data);
     alert('Draft saved locally in this browser');
+  }
+
+  function handleSaveDraftProceed() {
+    const data = buildDraftData();
+    if (onSaveDraftProceed) onSaveDraftProceed(data);
   }
 
   function getIdentity() {
@@ -1360,6 +1368,7 @@ const UI = (() => {
     showSuccess,
     showError,
     saveDraft,
+    loadDraft,
     getActiveCriteria,
     getCriteriaMeta,
     getTiers,

@@ -585,6 +585,14 @@ const Phase2 = (() => {
     if (i < 0 || j < 0) return;
     recordKnown(st, idx, aId, bId, aOverB);
     phase2ReviewChoice = null;
+    // Propagate the change to matrix, CR, and ranking so the review
+    // reflects the updated values immediately — same workflow as Phase 1.
+    if (isCriterionComplete(st)) {
+      runCompletion(cur().id);
+    }
+    renderCriterionCR();
+    renderRanking();
+    renderMatrix();
     renderPhase2GuidedReview();
   }
 
@@ -1292,8 +1300,7 @@ const Phase2 = (() => {
     const confirmP2 = [
       { btn: 'btn-confirm-p2-indicators', next: 'phase2-priority-section' },
       { btn: 'btn-confirm-p2-tiers', next: 'phase2-guided-card' },
-      { btn: 'btn-confirm-p2-guided', next: 'phase2-matrix-cr-section' },
-      { btn: 'btn-confirm-p2-matrix-cr', next: null } // last section: ranking is below
+      { btn: 'btn-confirm-p2-guided', next: 'phase2-matrix-cr-section' }
     ];
     confirmP2.forEach(({ btn, next }) => {
       const b = document.getElementById(btn);
@@ -1303,6 +1310,34 @@ const Phase2 = (() => {
         });
       }
     });
+
+    // ---- "Confirm and continue" on the Consistency Check / matrix section ----
+    // Advances to the next criterion (or first incomplete one). When every
+    // criterion is complete, scrolls to the end of the page (Final KPI
+    // Ranking), mirroring Phase 1 behavior.
+    const btnConfirmP2MatrixCr = document.getElementById('btn-confirm-p2-matrix-cr');
+    if (btnConfirmP2MatrixCr) {
+      btnConfirmP2MatrixCr.addEventListener('click', () => {
+        const n = criteria.length;
+        let target = null;
+        for (let i = current + 1; i < n; i++) {
+          const st = state[criteria[i].id];
+          const done = st && (st.skipped || (isCriterionComplete(st) && st.result));
+          if (!done) { target = i; break; }
+        }
+        if (target != null) {
+          current = target;
+          renderAll();
+          scrollToSection('phase2-priority-section');
+        } else {
+          // All criteria complete: move to end of page (ranking).
+          const end = document.getElementById('phase2-ranking-wrap');
+          if (end) {
+            end.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      });
+    }
 
     // Criterion banner navigation: scrolls to the priority-level section
     const scrollToPriority = () => {
@@ -1323,6 +1358,7 @@ const Phase2 = (() => {
     document.getElementById('btn-phase2-save').addEventListener('click', () => {
       persistDraft(true);
     });
+    document.getElementById('btn-phase2-submit').addEventListener('click', handleSubmit);
     const dlBtn = document.getElementById('btn-download-phase2-plot');
     if (dlBtn) dlBtn.addEventListener('click', () => downloadRanking());
   }
@@ -1347,7 +1383,14 @@ const Phase2 = (() => {
       alert('Please complete all criteria (guided questions for each tab) before submitting indicators grading.');
       return;
     }
-    if (onSubmit) onSubmit(buildPayload());
+    if (onSubmit) {
+      try {
+        onSubmit(buildPayload());
+      } catch (e) {
+        console.error('Phase 2 payload build failed:', e);
+        alert('Failed to build submission payload: ' + e.message);
+      }
+    }
   }
 
   function buildPayload() {
@@ -1407,7 +1450,7 @@ const Phase2 = (() => {
       criteriaIds: criteria.map(c => c.id),
       criteriaWeights: [...criteriaWeights],
       options,
-      globalScores: g.ranking.map(r => ({
+      globalScores: (g && g.ranking) ? g.ranking.map(r => ({
         indicatorId: indicators[r.index].id,
         code: indicators[r.index].code,
         score: r.score,
@@ -1415,7 +1458,7 @@ const Phase2 = (() => {
         scored: r.scored,
         evaluatedIn: r.evaluatedIn,
         weightBase: r.weightBase
-      }))
+      })) : []
     };
   }
 

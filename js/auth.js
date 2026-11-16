@@ -1,16 +1,13 @@
 const Auth = (() => {
   let onUnlock = null;
-  let currentCode = null;
   let storageRef = null;
 
   function init(config, callback, storage) {
-    // config kept for signature compat; verification is server-side via Worker.
     onUnlock = callback;
     storageRef = storage || null;
     attachEventListeners();
   }
 
-  // app.js passes Storage via setStorage; fallback: dynamic import to avoid cycles.
   function setStorage(storage) {
     storageRef = storage;
   }
@@ -22,51 +19,21 @@ const Auth = (() => {
   }
 
   function attachEventListeners() {
-    const input = document.getElementById('password-input');
-    const submitBtn = document.getElementById('password-submit');
-    const errorEl = document.getElementById('password-error');
-
-    const checkPassword = async () => {
-      const code = input.value;
-      if (!code) return;
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Checking...';
-      errorEl.classList.add('hidden');
-
-      try {
-        const storage = await getStorage();
-        await storage.verifyAccessCode(code);
-        currentCode = code;
-        input.value = '';
-        if (onUnlock) onUnlock();
-      } catch (e) {
-        errorEl.textContent = e.message || 'Incorrect password. Please try again.';
-        errorEl.classList.remove('hidden');
-        input.value = '';
-        input.focus();
-      }
-
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Unlock Survey';
-    };
-
-    submitBtn.addEventListener('click', checkPassword);
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') checkPassword();
-    });
+    // No password screen — the survey is public. The unlock callback is
+    // invoked immediately on init so the start screen shows directly.
+    if (onUnlock) onUnlock();
   }
 
   function getPassword() {
-    return currentCode;
+    return null; // no access code anymore
   }
 
   function getAccessCode() {
-    return currentCode;
+    return null; // no access code anymore
   }
 
   function clearPassword() {
-    currentCode = null;
+    // nothing to clear
   }
 
   return { init, setStorage, getPassword, getAccessCode, clearPassword };

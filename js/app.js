@@ -18,6 +18,8 @@ let phase1Link = null; // { submissionId, activeCriteria, weights }
 // Phase-1 data saved locally via the "Save draft and proceed to Phase 2"
 // draft path (submitted to the Worker together with Phase 2).
 let phase1DraftData = null;
+// Turnstile widget id (for reset after submission).
+let turnstileWidgetId = null;
 // Standalone Phase-2 response id (scenario B, no Phase-1 submission) — deprecated.
 let standaloneResponseId = null;
 
@@ -51,6 +53,7 @@ async function init() {
     onSubmit: handleSubmit,
     onSaveDraft: handleSaveDraft,
     onSaveDraftProceed: handleSaveDraftProceed,
+    onReturnToStart: returnToStartInfo,
     onCriteriaChange: handleCriteriaChange
   });
 
@@ -58,9 +61,11 @@ async function init() {
 
   wireStart();
   wireTransition();
+  wireSplash();
+  wirePhase2Return();
 
   Auth.init(CONFIG, () => {
-    UI.showScreen('start-screen');
+    UI.showScreen('splash-screen');
   });
 }
 
@@ -108,6 +113,7 @@ function wireStart() {
     selection = sel;
     phase1Link = null;
     standaloneResponseId = null;
+    updatePhase1ActionButtons(sel.phase2);
 
     if (sel.phase1) {
       // Phase 1 is mandatory (scenario B / Phase-2-only deprecated).
@@ -137,21 +143,82 @@ function phasesSelectedList() {
   return out;
 }
 
+function updatePhase1ActionButtons(phase2Selected) {
+  const submit = document.getElementById('btn-submit');
+  const proceed = document.getElementById('btn-save-draft-proceed');
+  if (phase2Selected) {
+    if (submit) submit.classList.add('hidden');
+    if (proceed) {
+      proceed.classList.remove('hidden');
+      proceed.classList.remove('btn-secondary');
+      proceed.classList.add('btn-primary');
+    }
+  } else {
+    if (submit) submit.classList.remove('hidden');
+    if (proceed) {
+      proceed.classList.add('hidden');
+      proceed.classList.remove('btn-primary');
+      proceed.classList.add('btn-secondary');
+    }
+  }
+}
+
+function setPhase2ReturnVisibility() {
+  const btn = document.getElementById('btn-phase2-return');
+  if (!btn) return;
+  // Visible only when the respondent reached Phase 2 via "Save choices and
+  // proceed" (Phase 1 draft kept locally, not yet submitted to the Worker).
+  btn.classList.toggle('hidden', !(phase1DraftData && !phase1Link));
+}
+
+function returnToPhase1() {
+  UI.showScreen('survey-screen');
+  UI.loadDraft();
+  const el = document.getElementById('criteria-section');
+  if (el) {
+    const headerOffset = 90;
+    const elTop = el.getBoundingClientRect().top + window.pageYOffset;
+    window.scrollTo({ top: elTop - headerOffset, behavior: 'smooth' });
+  }
+}
+
+function returnToStartInfo() {
+  UI.showScreen('start-screen');
+}
+
+function wireSplash() {
+  const btn = document.getElementById('btn-splash-start');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      UI.showScreen('start-screen');
+    });
+  }
+}
+
+function wirePhase2Return() {
+  const btn = document.getElementById('btn-phase2-return');
+  if (btn) {
+    btn.addEventListener('click', returnToPhase1);
+  }
+}
+
 async function handleSubmit(data) {
   const submitBtn = document.getElementById('btn-submit');
   submitBtn.disabled = true;
   submitBtn.textContent = 'Submitting...';
 
-  const accessCode = Auth.getAccessCode ? Auth.getAccessCode() : Auth.getPassword();
-  if (!accessCode) {
-    UI.showError('Session expired. Please re-enter the access code.');
+  const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const turnstileToken = isLocalHost ? '' : await getTurnstileToken();
+  console.log('Turnstile token length:', turnstileToken.length, 'widgetId:', turnstileWidgetId);
+  if (!turnstileToken && !isLocalHost) {
+    UI.showError('Please complete the verification challenge above before submitting.');
     submitBtn.disabled = false;
     submitBtn.textContent = 'Submit';
     return;
   }
 
   try {
-    const result = await Storage.saveSubmission({ ...data, accessCode, phasesSelected: phasesSelectedList() });
+    const result = await Storage.saveSubmission({ ...data, turnstileToken, phasesSelected: phasesSelectedList() });
     // Keep access code for optional Phase 2 (do NOT clear yet).
     phase1Link = {
       submissionId: result.submissionId || null,
@@ -162,6 +229,9 @@ async function handleSubmit(data) {
     localStorage.removeItem('ahp-phase1-draft-v1');
     submitBtn.disabled = false;
     submitBtn.textContent = 'Submit';
+    if (turnstileWidgetId) {
+      window.turnstile.reset(turnstileWidgetId);
+    }
     if (selection.phase2) {
       // Scenario C: transition screen, then Phase 2 on Phase-1 criteria.
       const detail = document.getElementById('phase2-invite-detail');
@@ -171,7 +241,6 @@ async function handleSubmit(data) {
       UI.showScreen('phase2-invite-screen');
     } else {
       // Scenario A: done after Phase 1.
-      Auth.clearPassword();
       UI.showSuccess('Criteria priorities submitted. Thank you!');
     }
   } catch (error) {
@@ -229,9 +298,17 @@ async function handlePhase2Submit(phase2payload) {
   const prev = btn.textContent;
   btn.textContent = 'Submitting indicators grading...';
 
-  const accessCode = Auth.getAccessCode ? Auth.getAccessCode() : Auth.getPassword();
-  if (!accessCode || !startIdentity) {
-    alert('Session expired. Please start again from login.');
+  if (!startIdentity) {
+    alert('Session expired. Please start again from the beginning.');
+    btn.disabled = false;
+    btn.textContent = prev;
+    return;
+  }
+
+  const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const turnstileToken = isLocalHost ? '' : await getTurnstileToken();
+  if (!turnstileToken && !isLocalHost) {
+    UI.showError('Please complete the verification challenge above before submitting.');
     btn.disabled = false;
     btn.textContent = prev;
     return;
@@ -258,7 +335,7 @@ async function handlePhase2Submit(phase2payload) {
 
   const base = {
     ...phase2payload,
-    accessCode,
+    turnstileToken,
     comments: Comments.getAll('p2'),
     name: startIdentity.name,
     role: startIdentity.role,
@@ -304,7 +381,9 @@ async function handlePhase2Submit(phase2payload) {
     await Storage.savePhase2Submission(base);
     Phase2.clearDraft();
     localStorage.removeItem('ahp-phase1-draft-v1');
-    Auth.clearPassword();
+    if (turnstileWidgetId) {
+      window.turnstile.reset(turnstileWidgetId);
+    }
     phase1Link = null;
     standaloneResponseId = null;
     UI.showSuccess('Indicators grading submitted. Thank you!');
@@ -321,10 +400,8 @@ async function handlePhase2Submit(phase2payload) {
 function handleSaveDraft(data) {
   UI.saveDraft(data);
   // Persist full Phase 1 payload for reload safety (unified draft pattern).
-  const accessCode = Auth.getAccessCode ? Auth.getAccessCode() : Auth.getPassword();
   const draft = {
     ...data,
-    accessCode,
     phasesSelected: phasesSelectedList()
   };
   try {
@@ -339,13 +416,13 @@ function handleSaveDraft(data) {
 // Saves Phase 1 data locally (no Worker submission yet) and moves to Phase 2.
 // Phase 1 is submitted to the Worker first during the final Phase 2 submit.
 async function handleSaveDraftProceed(data) {
-  const accessCode = Auth.getAccessCode ? Auth.getAccessCode() : Auth.getPassword();
   phase1DraftData = {
     ...data,
-    accessCode,
     phasesSelected: phasesSelectedList()
   };
-  // Persist for reload safety.
+  // Persist for reload safety and keep the unified draft current so returning
+  // to Phase 1 can restore the respondent's choices.
+  UI.saveDraft(data);
   try {
     localStorage.setItem('ahp-phase1-draft-v1', JSON.stringify(phase1DraftData));
   } catch (e) {
@@ -361,10 +438,70 @@ async function handleSaveDraftProceed(data) {
       onSaveDraft: () => {}
     });
     UI.showScreen('phase2-screen');
+    setPhase2ReturnVisibility();
   } catch (e) {
     console.error('Phase2 init failed:', e);
     alert('Could not load indicators: ' + e.message);
   }
 }
 
-document.addEventListener('DOMContentLoaded', init);
+// ---------- Turnstile helpers ----------
+async function getTurnstileToken() {
+  if (!window.turnstile || !turnstileWidgetId) return '';
+  return window.turnstile.getResponse(turnstileWidgetId) || '';
+}
+
+function initTurnstile() {
+  return new Promise((resolve) => {
+    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    // On localhost, Turnstile is bypassed entirely — no widget, no CSP errors
+    if (isLocalHost) {
+      turnstileWidgetId = null;
+      console.log('Turnstile bypassed on localhost');
+      resolve();
+      return;
+    }
+
+    // Production: inject the Turnstile widget div dynamically
+    const container = document.createElement('div');
+    container.id = 'turnstile-container';
+    container.style.margin = '1rem 0';
+    container.style.textAlign = 'center';
+    const widget = document.createElement('div');
+    widget.className = 'cf-turnstile';
+    widget.setAttribute('data-sitekey', CONFIG.TURNSTILE_SITEKEY || '');
+    widget.setAttribute('data-action', 'submit');
+    container.appendChild(widget);
+    document.body.appendChild(container);
+
+    const start = Date.now();
+    const timeoutMs = 10000;
+    const check = () => {
+      if (Date.now() - start > timeoutMs) {
+        turnstileWidgetId = null;
+        console.warn('Turnstile failed to load within', timeoutMs, 'ms — proceeding without it');
+        resolve();
+        return;
+      }
+      if (!window.turnstile) {
+        setTimeout(check, 100);
+        return;
+      }
+      const widgetId = widget.getAttribute('data-widget-id');
+      if (widgetId) {
+        turnstileWidgetId = widgetId;
+        console.log('Turnstile widget ready, widgetId:', widgetId);
+        resolve();
+        return;
+      }
+      setTimeout(check, 100);
+    };
+    check();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await initTurnstile();
+  init();
+});

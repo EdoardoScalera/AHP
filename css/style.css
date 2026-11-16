@@ -173,13 +173,10 @@ header h1 {
   accent-color: var(--primary);
 }
 
-.save-draft-phase2 {
+.save-draft-wrapper {
   display: inline-flex;
+  gap: 0.5rem;
   align-items: center;
-  gap: 6px;
-  font-size: 0.9rem;
-  color: var(--text);
-  white-space: nowrap;
 }
 
 /* Criteria selector (P1) */
@@ -943,6 +940,16 @@ header h1 {
 
 .btn-secondary:hover:not(:disabled) {
   background: #d0d0d0;
+}
+
+/* Return button: a lighter shade of blue than the confirm (primary) buttons. */
+.btn-return {
+  background: #5b9dbd;
+  color: white;
+}
+
+.btn-return:hover:not(:disabled) {
+  background: #4a8dae;
 }
 
 /* Success/Error Screens */
