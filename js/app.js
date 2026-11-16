@@ -340,7 +340,6 @@ async function handlePhase2Submit(phase2payload) {
     name: startIdentity.name,
     role: startIdentity.role,
     roleOther: startIdentity.roleOther || '',
-    pilot: startIdentity.pilot,
     country: startIdentity.country,
     email: startIdentity.email || '',
     consent: true,

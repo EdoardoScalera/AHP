@@ -282,11 +282,6 @@ const UI = (() => {
     }
     renderCustomList();
 
-    document.querySelectorAll('input[name="renovation"]').forEach(r => {
-      r.addEventListener('change', toggleRenovationDetails);
-    });
-    toggleRenovationDetails();
-
     const roleSelect = document.getElementById('input-role');
     const roleOtherGroup = document.getElementById('role-other-group');
     if (roleSelect && roleOtherGroup) {
@@ -423,13 +418,6 @@ const UI = (() => {
         b.addEventListener('click', () => scrollToSection(next));
       }
     });
-  }
-
-  function toggleRenovationDetails() {
-    const yes = document.getElementById('input-renovation-yes');
-    const group = document.getElementById('renovation-details-group');
-    if (!group) return;
-    group.classList.toggle('hidden', !(yes && yes.checked));
   }
 
   function handleMatrixInput(e) {
@@ -1037,14 +1025,8 @@ const UI = (() => {
 
   function getIdentity() {
     const consentEl = document.getElementById('input-consent');
-    const yesEl = document.getElementById('input-renovation-yes');
-    const noEl = document.getElementById('input-renovation-no');
-    const detailsEl = document.getElementById('input-renovation-details');
     const roleEl = document.getElementById('input-role');
     const roleOtherEl = document.getElementById('input-role-other');
-    let renovationUnderConsideration = null;
-    if (yesEl && yesEl.checked) renovationUnderConsideration = true;
-    else if (noEl && noEl.checked) renovationUnderConsideration = false;
     const role = roleEl ? roleEl.value.trim() : '';
     let roleOther = '';
     if (role === 'Other' && roleOtherEl) {
@@ -1054,17 +1036,14 @@ const UI = (() => {
       name: document.getElementById('input-name').value.trim(),
       role: role,
       roleOther: roleOther,
-      pilot: document.getElementById('input-pilot').value.trim(),
       country: document.getElementById('input-country').value.trim(),
       email: document.getElementById('input-email') ? document.getElementById('input-email').value.trim() : '',
-      consent: consentEl ? consentEl.checked : false,
-      renovationUnderConsideration,
-      renovationDetails: detailsEl ? detailsEl.value.trim().slice(0, 2000) : ''
+      consent: consentEl ? consentEl.checked : false
     };
   }
 
   function validateIdentity(identity) {
-    const required = ['name', 'role', 'pilot', 'country'];
+    const required = ['name', 'role', 'country'];
     for (const field of required) {
       if (!identity[field]) {
         alert(`Please fill in: ${field.charAt(0).toUpperCase() + field.slice(1)}`);
@@ -1082,16 +1061,6 @@ const UI = (() => {
       document.getElementById('input-role-other').focus();
       return false;
     }
-    if (identity.renovationUnderConsideration === null) {
-      alert('Please answer: Is a renovation under consideration?');
-      document.getElementById('input-renovation-yes').focus();
-      return false;
-    }
-    if (identity.renovationDetails && identity.renovationDetails.length > 2000) {
-      alert('Renovation details are too long (max 2000 characters).');
-      document.getElementById('input-renovation-details').focus();
-      return false;
-    }
     if (!identity.consent) {
       alert('Please tick the consent box to allow storing your response in the private repository.');
       document.getElementById('input-consent').focus();
@@ -1105,7 +1074,7 @@ const UI = (() => {
       const draft = JSON.parse(localStorage.getItem(DRAFT_KEY));
       if (!draft) return;
       if (draft.identity) {
-        const simple = ['name', 'role', 'pilot', 'country', 'email'];
+        const simple = ['name', 'role', 'country', 'email'];
         simple.forEach(k => {
           const el = document.getElementById(`input-${k}`);
           if (el && draft.identity[k] != null) el.value = draft.identity[k];
@@ -1124,15 +1093,6 @@ const UI = (() => {
           const el = document.getElementById('input-consent');
           if (el) el.checked = true;
         }
-        if (draft.identity.renovationUnderConsideration === true) {
-          document.getElementById('input-renovation-yes').checked = true;
-        } else if (draft.identity.renovationUnderConsideration === false) {
-          document.getElementById('input-renovation-no').checked = true;
-        }
-        if (draft.identity.renovationDetails) {
-          document.getElementById('input-renovation-details').value = draft.identity.renovationDetails;
-        }
-        toggleRenovationDetails();
       }
       if (draft.criteria) {
         const active = new Set(draft.criteria.activeIds || []);
@@ -1271,7 +1231,6 @@ const UI = (() => {
     customCounter = 1;
     renderCustomList();
     tiers = {};
-    toggleRenovationDetails();
     rebuildFromCriteria(false);
     updateCRDisplay(null);
     if (onMatrixChange && matrix.length >= MIN_N) {
@@ -1312,7 +1271,7 @@ const UI = (() => {
       const d = JSON.parse(localStorage.getItem(START_DRAFT_KEY));
       if (!d) return;
       if (d.identity) {
-        ['name', 'role', 'pilot', 'country', 'email'].forEach(k => {
+        ['name', 'role', 'country', 'email'].forEach(k => {
           const el = document.getElementById(`input-${k}`);
           if (el && d.identity[k] != null) el.value = d.identity[k];
         });
@@ -1330,15 +1289,6 @@ const UI = (() => {
           const el = document.getElementById('input-consent');
           if (el) el.checked = true;
         }
-        if (d.identity.renovationUnderConsideration === true) {
-          document.getElementById('input-renovation-yes').checked = true;
-        } else if (d.identity.renovationUnderConsideration === false) {
-          document.getElementById('input-renovation-no').checked = true;
-        }
-        if (d.identity.renovationDetails) {
-          document.getElementById('input-renovation-details').value = d.identity.renovationDetails;
-        }
-        toggleRenovationDetails();
       }
       if (d.selection) {
         const p1 = document.getElementById('input-phase1-select');

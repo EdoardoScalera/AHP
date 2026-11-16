@@ -35,7 +35,7 @@
       <form id="start-form" novalidate>
         <section id="identity-section" class="card">
           <h2>Respondent Information</h2>
-          <p class="hint">Name, role, pilot and country are required.</p>
+          <p class="hint">Name, role and country are required.</p>
           <div class="form-grid">
             <div class="form-group">
               <label for="input-name">Name *</label>
@@ -60,10 +60,6 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="input-pilot">Pilot Name *</label>
-              <input type="text" id="input-pilot" required placeholder="e.g., Tallinn pilot" autocomplete="off">
-            </div>
-            <div class="form-group">
               <label for="input-country">Country *</label>
               <input type="text" id="input-country" required placeholder="e.g., Estonia" autocomplete="off">
             </div>
@@ -71,31 +67,22 @@
               <label for="input-email">Email (optional, for follow-up)</label>
               <input type="email" id="input-email" placeholder="e.g., name@example.eu" autocomplete="email">
             </div>
-            <div class="form-group">
-              <span class="label">Is a renovation under consideration? *</span>
-              <label><input type="radio" name="renovation" id="input-renovation-yes" value="yes" required> Yes</label>
-              <label><input type="radio" name="renovation" id="input-renovation-no" value="no" required> No</label>
-            </div>
-            <div class="form-group hidden" id="renovation-details-group">
-              <label for="input-renovation-details">Renovation details (optional, e.g. building, scope, timeline)</label>
-              <textarea id="input-renovation-details" rows="2" maxlength="2000" placeholder="Optional details..."></textarea>
-            </div>
-            <div class="form-group">
-              <label><input type="checkbox" id="input-consent" required> I acknowledge and consent to the processing and secure storage of my personal data solely for the purposes of the ENTRANCE project. *</label>
+            <div class="form-group consent-row">
+              <label><input type="checkbox" id="input-consent" required> I acknowledge and consent to the processing and secure storage of my personal data solely for the purposes of the ENTRANCE project.</label>
             </div>
           </div>
         </section>
 
         <section id="phases-section" class="card">
           <h2>Survey Phases</h2>
-          <p class="hint">By completing both sections, you will help ensure that both the criteria that matter most to stakeholders and the indicators best suited to measure them are properly reflected in the final framework.<br> Section 2 is optional but highly recommended, as it will provide valuable additional insight into how the proposed indicators should be prioritised. </p>
+          <p class="hint">By completing both sections, you will help ensure that both the criteria that matter most to stakeholders and the indicators best suited to measure them are properly reflected in the final framework.<br> Section 2 is optional but highly recommended, as it will provide valuable additional insight into how the proposed indicators should be prioritised.</p>
           <div class="form-group">
             <label><input type="checkbox" id="input-phase1-select" checked disabled> 1. Define the decision criteria and their priorities (10 min) </label>
           </div>
           <div class="form-group">
             <label><input type="checkbox" id="input-phase2-select" checked> 2. Rank performance indicators under each criterion (20-30 min)</label>
           </div>
-          <p class="hint">You can save your session and return later to continue where you left off. Your progress will be retained when you resume.</p>
+          <p class="hint"><br> You can save your session and return later to continue where you left off. Your progress will be retained when you resume.</p>
           <p id="start-error" class="error hidden">Please select at least one phase.</p>
           <div class="form-actions">
             <button type="button" id="btn-start" class="btn btn-primary">Start Survey</button>

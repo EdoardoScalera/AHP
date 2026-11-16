@@ -15,7 +15,7 @@ The goal of this survey is to gather information on stakeholders to support the 
 ## How It Works (respondent flow)
 
 1. **Access code** — shared code unlocks the survey, verified server-side (never in page source).
-2. **Respondent** — name, role, pilot, country (required), email (optional), renovation under consideration Yes/No + details, consent checkbox.
+2. **Respondent** — name, role, country (required), email (optional), consent checkbox.
 3. **Decision criteria** — 7 defaults (uncheck irrelevant, add your own; 3–9 active, matrix adapts).
 4. **Priority levels** — drag criteria into tiers A (top) / B (mid) / C (low); keyboard accessible (arrows, A/B/C keys).
 5. **Guided comparisons** — ~n(n−1)/4 questions from a spanning tree (hub = first Tier-A), Yes/No/Equal + 2–9 scale with tier-based recommended highlights (non-binding) and transitive hints. The pairwise matrix stays hidden until every guided question is answered.
@@ -82,7 +82,7 @@ Sibling projects (separate checkouts, not in this repo): `entrance-survey-respon
   "schemaVersion": 5,
   "submissionId": "<uuid>",
   "submittedAt": "<ISO>",
-  "respondent": {"name":"...","role":"...","pilot":"...","country":"...","email":"...","renovationUnderConsideration":true,"renovationDetails":"..."},
+  "respondent": {"name":"...","role":"...","country":"...","email":"..."},
   "criteria": {"activeIds":[...],"excludedIds":[...],"custom":null,"customCriteria":[],"criteriaSet":"v3-7"},
   "tiers": {"<id>":"A|B|C"},
   "pairwise": {"order":[[...]],"answers":[{"a":"...","b":"...","value":3}],"estimated":[[false]]},
