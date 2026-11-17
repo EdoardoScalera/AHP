@@ -949,8 +949,6 @@ const UI = (() => {
     const identity = getIdentity();
     if (!validateIdentity(identity)) return;
 
-    const missingEl = document.getElementById('input-missing');
-    const missingCriteria = missingEl ? missingEl.value.trim() : '';
     const result = AHP.calculateAll(matrix);
     const meta = getCriteriaMeta();
 
@@ -963,7 +961,7 @@ const UI = (() => {
       weights: result.weights,
       cr: result.CR,
       consistent: result.consistent,
-      missingCriteria,
+      missingCriteria: '',
       comments: Comments.getAll('p1')
     };
 
@@ -986,8 +984,6 @@ const UI = (() => {
 
   function buildDraftData() {
     const identity = getIdentity();
-    const missingEl = document.getElementById('input-missing');
-    const missingCriteria = missingEl ? missingEl.value.trim() : '';
     let weights = null, cr = null, consistent = null;
     try {
       const result = AHP.calculateAll(matrix);
@@ -1007,7 +1003,7 @@ const UI = (() => {
       weights,
       cr,
       consistent,
-      missingCriteria,
+      missingCriteria: '',
       comments: Comments.getAll('p1')
     };
   }
@@ -1172,10 +1168,6 @@ const UI = (() => {
         if (onMatrixChange) onMatrixChange(null);
       }
       renderGuided();
-      if (draft.missingCriteria) {
-        const missingEl = document.getElementById('input-missing');
-        if (missingEl) missingEl.value = draft.missingCriteria;
-      }
     } catch (e) {
       console.warn('Failed to load draft:', e);
     }
@@ -1187,6 +1179,20 @@ const UI = (() => {
     } catch (e) {
       console.warn('Failed to save draft:', e);
     }
+  }
+
+  // Clear every locally stored draft / response trace so a new response starts
+  // from a completely clean slate.
+  function clearAllDrafts() {
+    try {
+      localStorage.removeItem(DRAFT_KEY);              // ahp-draft-v3 (UI draft)
+      localStorage.removeItem('ahp-phase1-draft-v1');  // app-level phase-1 draft
+      localStorage.removeItem(START_DRAFT_KEY);        // ahp-start-v1 (identity + phase selection)
+    } catch (e) {
+      console.warn('Failed to clear drafts:', e);
+    }
+    Comments.clear('p1');
+    Comments.clear('p2');
   }
 
   function showScreen(screenId) {
@@ -1208,10 +1214,7 @@ const UI = (() => {
   function showSuccess(detail) {
     document.getElementById('success-detail').textContent = detail;
     showScreen('success-screen');
-    localStorage.removeItem(DRAFT_KEY);
-    localStorage.removeItem('ahp-phase1-draft-v1');
-    Comments.clear('p1');
-    Comments.clear('p2');
+    clearAllDrafts();
   }
 
   function showError(message) {
@@ -1223,9 +1226,7 @@ const UI = (() => {
     document.getElementById('survey-form').reset();
     const startForm = document.getElementById('start-form');
     if (startForm) startForm.reset();
-    Comments.clear('p1');
-    Comments.clear('p2');
-    localStorage.removeItem('ahp-phase1-draft-v1');
+    clearAllDrafts();
     document.querySelectorAll('#criteria-checklist input[type="checkbox"]').forEach(cb => { cb.checked = true; });
     customCriteria = [];
     customCounter = 1;
@@ -1233,16 +1234,7 @@ const UI = (() => {
     tiers = {};
     rebuildFromCriteria(false);
     updateCRDisplay(null);
-    if (onMatrixChange && matrix.length >= MIN_N) {
-      try {
-        const { AHP: Ahp } = { AHP };
-        void Ahp;
-      } catch (e) { /* noop */ }
-    }
-    // Back to login for a fresh response (access code is cleared at thank-you).
-    const pwdInput = document.getElementById('password-input');
-    if (pwdInput) pwdInput.value = '';
-    showScreen('password-screen');
+    showScreen('start-screen');
   }
 
   // Start screen (respondent info + phase selection) persistence.

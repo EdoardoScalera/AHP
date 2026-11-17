@@ -1323,7 +1323,12 @@ const Phase2 = (() => {
       btnConfirmP2MatrixCr.addEventListener('click', () => {
         const n = criteria.length;
         let target = null;
-        for (let i = current + 1; i < n; i++) {
+        // When on the last criterion, wrap around from the beginning to check
+        // every criterion for incompleteness, so the respondent is sent back
+        // to finish anything still pending instead of jumping to the ranking.
+        const startIdx = current >= n - 1 ? 0 : current + 1;
+        for (let i = startIdx; i < n; i++) {
+          if (current >= n - 1 && i === current) continue; // skip self when wrapping
           const st = state[criteria[i].id];
           const done = st && (st.skipped || (isCriterionComplete(st) && st.result));
           if (!done) { target = i; break; }
