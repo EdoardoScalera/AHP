@@ -18,8 +18,6 @@ let phase1Link = null; // { submissionId, activeCriteria, weights }
 // Phase-1 data saved locally via the "Save draft and proceed to Phase 2"
 // draft path (submitted to the Worker together with Phase 2).
 let phase1DraftData = null;
-// Turnstile widget id (for reset after submission).
-let turnstileWidgetId = null;
 // Standalone Phase-2 response id (scenario B, no Phase-1 submission) — deprecated.
 let standaloneResponseId = null;
 
@@ -207,18 +205,8 @@ async function handleSubmit(data) {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Submitting...';
 
-  const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const turnstileToken = isLocalHost ? '' : await getTurnstileToken();
-  console.log('Turnstile token length:', turnstileToken.length, 'widgetId:', turnstileWidgetId);
-  if (!turnstileToken && !isLocalHost) {
-    UI.showError('Please complete the verification challenge above before submitting.');
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Submit';
-    return;
-  }
-
   try {
-    const result = await Storage.saveSubmission({ ...data, turnstileToken, phasesSelected: phasesSelectedList() });
+    const result = await Storage.saveSubmission({ ...data, phasesSelected: phasesSelectedList() });
     // Keep access code for optional Phase 2 (do NOT clear yet).
     phase1Link = {
       submissionId: result.submissionId || null,
@@ -229,9 +217,6 @@ async function handleSubmit(data) {
     localStorage.removeItem('ahp-phase1-draft-v1');
     submitBtn.disabled = false;
     submitBtn.textContent = 'Submit';
-    if (turnstileWidgetId) {
-      window.turnstile.reset(turnstileWidgetId);
-    }
     if (selection.phase2) {
       // Scenario C: transition screen, then Phase 2 on Phase-1 criteria.
       const detail = document.getElementById('phase2-invite-detail');
@@ -306,13 +291,6 @@ async function handlePhase2Submit(phase2payload) {
   }
 
   const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const turnstileToken = isLocalHost ? '' : await getTurnstileToken();
-  if (!turnstileToken && !isLocalHost) {
-    UI.showError('Please complete the verification challenge above before submitting.');
-    btn.disabled = false;
-    btn.textContent = prev;
-    return;
-  }
 
   // Unfinished survey check: warn if any part (Phase 1 or Phase 2) is incomplete.
   if (!Phase2.isAllComplete()) {
@@ -335,7 +313,6 @@ async function handlePhase2Submit(phase2payload) {
 
   const base = {
     ...phase2payload,
-    turnstileToken,
     comments: Comments.getAll('p2'),
     name: startIdentity.name,
     role: startIdentity.role,
@@ -380,9 +357,6 @@ async function handlePhase2Submit(phase2payload) {
     await Storage.savePhase2Submission(base);
     Phase2.clearDraft();
     localStorage.removeItem('ahp-phase1-draft-v1');
-    if (turnstileWidgetId) {
-      window.turnstile.reset(turnstileWidgetId);
-    }
     phase1Link = null;
     standaloneResponseId = null;
     UI.showSuccess('Indicators grading submitted. Thank you!');
@@ -445,144 +419,6 @@ async function handleSaveDraftProceed(data) {
   }
 }
 
-// ---------- Turnstile helpers ----------
-async function getTurnstileToken() {
-  if (!window.turnstile || !turnstileWidgetId) return '';
-  return window.turnstile.getResponse(turnstileWidgetId) || '';
-}
-
-// Verification overlay shown while Turnstile loads / user completes the challenge.
-let turnstileOverlay = null;
-
-function showTurnstileOverlay() {
-  if (turnstileOverlay) return;
-  const overlay = document.createElement('div');
-  overlay.id = 'turnstile-overlay';
-  overlay.style.position = 'fixed';
-  overlay.style.inset = '0';
-  overlay.style.zIndex = '10000';
-  overlay.style.background = '#ffffff';
-  overlay.style.display = 'flex';
-  overlay.style.flexDirection = 'column';
-  overlay.style.alignItems = 'center';
-  overlay.style.justifyContent = 'center';
-  overlay.style.textAlign = 'center';
-  overlay.style.padding = '2rem';
-  overlay.style.fontFamily = 'system-ui, -apple-system, sans-serif';
-
-  const title = document.createElement('h2');
-  title.textContent = 'Verification required';
-  title.style.margin = '0 0 1rem 0';
-  title.style.fontSize = '1.25rem';
-  title.style.color = '#111827';
-
-  const msg = document.createElement('p');
-  msg.textContent = 'Please complete the Cloudflare verification challenge below before accessing the survey.';
-  msg.style.margin = '0 0 1.5rem 0';
-  msg.style.color = '#4b5563';
-  msg.style.maxWidth = '400px';
-  msg.style.lineHeight = '1.5';
-
-  const container = document.createElement('div');
-  container.id = 'turnstile-container';
-  container.style.margin = '0 auto';
-
-  const error = document.createElement('p');
-  error.id = 'turnstile-error';
-  error.style.margin = '1.5rem 0 0 0';
-  error.style.color = '#dc2626';
-  error.style.fontSize = '0.9rem';
-  error.style.maxWidth = '400px';
-  error.style.display = 'none';
-
-  overlay.appendChild(title);
-  overlay.appendChild(msg);
-  overlay.appendChild(container);
-  overlay.appendChild(error);
-  document.body.appendChild(overlay);
-  turnstileOverlay = overlay;
-}
-
-function hideTurnstileOverlay() {
-  if (turnstileOverlay) {
-    turnstileOverlay.remove();
-    turnstileOverlay = null;
-  }
-}
-
-function showTurnstileError(msg) {
-  const error = document.getElementById('turnstile-error');
-  if (error) {
-    error.textContent = msg;
-    error.style.display = 'block';
-  }
-}
-
-function initTurnstile() {
-  return new Promise((resolve) => {
-    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-    // On localhost, Turnstile is bypassed entirely — no widget, no CSP errors
-    if (isLocalHost) {
-      turnstileWidgetId = null;
-      console.log('Turnstile bypassed on localhost');
-      resolve();
-      return;
-    }
-
-    // Production: show the verification overlay and inject the Turnstile widget.
-    // The user must complete the challenge before the survey is accessible.
-    showTurnstileOverlay();
-
-    const container = document.getElementById('turnstile-container');
-
-    // Poll for Turnstile to load. No silent timeout — we wait until the
-    // script is available or the page is refreshed. If Cloudflare's CSP blocks
-    // the widget, an error is shown instead of silently proceeding without verification.
-    let attempts = 0;
-    const maxAttempts = 600; // ~60 seconds at 100ms intervals
-    const check = () => {
-      attempts++;
-      if (!window.turnstile) {
-        if (attempts >= maxAttempts) {
-          showTurnstileError('Cloudflare Turnstile failed to load. Please refresh the page and try again.');
-          resolve();
-          return;
-        }
-        setTimeout(check, 100);
-        return;
-      }
-
-      // Turnstile is loaded — render the widget programmatically with a callback
-      // that fires when the user completes the challenge. Only then do we dismiss
-      // the overlay and unlock the survey.
-      try {
-        turnstileWidgetId = window.turnstile.render(container, {
-          sitekey: CONFIG.TURNSTILE_SITEKEY || '',
-          action: 'submit',
-          callback: (token) => {
-            console.log('Turnstile challenge completed, token length:', token.length);
-            hideTurnstileOverlay();
-            resolve();
-          },
-          'error-callback': () => {
-            console.error('Turnstile challenge errored');
-            showTurnstileError('Turnstile verification failed. Please refresh the page and try again.');
-          },
-        });
-        console.log('Turnstile widget rendered, widgetId:', turnstileWidgetId);
-      } catch (e) {
-        console.error('Turnstile render failed:', e);
-        showTurnstileError('Turnstile verification failed to initialize. Please refresh the page.');
-        resolve();
-      }
-    };
-    check();
-  });
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
-  // Turnstile verification must complete before the survey UI is accessible.
-  await initTurnstile();
   init();
 });

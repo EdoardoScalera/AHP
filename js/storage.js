@@ -17,13 +17,7 @@ const Storage = (() => {
     if (!workerBase) {
       throw new Error('Storage not initialized. Check js/config.js');
     }
-    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const turnstileToken = data.turnstileToken || '';
-    if (!turnstileToken && !isLocalHost) {
-      throw new Error('Turnstile verification is required. Please complete the challenge above.');
-    }
     const payload = {
-      turnstileToken,
       phase: 1,
       name: data.name,
       role: data.role,
@@ -64,16 +58,10 @@ const Storage = (() => {
     if (!workerBase) {
       throw new Error('Storage not initialized. Check js/config.js');
     }
-    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const turnstileToken = data.turnstileToken || '';
-    if (!turnstileToken && !isLocalHost) {
-      throw new Error('Turnstile verification is required. Please complete the challenge above.');
-    }
     if (!data.phase1SubmissionId && !(data.phase1Skipped === true && data.responseId)) {
       throw new Error('Criteria priorities link is missing. Please complete that part first.');
     }
     const payload = {
-      turnstileToken,
       phase: 2,
       phase1SubmissionId: data.phase1SubmissionId || null,
       phase1Skipped: data.phase1Skipped === true,
