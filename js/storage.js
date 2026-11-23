@@ -17,6 +17,18 @@ const Storage = (() => {
     if (!workerBase) {
       throw new Error('Storage not initialized. Check js/config.js');
     }
+    console.debug('[Storage.saveSubmission] input data:', {
+      name: data.name,
+      role: data.role,
+      country: data.country,
+      email: data.email,
+      consent: data.consent,
+      hasCriteria: !!data.criteria,
+      hasPairwise: !!data.pairwise,
+      hasMatrix: !!data.matrix,
+      hasWeights: !!data.weights,
+      phasesSelected: data.phasesSelected
+    });
     const payload = {
       phase: 1,
       name: data.name,
@@ -35,7 +47,7 @@ const Storage = (() => {
       consent: data.consent,
       phasesSelected: data.phasesSelected || null
     };
-
+    console.debug('[Storage.saveSubmission] sending payload:', payload);
     let response;
     try {
       response = await fetch(`${workerBase}${submitPath}`, {
