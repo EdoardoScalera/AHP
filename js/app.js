@@ -487,12 +487,6 @@ function showTurnstileOverlay() {
   container.id = 'turnstile-container';
   container.style.margin = '0 auto';
 
-  const widget = document.createElement('div');
-  widget.className = 'cf-turnstile';
-  widget.setAttribute('data-sitekey', CONFIG.TURNSTILE_SITEKEY || '');
-  widget.setAttribute('data-action', 'submit');
-  container.appendChild(widget);
-
   const error = document.createElement('p');
   error.id = 'turnstile-error';
   error.style.margin = '1.5rem 0 0 0';
