@@ -535,15 +535,10 @@ function initTurnstile() {
     showTurnstileOverlay();
 
     const container = document.getElementById('turnstile-container');
-    const widget = document.createElement('div');
-    widget.className = 'cf-turnstile';
-    widget.setAttribute('data-sitekey', CONFIG.TURNSTILE_SITEKEY || '');
-    widget.setAttribute('data-action', 'submit');
-    container.appendChild(widget);
 
-    // Poll for Turnstile to be ready. No silent timeout — we wait until the
-    // widget loads or the page is refreshed. If Cloudflare's CSP blocks the
-    // widget, an error is shown instead of silently proceeding without verification.
+    // Poll for Turnstile to load. No silent timeout — we wait until the
+    // script is available or the page is refreshed. If Cloudflare's CSP blocks
+    // the widget, an error is shown instead of silently proceeding without verification.
     let attempts = 0;
     const maxAttempts = 600; // ~60 seconds at 100ms intervals
     const check = () => {
@@ -557,21 +552,37 @@ function initTurnstile() {
         setTimeout(check, 100);
         return;
       }
-      const widgetId = widget.getAttribute('data-widget-id');
-      if (widgetId) {
-        turnstileWidgetId = widgetId;
-        console.log('Turnstile widget ready, widgetId:', widgetId);
-        hideTurnstileOverlay();
+
+      // Turnstile is loaded — render the widget programmatically with a callback
+      // that fires when the user completes the challenge. Only then do we dismiss
+      // the overlay and unlock the survey.
+      try {
+        turnstileWidgetId = window.turnstile.render(container, {
+          sitekey: CONFIG.TURNSTILE_SITEKEY || '',
+          action: 'submit',
+          callback: (token) => {
+            console.log('Turnstile challenge completed, token length:', token.length);
+            hideTurnstileOverlay();
+            resolve();
+          },
+          'error-callback': () => {
+            console.error('Turnstile challenge errored');
+            showTurnstileError('Turnstile verification failed. Please refresh the page and try again.');
+          },
+        });
+        console.log('Turnstile widget rendered, widgetId:', turnstileWidgetId);
+      } catch (e) {
+        console.error('Turnstile render failed:', e);
+        showTurnstileError('Turnstile verification failed to initialize. Please refresh the page.');
         resolve();
-        return;
       }
-      setTimeout(check, 100);
     };
     check();
   });
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  initTurnstile();
+  // Turnstile verification must complete before the survey UI is accessible.
+  await initTurnstile();
   init();
 });
