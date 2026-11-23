@@ -451,6 +451,79 @@ async function getTurnstileToken() {
   return window.turnstile.getResponse(turnstileWidgetId) || '';
 }
 
+// Verification overlay shown while Turnstile loads / user completes the challenge.
+let turnstileOverlay = null;
+
+function showTurnstileOverlay() {
+  if (turnstileOverlay) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'turnstile-overlay';
+  overlay.style.position = 'fixed';
+  overlay.style.inset = '0';
+  overlay.style.zIndex = '10000';
+  overlay.style.background = '#ffffff';
+  overlay.style.display = 'flex';
+  overlay.style.flexDirection = 'column';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.textAlign = 'center';
+  overlay.style.padding = '2rem';
+  overlay.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+
+  const title = document.createElement('h2');
+  title.textContent = 'Verification required';
+  title.style.margin = '0 0 1rem 0';
+  title.style.fontSize = '1.25rem';
+  title.style.color = '#111827';
+
+  const msg = document.createElement('p');
+  msg.textContent = 'Please complete the Cloudflare verification challenge below before accessing the survey.';
+  msg.style.margin = '0 0 1.5rem 0';
+  msg.style.color = '#4b5563';
+  msg.style.maxWidth = '400px';
+  msg.style.lineHeight = '1.5';
+
+  const container = document.createElement('div');
+  container.id = 'turnstile-container';
+  container.style.margin = '0 auto';
+
+  const widget = document.createElement('div');
+  widget.className = 'cf-turnstile';
+  widget.setAttribute('data-sitekey', CONFIG.TURNSTILE_SITEKEY || '');
+  widget.setAttribute('data-action', 'submit');
+  container.appendChild(widget);
+
+  const error = document.createElement('p');
+  error.id = 'turnstile-error';
+  error.style.margin = '1.5rem 0 0 0';
+  error.style.color = '#dc2626';
+  error.style.fontSize = '0.9rem';
+  error.style.maxWidth = '400px';
+  error.style.display = 'none';
+
+  overlay.appendChild(title);
+  overlay.appendChild(msg);
+  overlay.appendChild(container);
+  overlay.appendChild(error);
+  document.body.appendChild(overlay);
+  turnstileOverlay = overlay;
+}
+
+function hideTurnstileOverlay() {
+  if (turnstileOverlay) {
+    turnstileOverlay.remove();
+    turnstileOverlay = null;
+  }
+}
+
+function showTurnstileError(msg) {
+  const error = document.getElementById('turnstile-error');
+  if (error) {
+    error.textContent = msg;
+    error.style.display = 'block';
+  }
+}
+
 function initTurnstile() {
   return new Promise((resolve) => {
     const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -463,28 +536,30 @@ function initTurnstile() {
       return;
     }
 
-    // Production: inject the Turnstile widget div dynamically
-    const container = document.createElement('div');
-    container.id = 'turnstile-container';
-    container.style.margin = '1rem 0';
-    container.style.textAlign = 'center';
+    // Production: show the verification overlay and inject the Turnstile widget.
+    // The user must complete the challenge before the survey is accessible.
+    showTurnstileOverlay();
+
+    const container = document.getElementById('turnstile-container');
     const widget = document.createElement('div');
     widget.className = 'cf-turnstile';
     widget.setAttribute('data-sitekey', CONFIG.TURNSTILE_SITEKEY || '');
     widget.setAttribute('data-action', 'submit');
     container.appendChild(widget);
-    document.body.appendChild(container);
 
-    const start = Date.now();
-    const timeoutMs = 10000;
+    // Poll for Turnstile to be ready. No silent timeout — we wait until the
+    // widget loads or the page is refreshed. If Cloudflare's CSP blocks the
+    // widget, an error is shown instead of silently proceeding without verification.
+    let attempts = 0;
+    const maxAttempts = 600; // ~60 seconds at 100ms intervals
     const check = () => {
-      if (Date.now() - start > timeoutMs) {
-        turnstileWidgetId = null;
-        console.warn('Turnstile failed to load within', timeoutMs, 'ms — proceeding without it');
-        resolve();
-        return;
-      }
+      attempts++;
       if (!window.turnstile) {
+        if (attempts >= maxAttempts) {
+          showTurnstileError('Cloudflare Turnstile failed to load. Please refresh the page and try again.');
+          resolve();
+          return;
+        }
         setTimeout(check, 100);
         return;
       }
@@ -492,6 +567,7 @@ function initTurnstile() {
       if (widgetId) {
         turnstileWidgetId = widgetId;
         console.log('Turnstile widget ready, widgetId:', widgetId);
+        hideTurnstileOverlay();
         resolve();
         return;
       }
