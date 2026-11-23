@@ -999,6 +999,7 @@ const UI = (() => {
         answers: guidedKnownPairs(),
         idx: guidedIdx
       },
+      pairwise: getPairwisePayload(),
       matrix,
       weights,
       cr,
